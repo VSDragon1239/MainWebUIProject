@@ -39,4 +39,4 @@ EXPOSE 8000
 # Команда запуска (gunicorn лучше указывать timeout и количество воркеров по нагрузке)
 # При старте сначала entrypoint, потом gunicorn
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["gunicorn", "mysite.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+CMD ["gunicorn", "mysite.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "120"]
