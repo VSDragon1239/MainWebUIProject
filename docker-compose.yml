@@ -52,6 +52,8 @@ services:
       - PGADMIN_CONFIG_SCRIPT_NAME='/pgadmin'
       - GUNICORN_TIMEOUT=40
       - PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=False
+      - PGADMIN_CONFIG_LOGIN_BANNER="Server Mode"
+      - PGADMIN_CONFIG_CSRF_TRUSTED_ORIGINS=["https://194.87.214.67"]
       - PGADMIN_CONFIG_CONSOLE_LOG_LEVEL=10
     volumes:
       - pgadmin_data:/var/lib/pgadmin
