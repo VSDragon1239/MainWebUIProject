@@ -26,13 +26,13 @@ DEBUG = os.getenv('DEBUG') == 'True'
 
 hosts = os.getenv(
     'DJANGO_ALLOWED_HOSTS',
-    'localhost,127.0.0.1,[::1],45.132.16.113'  # добавь сюда свой реальный IP
+    'localhost,127.0.0.1,[::1],194.87.214.67'  # добавь сюда свой реальный IP
 )
 ALLOWED_HOSTS = hosts.split(',')
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://194.87.147.48:443',  # если кто-то придёт на 443
-    'https://194.87.147.48:8443',  # добавляем порт туннеля
+    'https://194.87.214.67:443',  # если кто-то придёт на 443
+    'https://194.87.214.67:8443',  # добавляем порт туннеля
 ]
 
 # Application definition
