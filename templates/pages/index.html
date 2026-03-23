@@ -405,10 +405,37 @@
 <section class="news-section">
     <h3>Новости</h3>
     <div class="news">
-        {% for n in blog %}
+        {% for n in blogs_list %}
         <article class="news__item">
-            <h4 class="news__title"><a href="{{ n.get_absolute_url }}">{{ n.title }}</a></h4>
-            <p class="news__meta">{{ n.published_at|date:"d.m.Y" }}</p>
+            <div class="blog-posts">
+                {% for blog in blogs_list %}
+                <div class="blog-post">
+                    <div class="blog-post-image">
+                        {% if blog.images.first %}
+                        <div class="img-blog-image_first">
+                            <img src="{{ blog.images.first.image.url }}" width="450" alt="Превью">
+                        </div>
+                        {% endif %}
+                        <div class="img-blog-images">
+                            {% for img in blog.images.all %}
+                            {% if img.image.url == blog.images.first.image.url %}
+
+                            {% else %}
+                            <img src="{{ img.image.url }}" width="221" height="221" alt="Изображение">
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <h2 class="blog-post-title">{{ blog.title }}</h2>
+                    <p class="blog-post-meta">
+                        <span class="blog-post-author">{{ blog.author }}</span>
+                        <span class="blog-post-date">{{ blog.created_at }}</span>
+                    </p>
+                    <p class="blog-post-body">{{ blog.content|truncatechars:200|urlize }}</p>
+                    <p class="blog-post-footer">Магические причуды</p>
+                </div>
+                {% endfor %}
+            </div>
         </article>
         {% empty %}
         <p style="color: #94a3b8;">Новостей нет.</p>
