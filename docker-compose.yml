@@ -51,6 +51,8 @@ services:
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
       - PGADMIN_CONFIG_SCRIPT_NAME='/pgadmin'
       - GUNICORN_TIMEOUT=40
+      - PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION=False
+      - PGADMIN_CONFIG_CONSOLE_LOG_LEVEL=10
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
