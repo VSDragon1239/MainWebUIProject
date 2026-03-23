@@ -6,70 +6,173 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/index_style.css' %}">
 <style>
-    /* Стили для зоны загрузки файлов */
-    .file-dropzone {
-        border: 2px dashed #ccc;
+    /* Улучшенные стили для AI модуля */
+    .ai-module {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .ai-terminal {
+        background: #1e2a38;
+        color: #00cec9;
+        padding: 20px;
+        border-radius: 8px;
+        min-height: 150px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        margin-bottom: 20px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ai-terminal::before {
+        content: "SYSTEM OUTPUT";
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: #2d3b4d;
+        color: #8692a3;
+        font-size: 10px;
+        padding: 4px 8px;
+        border-bottom-left-radius: 8px;
+    }
+
+    /* Зона загрузки файлов */
+    .upload-zone {
+        border: 2px dashed #cbd5e0;
         border-radius: 8px;
         padding: 20px;
         text-align: center;
-        background: #f9f9f9;
-        margin-bottom: 15px;
-        transition: all 0.3s;
+        transition: all 0.3s ease;
+        background: #f8fafc;
         cursor: pointer;
+        margin-bottom: 15px;
     }
 
-    .file-dropzone.drag-over {
-        background: #e3f2fd;
-        border-color: #2196f3;
+    .upload-zone:hover, .upload-zone.dragover {
+        border-color: #4299e1;
+        background: #ebf8ff;
     }
 
-    .file-list {
+    .upload-zone__icon {
+        font-size: 24px;
+        color: #a0aec0;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    /* Превью загруженных файлов */
+    .attachments-list {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
-        margin-top: 10px;
+        margin-bottom: 15px;
     }
 
-    .file-item {
-        background: #f0f0f0;
-        border-radius: 6px;
-        padding: 5px 10px;
+    .attachment-item {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        background: #edf2f7;
         display: flex;
         align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        position: relative;
+        justify-content: center;
+        flex-direction: column;
     }
 
-    .file-item img.preview {
-        max-height: 30px;
-        max-width: 30px;
-        border-radius: 4px;
+    .attachment-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 
-    .file-item .remove-file {
-        cursor: pointer;
-        color: #e74c3c;
-        font-weight: bold;
-        margin-left: 5px;
+    .attachment-item .doc-icon {
+        font-size: 24px;
+        color: #4a5568;
     }
 
-    .upload-progress {
-        display: inline-block;
-        width: 16px;
-        height: 16px;
-        border: 2px solid #ccc;
-        border-top-color: #2196f3;
+    .attachment-item .filename {
+        font-size: 9px;
+        padding: 2px;
+        text-align: center;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        position: absolute;
+        bottom: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .attachment-item .remove-btn {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
         border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin-left: 8px;
-        vertical-align: middle;
+        width: 18px;
+        height: 18px;
+        font-size: 12px;
+        line-height: 16px;
+        cursor: pointer;
+        display: none;
     }
 
-    @keyframes spin {
-        to {
-            transform: rotate(360deg);
-        }
+    .attachment-item:hover .remove-btn {
+        display: block;
+    }
+
+    /* Форма ввода */
+    .input-group {
+        display: flex;
+        gap: 10px;
+    }
+
+    .input-group input {
+        flex: 1;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+
+    .input-group input:focus {
+        outline: none;
+        border-color: #4299e1;
+    }
+
+    .btn--primary {
+        background: #4299e1;
+        color: white;
+        border: none;
+        padding: 0 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn--primary:hover {
+        background: #3182ce;
+    }
+
+    /* Статусы загрузки */
+    .status-loading {
+        color: #4299e1;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .status-error {
+        color: #fc8181;
     }
 </style>
 {% endblock %}
@@ -79,40 +182,43 @@
 {% endblock %}
 
 {% block content_block_1 %}
-<!-- ИНТЕРФЕЙС AI SYSTEM CORE -->
-<section class="content-block-01 ai-module" style="margin-bottom: 20px;">
+<section class="content-block-01 ai-module">
     <h1>AI System Core</h1>
 
     <!-- Блок вывода ответа -->
-    <div class="ai-terminal"
-         style="background: #1e2a38; color: #00cec9; padding: 15px; border-radius: 8px; min-height: 100px; font-family: monospace; margin-bottom: 15px;">
+    <div class="ai-terminal">
         {% if ai_response %}
-        <p style="margin:0; white-space: pre-wrap;">{{ ai_response }}</p>
-        {% else %}
-        <p style="margin:0; opacity: 0.7;">> Ожидание ввода команд...</p>
-        {% endif %}
+        {{ ai_response }}{% else %}
+        > Ожидание ввода команд...
+        Система готова к анализу документов и изображений.{% endif %}
     </div>
 
-    <!-- Drag-and-drop зона загрузки файлов -->
-    <div id="fileDropzone" class="file-dropzone">
-        📁 Перетащите файлы сюда или кликните для выбора
-        <input type="file" id="fileInput" multiple style="display: none;">
+    <!-- Список прикрепленных файлов -->
+    <div id="attachments-list" class="attachments-list"></div>
+
+    <!-- Статус загрузки -->
+    <div id="upload-status" class="status-loading"></div>
+
+    <!-- Зона загрузки файлов (Drag & Drop) -->
+    <div id="drop-zone" class="upload-zone">
+        <span class="upload-zone__icon">📂</span>
+        <p>Перетащите файлы сюда или кликните для выбора</p>
+        <small style="color: #718096;">Поддерживаются документы, изображения, PDF</small>
+        <input type="file" id="file-input" multiple style="display: none;">
     </div>
 
-    <!-- Список загруженных файлов -->
-    <div id="fileList" class="file-list"></div>
-
-    <!-- Форма ввода с поддержкой файлов -->
-    <form method="post" action="" id="chatForm">
+    <!-- Форма ввода -->
+    <form method="post" action="" id="ai-form">
         {% csrf_token %}
-        <div style="display: flex; gap: 10px;">
-            <input type="text" name="prompt" id="promptInput" placeholder="Введите запрос к системе..."
-                   value="{{ last_prompt|default:'' }}"
-                   style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #ccc;">
+        <!-- Скрытое поле для передачи имен файлов, если нужно для бэкенда,
+             но в данном случае AnythingLLM уже получил файлы через AJAX -->
+        <input type="hidden" name="attached_files" id="attached-files-input" value="">
+
+        <div class="input-group">
+            <input type="text" name="prompt" placeholder="Например: Проанализируй прикрепленный документ..."
+                   value="{{ last_prompt|default:'' }}">
             <button type="submit" class="btn btn--primary">Запрос</button>
         </div>
-        <!-- Скрытое поле для хранения имён загруженных файлов -->
-        <input type="hidden" name="attached_files" id="attachedFilesInput" value="">
     </form>
 </section>
 
@@ -130,112 +236,124 @@
         {% endfor %}
     </div>
 </section>
-
 {% endblock %}
+
+{% block content_block_2 %}{% endblock %}
+{% block content_block_3 %}{% endblock %}
 
 {% block extra_js %}
 <script>
-    // Управление загрузкой файлов
-    const dropzone = document.getElementById('fileDropzone');
-    const fileInput = document.getElementById('fileInput');
-    const fileListDiv = document.getElementById('fileList');
-    const attachedFilesInput = document.getElementById('attachedFilesInput');
-    let attachedFiles = []; // массив объектов {filename, preview, fileId}
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const attachmentsList = document.getElementById('attachments-list');
+        const uploadStatus = document.getElementById('upload-status');
+        const attachedFilesInput = document.getElementById('attached-files-input');
 
-    // Функция отображения списка файлов
-    function renderFileList() {
-        fileListDiv.innerHTML = attachedFiles.map((file, idx) => `
-            <div class="file-item" data-idx="${idx}">
-                ${file.preview ? `<img class="preview" src="${file.preview}" alt="">` : '📄'}
-                <span>${file.filename}</span>
-                <span class="remove-file" data-filename="${file.filename}">✖</span>
-            </div>
-        `).join('');
-        // Обновить скрытое поле
-        attachedFilesInput.value = attachedFiles.map(f => f.filename).join(',');
-        // Добавить обработчики удаления
-        document.querySelectorAll('.remove-file').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const filename = btn.getAttribute('data-filename');
-                attachedFiles = attachedFiles.filter(f => f.filename !== filename);
-                renderFileList();
-            });
+        // Хранилище успешно загруженных файлов
+        let uploadedFiles = [];
+
+        // Клик по зоне загрузки
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        // Обработка Drag & Drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
         });
-    }
 
-    // Загрузка файла на сервер
-    async function uploadFile(file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        const progressSpan = document.createElement('span');
-        progressSpan.className = 'upload-progress';
-        const tempItem = document.createElement('div');
-        tempItem.className = 'file-item';
-        tempItem.innerHTML = `<span>${file.name}</span>`;
-        tempItem.appendChild(progressSpan);
-        fileListDiv.appendChild(tempItem);
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
 
-        try {
-            const response = await fetch('/upload-file/', {
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+        fileInput.addEventListener('change', handleFiles, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles({target: {files: files}});
+        }
+
+        function handleFiles(e) {
+            const files = [...e.target.files];
+            files.forEach(uploadFile);
+        }
+
+        function uploadFile(file) {
+            const url = '/upload-file/'; // URL нашего нового view
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Получаем CSRF токен
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // Обновляем статус
+            uploadStatus.textContent = `Загрузка ${file.name}...`;
+            uploadStatus.className = 'status-loading';
+
+            // Локальное превью (для изображений)
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function (e) {
+                    addAttachmentPreview(file.name, e.target.result, 'image');
+                };
+            } else {
+                addAttachmentPreview(file.name, null, 'doc');
+            }
+
+            fetch(url, {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-CSRFToken': csrftoken
                 }
-            });
-            const data = await response.json();
-            if (response.ok && data.success) {
-                // Удаляем временный элемент
-                tempItem.remove();
-                attachedFiles.push({
-                    filename: data.filename,
-                    preview: data.preview,
-                    fileId: data.file_id
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        uploadStatus.textContent = `Файл "${data.filename}" успешно встроен в контекст.`;
+                        uploadedFiles.push(data.doc_name);
+                        attachedFilesInput.value = uploadedFiles.join(',');
+                    } else {
+                        uploadStatus.textContent = `Ошибка: ${data.error}`;
+                        uploadStatus.className = 'status-loading status-error';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    uploadStatus.textContent = 'Ошибка соединения при загрузке файла.';
+                    uploadStatus.className = 'status-loading status-error';
                 });
-                renderFileList();
+        }
+
+        function addAttachmentPreview(name, src, type) {
+            const div = document.createElement('div');
+            div.className = 'attachment-item';
+
+            if (type === 'image' && src) {
+                div.innerHTML = `
+                <img src="${src}" alt="${name}">
+                <div class="filename">${name}</div>
+            `;
             } else {
-                throw new Error(data.error || 'Ошибка загрузки');
+                div.innerHTML = `
+                <div class="doc-icon">📄</div>
+                <div class="filename">${name}</div>
+            `;
             }
-        } catch (error) {
-            tempItem.innerHTML = `<span style="color:red;">Ошибка: ${file.name}</span>`;
-            setTimeout(() => tempItem.remove(), 2000);
+
+            attachmentsList.appendChild(div);
         }
-    }
-
-    // Обработка выбора файлов через input
-    fileInput.addEventListener('change', (e) => {
-        Array.from(e.target.files).forEach(file => uploadFile(file));
-        fileInput.value = '';
-    });
-
-    // Drag-and-drop
-    dropzone.addEventListener('click', () => fileInput.click());
-    dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('drag-over');
-    });
-    dropzone.addEventListener('dragleave', () => {
-        dropzone.classList.remove('drag-over');
-    });
-    dropzone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        dropzone.classList.remove('drag-over');
-        const files = Array.from(e.dataTransfer.files);
-        files.forEach(file => uploadFile(file));
-    });
-
-    // При отправке формы можно добавить подсказку о файлах в промпт (опционально)
-    const chatForm = document.getElementById('chatForm');
-    const promptInput = document.getElementById('promptInput');
-    chatForm.addEventListener('submit', (e) => {
-        if (attachedFiles.length > 0 && promptInput.value.trim() === '') {
-            // Если есть файлы, но нет текста, можно предупредить
-            e.preventDefault();
-            alert('Введите вопрос к системе');
-        }
-        // В остальном форма отправится как обычно
-        // attachedFilesInput уже содержит имена файлов
     });
 </script>
 {% endblock %}
