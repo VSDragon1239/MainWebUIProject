@@ -427,13 +427,17 @@
                                 const jsonStr = line.substring(6);
                                 const data = JSON.parse(jsonStr);
 
-                                if (data.textResponse) {
-                                    terminalContent.textContent += data.textResponse;
-                                    // Автоскролл
-                                    terminalContent.scrollTop = terminalContent.scrollHeight;
-                                }
+                                // Обработка ошибок, пришедших от бэкенда
                                 if (data.error) {
                                     terminalContent.textContent += `\n[Ошибка: ${data.error}]`;
+                                    finishChat(); // Останавливаем курсор
+                                    return;
+                                }
+
+                                // Обработка нормального текста
+                                if (data.textResponse) {
+                                    terminalContent.textContent += data.textResponse;
+                                    terminalContent.scrollTop = terminalContent.scrollHeight;
                                 }
                             } catch (parseError) {
                                 console.warn("JSON parse error:", parseError);
