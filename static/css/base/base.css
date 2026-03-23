@@ -25,7 +25,7 @@ header h1 {
     font-size: 28px;
     text-transform: uppercase;
     letter-spacing: 1px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* === MAIN LAYOUT === */
@@ -53,14 +53,14 @@ main {
     background-color: white;
     border-radius: 16px;
     padding: 25px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     border-left: 5px solid #6c5ce7; /* Фиолетовая полоса слева */
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .content-block-01:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     border-left-color: #00cec9; /* Смена акцента при наведении */
 }
 
@@ -88,7 +88,7 @@ main {
     background-color: white;
     border-radius: 12px;
     margin-bottom: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .content-top h1 {
@@ -102,7 +102,7 @@ main {
 /* === FOOTER === */
 footer {
     background-color: #1e2a38;
-    color: rgba(255,255,255,0.6);
+    color: rgba(255, 255, 255, 0.6);
     text-align: center;
     padding: 20px;
     margin-top: auto;
@@ -124,22 +124,41 @@ footer {
 }
 
 /* === АДАПТИВНОСТЬ === */
+/* Увеличение масштаба для мобильных устройств */
 @media (max-width: 768px) {
-    main {
-        padding: 10px;
+    body {
+        font-size: 26px; /* базовый размер */
     }
 
     header h1 {
-        font-size: 20px;
+        font-size: 36px; /* крупнее */
+    }
+
+    .content-block-01 h1 {
+        font-size: 26px;
     }
 
     .content-block-01 {
-        padding: 15px;
-        border-radius: 12px;
-        border-left-width: 3px;
+        padding: 26px;
     }
 
-    .content-top {
-        padding: 10px 15px;
+    /* Для кнопок и полей ввода (если есть в AI-модуле) */
+    .btn, button, .input-wrapper input {
+        font-size: 16px;
+        padding: 12px 16px;
+    }
+
+    .ai-terminal {
+        font-size: 15px;
+        padding: 20px;
+    }
+
+    .upload-zone {
+        font-size: 15px;
+        padding: 20px;
+    }
+
+    .attachment-item .filename {
+        font-size: 11px;
     }
 }

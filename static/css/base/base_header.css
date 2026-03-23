@@ -1,21 +1,36 @@
 /* base_header.css */
 
-/* Контейнер для навигации внутри header (если нужен) или шапка целиком */
-.nav-content {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    gap: 15px;
-    padding: 0 10px;
+/* Контейнер шапки с эффектом размытия (Glassmorphism) */
+header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(30, 42, 56, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 0;
 }
 
-/* Логотип или основной блок слева (если нужен) */
-.header-block-1 {
+.nav-content {
     display: flex;
     align-items: center;
-    margin-right: auto; /* Прижимаем к левому краю */
+    justify-content: space-between;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 20px;
+    gap: 15px;
+}
+
+/* Блоки для идеальной центровки */
+.header-block-1, .header-block-3 {
+    flex: 1; /* Растягиваются поровну, выталкивая блок-2 в центр */
+    display: flex;
+    align-items: center;
+}
+
+.header-block-3 {
+    justify-content: flex-end;
 }
 
 /* Центральный блок с кнопками */
@@ -23,75 +38,109 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-wrap: wrap; /* Кнопки переносятся на маленьких экранах */
     gap: 10px;
 }
 
-/* Блок справа */
-.header-block-3 {
-    display: flex;
-    align-items: center;
-    margin-left: auto; /* Прижимаем к правому краю */
-}
-
-/* Кнопки навигации (бывшие base-link) */
+/* Ссылка-кнопка */
 .base-link {
-    display: flex;
-    justify-content: center;
+    display: inline-flex;
     align-items: center;
-    height: 45px;
-    padding: 0 20px;
-    border-radius: 8px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
+    justify-content: center;
+    padding: 10px 22px;
+    min-height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
     font-family: "KellySlab", serif;
-    font-size: 16px;
+    font-size: 14px;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    text-decoration: none;
+    letter-spacing: 0.8px;
+    white-space: nowrap;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Эффекты при наведении */
 .base-link:hover {
-    background-color: #00cec9;
+    background: #00cec9;
     color: #1e2a38;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 206, 201, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 206, 201, 0.3);
+    border-color: transparent;
 }
 
 .base-link:active {
-    transform: translateY(0);
-    background-color: #6c5ce7;
-    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 206, 201, 0.2);
 }
 
-/* Варианты ссылок */
-.link-1 { background-color: #00cec9; color: #1e2a38; }
-.link-2 { background-color: #6c5ce7; }
-.link-3 { background-color: rgba(255,255,255, 0.15); }
-
-/* Убрал старые .background_line, так как они неадаптивны.
-   Теперь стили вешаются на сам header в base.css или тут. */
-.header-block-2 a {
-    text-decoration: none;
-    height: auto; /* Сброс */
+/* Цветовые акценты */
+.link-1 {
+    background: #00cec9;
+    color: #1e2a38;
 }
 
-/* Адаптивность для навигации */
+.link-2 {
+    background: #6c5ce7;
+}
+
+.link-3 {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* --- АДАПТИВНОСТЬ --- */
+
+/* Планшеты: разрешаем перенос кнопок в центре */
+@media (max-width: 1024px) {
+    .header-block-2 {
+        flex-wrap: wrap;
+        max-width: 500px;
+    }
+}
+
+/* Мобильные устройства: перестраиваем в колонку */
 @media (max-width: 768px) {
+    header {
+        padding: 20px 0;
+    }
+
     .nav-content {
-        flex-direction: column; /* Стекаем кнопки в столбик на мобайле */
-        gap: 10px;
+        flex-direction: column;
+        gap: 20px;
     }
 
     .header-block-1, .header-block-3 {
-        margin: 0; /* Убираем отступы для центровки */
+        flex: none;
         width: 100%;
         justify-content: center;
     }
 
+    .header-block-2 {
+        width: 100%;
+        flex-direction: column;
+        gap: 12px;
+    }
+
     .base-link {
-        width: 90%; /* Кнопки на всю ширину */
-        max-width: 300px;
+        width: 100%;
+        max-width: 340px; /* Чтобы кнопки не были слишком длинными на больших телефонах */
+        font-size: 16px;
+        padding: 14px;
+    }
+
+    /* Меняем порядок: Логотип сверху, кнопки посередине, доп. элементы снизу */
+    .header-block-1 {
+        order: 1;
+    }
+
+    .header-block-2 {
+        order: 2;
+    }
+
+    .header-block-3 {
+        order: 3;
     }
 }

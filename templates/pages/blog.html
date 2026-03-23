@@ -44,8 +44,8 @@
                     <span class="blog-post-author">{{ blog.author }}</span>
                     <span class="blog-post-date">{{ blog.created_at }}</span>
                 </p>
-                <p class="blog-post-body">{{ blog.content|truncatechars:200 }}</p>
-                <p class="blog-post-footer">Техно-восток</p>
+                <p class="blog-post-body">{{ blog.content|truncatechars:200|urlize }}</p>
+                <p class="blog-post-footer">Магические причуды</p>
             </div>
         {% endfor %}
     </div>

@@ -405,7 +405,7 @@
 <section class="news-section">
     <h3>Новости</h3>
     <div class="news">
-        {% for n in latest_news %}
+        {% for n in blog %}
         <article class="news__item">
             <h4 class="news__title"><a href="{{ n.get_absolute_url }}">{{ n.title }}</a></h4>
             <p class="news__meta">{{ n.published_at|date:"d.m.Y" }}</p>
