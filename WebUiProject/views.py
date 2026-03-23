@@ -13,6 +13,8 @@ from .models import Project, Blog, BlogImage, ProjectType
 from .permissions import RoleRequiredMixin
 
 # Главная страница
+import requests
+from django.conf import settings
 from django.views import View
 from django.shortcuts import render
 
@@ -32,29 +34,34 @@ class IndexView(View):
 
         if prompt:
             try:
-                # === ЗАГЛУШКА (Эмуляция работы AI) ===
-                # Раскомментируй блок ниже для реального подключения к Docker контейнеру
-                """
-                payload = {"message": prompt, "mode": "chat"}
-                headers = {"Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}"}
-                response = requests.post(
-                    f"{settings.ANYTHINGLLM_API_URL}/api/v1/workspace/{settings.ANYTHINGLLM_WORKSPACE}/chat",
-                    json=payload,
-                    headers=headers,
-                    timeout=10
-                )
-                response.raise_for_status()
-                ai_response = response.json().get('textResponse', 'Пустой ответ от AI.')
-                """
+                # Подготовка запроса к AnythingLLM
+                payload = {
+                    "message": prompt,
+                    "mode": "chat"           # или "query" в зависимости от задачи
+                }
+                headers = {
+                    "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                }
+                url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/workspace/{settings.ANYTHINGLLM_WORKSPACE}/chat"
 
-                # Логика заглушки
-                if "проект" in prompt.lower():
-                    ai_response = "Анализ данных завершен. Активных проектов: 3. Статус: Норма."
-                else:
-                    ai_response = f"Запрос '{prompt}' принят системой. API AnythingLLM отключен (режим заглушки)."
+                response = requests.post(url, json=payload, headers=headers, timeout=10)
+                response.raise_for_status()   # вызовет исключение для 4xx/5xx
 
+                data = response.json()
+                ai_response = data.get('textResponse', 'Пустой ответ от AI.')
+            except requests.exceptions.Timeout:
+                ai_response = "Превышено время ожидания ответа от AI-сервера."
+            except requests.exceptions.RequestException as e:
+                # Если есть тело ответа, выводим его для отладки (можно логировать)
+                error_detail = ""
+                if e.response is not None:
+                    error_detail = f" (статус: {e.response.status_code})"
+                ai_response = f"Ошибка соединения с AI ядром: {e}{error_detail}"
             except Exception as e:
-                ai_response = f"Ошибка соединения с AI ядром: {e}"
+                # Любые другие ошибки (например, парсинг JSON)
+                ai_response = f"Внутренняя ошибка: {e}"
 
         context = self.get_context_data()
         context['ai_response'] = ai_response
