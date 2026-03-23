@@ -46,7 +46,7 @@ class IndexView(View):
                 }
                 url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/workspace/{settings.ANYTHINGLLM_WORKSPACE}/chat"
 
-                response = requests.post(url, json=payload, headers=headers, timeout=10)
+                response = requests.post(url, json=payload, headers=headers, timeout=120)
                 response.raise_for_status()   # вызовет исключение для 4xx/5xx
 
                 data = response.json()
