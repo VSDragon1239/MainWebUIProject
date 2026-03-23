@@ -3,6 +3,7 @@ from django.contrib.auth.models import User, Group
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, FormView, CreateView, ListView, UpdateView, DeleteView
 from django.contrib import messages
 from django.http import JsonResponse
@@ -19,15 +20,14 @@ from django.views import View
 from django.shortcuts import render
 
 
+@csrf_exempt  # для простоты, можно настроить CSRF для API-эндпоинта отдельно
 def upload_file(request):
-    """Обработка загрузки файла (изображение или документ) в AnythingLLM."""
+    """Обработка загрузки файла в AnythingLLM."""
     if request.method != 'POST' or not request.FILES.get('file'):
         return JsonResponse({'error': 'Нет файла'}, status=400)
 
     uploaded_file = request.FILES['file']
     try:
-        # Подготовка запроса к AnythingLLM API для загрузки документа
-        # Документация: POST /api/v1/document/upload
         url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/document/upload"
         headers = {
             "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
@@ -35,19 +35,27 @@ def upload_file(request):
         files = {
             'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)
         }
-        # Можно добавить параметр folderName, если нужно
         params = {
-            'folderName': 'uploads'  # папка, куда сохранить в AnythingLLM
+            'folderName': 'uploads'  # можно задать имя папки
         }
         response = requests.post(url, headers=headers, files=files, params=params, timeout=30)
         response.raise_for_status()
         data = response.json()
-        # Возвращаем информацию о файле для отображения в интерфейсе
+
+        # Генерация превью для изображений
+        preview = None
+        if uploaded_file.content_type.startswith('image/'):
+            # Для превью используем data URL (можно также сохранить локально)
+            uploaded_file.seek(0)  # возвращаем указатель, т.к. файл уже прочитан
+            file_data = uploaded_file.read()
+            preview = f"data:{uploaded_file.content_type};base64,{base64.b64encode(file_data).decode()}"
+            uploaded_file.seek(0)  # для повторного использования, если потребуется
+
         return JsonResponse({
             'success': True,
             'filename': uploaded_file.name,
+            'preview': preview,
             'file_id': data.get('id', ''),
-            'preview': _get_preview_url(uploaded_file)  # функция для создания превью
         })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
@@ -72,24 +80,27 @@ class IndexView(View):
     template_name = "pages/index.html"
 
     def get(self, request, *args, **kwargs):
-        """Отрисовка главной страницы"""
         context = self.get_context_data()
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
         prompt = request.POST.get('prompt', '')
         attached_files = request.POST.get('attached_files', '').split(',')
-        attached_files = [f for f in attached_files if f]  # убираем пустые
+        attached_files = [f for f in attached_files if f]
         ai_response = None
+        sources = []
 
         if prompt:
             try:
-                # Формируем сообщение с учётом прикреплённых файлов
+                # Формируем сообщение с указанием прикреплённых файлов
                 message = prompt
                 if attached_files:
-                    # Указываем модели, что есть прикреплённые документы
-                    message = f"[Прикреплённые файлы: {', '.join(attached_files)}]\n{message}"
-                payload = {"message": message, "mode": "chat"}
+                    message = f"[Прикреплённые документы: {', '.join(attached_files)}]\n{message}"
+
+                payload = {
+                    "message": message,
+                    "mode": "chat"  # или "query" для RAG, но chat тоже использует RAG
+                }
                 headers = {
                     "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
                     "Content-Type": "application/json",
@@ -101,6 +112,8 @@ class IndexView(View):
                 response.raise_for_status()
                 data = response.json()
                 ai_response = data.get('textResponse', 'Пустой ответ от AI.')
+                # Если есть источники (sources) — они могут быть в ответе
+                sources = data.get('sources', [])
             except requests.exceptions.Timeout:
                 ai_response = "Превышено время ожидания ответа от AI-сервера."
             except Exception as e:
@@ -108,15 +121,17 @@ class IndexView(View):
 
         context = self.get_context_data()
         context['ai_response'] = ai_response
+        context['sources'] = sources
         context['last_prompt'] = prompt
-        # передаём список файлов обратно, чтобы форма могла отобразить их после отправки
-        context['attached_files'] = attached_files
+        context['attached_files'] = attached_files  # для возможного отображения после отправки
         return render(request, self.template_name, context)
 
     def get_context_data(self, **kwargs):
+        latest_news = []
+        # latest_news = News.objects.all()[:3]  # раскомментировать при наличии
         context = {
-            'stats': {'projects': 3, 'publications': 30, 'mentors': 7}
-            # Сюда можно добавить новости: 'latest_news': News.objects.all()[:3]
+            'stats': {'projects': 3, 'publications': 30, 'mentors': 7},
+            'latest_news': latest_news,
         }
         return context
 
