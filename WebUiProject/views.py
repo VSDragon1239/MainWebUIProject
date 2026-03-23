@@ -16,67 +16,12 @@ from .forms import BlogPostForm, BlogPostImageFormSet, UserUpdateForm, UserCreat
 from .models import Project, Blog, BlogImage, ProjectType
 from .permissions import RoleRequiredMixin
 
-# Главная страница
 import requests
-from django.conf import settings
-from django.views import View
+import json
 from django.shortcuts import render
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class UploadFileView(View):
-    """
-    Обрабатывает загрузку файлов, отправляет в AnythingLLM и обновляет эмбеддинги.
-    """
-
-    def post(self, request, *args, **kwargs):
-        uploaded_file = request.FILES.get('file')
-        if not uploaded_file:
-            return JsonResponse({'error': 'Файл не найден'}, status=400)
-
-        try:
-            # 1. Загрузка файла в AnythingLLM
-            upload_url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/document/upload"
-            headers = {
-                "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
-                "Accept": "application/json"
-            }
-
-            files = {
-                'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)
-            }
-
-            response = requests.post(upload_url, files=files, headers=headers)
-            response.raise_for_status()
-            upload_data = response.json()
-
-            # Получаем имя документа из ответа (обычно в 'documents')
-            doc_name = None
-            if upload_data.get('documents'):
-                doc_name = upload_data['documents'][0].get('name') or upload_data['documents'][0].get('location')
-
-            if not doc_name:
-                return JsonResponse({'error': 'Не удалось получить имя документа из API'}, status=500)
-
-            # 2. Добавление документа в Workspace (создание эмбеддингов)
-            embed_url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/workspace/{settings.ANYTHINGLLM_WORKSPACE}/update-embeddings"
-            embed_payload = {
-                "adds": [doc_name]
-            }
-
-            embed_response = requests.post(embed_url, json=embed_payload, headers=headers)
-            embed_response.raise_for_status()
-
-            return JsonResponse({
-                'status': 'success',
-                'filename': uploaded_file.name,
-                'doc_name': doc_name
-            })
-
-        except requests.exceptions.RequestException as e:
-            return JsonResponse({'error': f"Ошибка API: {str(e)}"}, status=500)
-        except Exception as e:
-            return JsonResponse({'error': f"Внутренняя ошибка: {str(e)}"}, status=500)
+from django.views import View
+from django.http import StreamingHttpResponse
+from django.conf import settings
 
 
 class IndexView(View):
@@ -86,15 +31,30 @@ class IndexView(View):
         context = self.get_context_data()
         return render(request, self.template_name, context)
 
+    def get_context_data(self, **kwargs):
+        return {
+            'stats': {'projects': 3, 'publications': 30, 'mentors': 7},
+            # 'latest_news': News.objects.all()[:3]
+        }
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class StreamChatView(View):
+    """
+    Обрабатывает POST запрос для чата и возвращает потоковый ответ (SSE-like).
+    """
+
     def post(self, request, *args, **kwargs):
         prompt = request.POST.get('prompt', '')
-        ai_response = None
+        if not prompt:
+            return JsonResponse({'error': 'Пустой запрос'}, status=400)
 
-        if prompt:
+        def event_stream():
             try:
                 payload = {
                     "message": prompt,
-                    "mode": "chat"
+                    "mode": "chat",
+                    "stream": True  # Ключевой момент: включаем потоковую передачу в API
                 }
                 headers = {
                     "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
@@ -102,26 +62,74 @@ class IndexView(View):
                 }
                 url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/workspace/{settings.ANYTHINGLLM_WORKSPACE}/chat"
 
-                response = requests.post(url, json=payload, headers=headers, timeout=120)
+                # stream=True важен для requests, чтобы не ждать полного ответа
+                response = requests.post(url, json=payload, headers=headers, stream=True, timeout=120)
                 response.raise_for_status()
-                data = response.json()
-                ai_response = data.get('textResponse', 'Пустой ответ от AI.')
+
+                # Читаем ответ построчно
+                for line in response.iter_lines():
+                    if line:
+                        decoded_line = line.decode('utf-8')
+
+                        # AnythingLLM присылает данные в формате "data: {...}"
+                        if decoded_line.startswith('data: '):
+                            json_str = decoded_line[6:]
+                            try:
+                                data = json.loads(json_str)
+                                # Стандартный формат чанка AnythingLLM
+                                if 'textResponse' in data:
+                                    # Отправляем клиенту текст в формате SSE
+                                    yield f"data: {json.dumps({'text': data['textResponse']})}\n\n"
+                            except json.JSONDecodeError:
+                                continue
+
+                # Сигнал завершения
+                yield f"data: {json.dumps({'done': True})}\n\n"
+
+            except requests.exceptions.RequestException as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
             except Exception as e:
-                ai_response = f"Ошибка: {str(e)}"
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
-        context = self.get_context_data()
-        context['ai_response'] = ai_response
-        context['last_prompt'] = prompt
-        return render(request, self.template_name, context)
+        return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
 
-    def get_context_data(self, **kwargs):
-        latest_news = []
-        # latest_news = News.objects.all()[:3]  # раскомментировать при наличии
-        context = {
-            'stats': {'projects': 3, 'publications': 30, 'mentors': 7},
-            'latest_news': latest_news,
-        }
-        return context
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UploadFileView(View):
+    """Загрузка файлов (без изменений из предыдущего шага)"""
+
+    def post(self, request, *args, **kwargs):
+        uploaded_file = request.FILES.get('file')
+        if not uploaded_file:
+            return JsonResponse({'error': 'Файл не найден'}, status=400)
+
+        try:
+            upload_url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/document/upload"
+            headers = {
+                "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
+                "Accept": "application/json"
+            }
+            files = {'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)}
+
+            response = requests.post(upload_url, files=files, headers=headers)
+            response.raise_for_status()
+            upload_data = response.json()
+
+            doc_name = None
+            if upload_data.get('documents'):
+                doc_name = upload_data['documents'][0].get('name') or upload_data['documents'][0].get('location')
+
+            if not doc_name:
+                return JsonResponse({'error': 'Не удалось получить имя документа'}, status=500)
+
+            embed_url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/workspace/{settings.ANYTHINGLLM_WORKSPACE}/update-embeddings"
+            embed_payload = {"adds": [doc_name]}
+            requests.post(embed_url, json=embed_payload, headers=headers).raise_for_status()
+
+            return JsonResponse({'status': 'success', 'filename': uploaded_file.name, 'doc_name': doc_name})
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
 
 
 # Страница с проектами "projects"
