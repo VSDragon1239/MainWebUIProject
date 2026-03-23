@@ -1,8 +1,11 @@
+import base64
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User, Group
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, FormView, CreateView, ListView, UpdateView, DeleteView
 from django.contrib import messages
@@ -20,60 +23,60 @@ from django.views import View
 from django.shortcuts import render
 
 
-@csrf_exempt  # для простоты, можно настроить CSRF для API-эндпоинта отдельно
-def upload_file(request):
-    """Обработка загрузки файла в AnythingLLM."""
-    if request.method != 'POST' or not request.FILES.get('file'):
-        return JsonResponse({'error': 'Нет файла'}, status=400)
+@method_decorator(csrf_exempt, name='dispatch')
+class UploadFileView(View):
+    """
+    Обрабатывает загрузку файлов, отправляет в AnythingLLM и обновляет эмбеддинги.
+    """
 
-    uploaded_file = request.FILES['file']
-    try:
-        url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/document/upload"
-        headers = {
-            "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
-        }
-        files = {
-            'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)
-        }
-        params = {
-            'folderName': 'uploads'  # можно задать имя папки
-        }
-        response = requests.post(url, headers=headers, files=files, params=params, timeout=30)
-        response.raise_for_status()
-        data = response.json()
+    def post(self, request, *args, **kwargs):
+        uploaded_file = request.FILES.get('file')
+        if not uploaded_file:
+            return JsonResponse({'error': 'Файл не найден'}, status=400)
 
-        # Генерация превью для изображений
-        preview = None
-        if uploaded_file.content_type.startswith('image/'):
-            # Для превью используем data URL (можно также сохранить локально)
-            uploaded_file.seek(0)  # возвращаем указатель, т.к. файл уже прочитан
-            file_data = uploaded_file.read()
-            preview = f"data:{uploaded_file.content_type};base64,{base64.b64encode(file_data).decode()}"
-            uploaded_file.seek(0)  # для повторного использования, если потребуется
+        try:
+            # 1. Загрузка файла в AnythingLLM
+            upload_url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/document/upload"
+            headers = {
+                "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
+                "Accept": "application/json"
+            }
 
-        return JsonResponse({
-            'success': True,
-            'filename': uploaded_file.name,
-            'preview': preview,
-            'file_id': data.get('id', ''),
-        })
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+            files = {
+                'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)
+            }
 
+            response = requests.post(upload_url, files=files, headers=headers)
+            response.raise_for_status()
+            upload_data = response.json()
 
-def _get_preview_url(uploaded_file):
-    """Вспомогательная функция для генерации URL превью изображения.
-       В реальности можно сохранить файл локально и отдать статический URL."""
-    # Если файл — изображение, возвращаем data:image или путь.
-    # Здесь простой вариант: если это изображение, возвращаем data URL (для демо).
-    if uploaded_file.content_type.startswith('image/'):
-        import base64
-        file_data = uploaded_file.read()
-        # После чтения файла нужно сбросить указатель, т.к. мы уже прочитали его выше
-        uploaded_file.seek(0)
-        data_url = f"data:{uploaded_file.content_type};base64,{base64.b64encode(file_data).decode()}"
-        return data_url
-    return None
+            # Получаем имя документа из ответа (обычно в 'documents')
+            doc_name = None
+            if upload_data.get('documents'):
+                doc_name = upload_data['documents'][0].get('name') or upload_data['documents'][0].get('location')
+
+            if not doc_name:
+                return JsonResponse({'error': 'Не удалось получить имя документа из API'}, status=500)
+
+            # 2. Добавление документа в Workspace (создание эмбеддингов)
+            embed_url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/workspace/{settings.ANYTHINGLLM_WORKSPACE}/update-embeddings"
+            embed_payload = {
+                "adds": [doc_name]
+            }
+
+            embed_response = requests.post(embed_url, json=embed_payload, headers=headers)
+            embed_response.raise_for_status()
+
+            return JsonResponse({
+                'status': 'success',
+                'filename': uploaded_file.name,
+                'doc_name': doc_name
+            })
+
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({'error': f"Ошибка API: {str(e)}"}, status=500)
+        except Exception as e:
+            return JsonResponse({'error': f"Внутренняя ошибка: {str(e)}"}, status=500)
 
 
 class IndexView(View):
@@ -85,26 +88,17 @@ class IndexView(View):
 
     def post(self, request, *args, **kwargs):
         prompt = request.POST.get('prompt', '')
-        attached_files = request.POST.get('attached_files', '').split(',')
-        attached_files = [f for f in attached_files if f]
         ai_response = None
-        sources = []
 
         if prompt:
             try:
-                # Формируем сообщение с указанием прикреплённых файлов
-                message = prompt
-                if attached_files:
-                    message = f"[Прикреплённые документы: {', '.join(attached_files)}]\n{message}"
-
                 payload = {
-                    "message": message,
-                    "mode": "chat"  # или "query" для RAG, но chat тоже использует RAG
+                    "message": prompt,
+                    "mode": "chat"
                 }
                 headers = {
                     "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
+                    "Content-Type": "application/json"
                 }
                 url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/workspace/{settings.ANYTHINGLLM_WORKSPACE}/chat"
 
@@ -112,18 +106,12 @@ class IndexView(View):
                 response.raise_for_status()
                 data = response.json()
                 ai_response = data.get('textResponse', 'Пустой ответ от AI.')
-                # Если есть источники (sources) — они могут быть в ответе
-                sources = data.get('sources', [])
-            except requests.exceptions.Timeout:
-                ai_response = "Превышено время ожидания ответа от AI-сервера."
             except Exception as e:
-                ai_response = f"Ошибка: {e}"
+                ai_response = f"Ошибка: {str(e)}"
 
         context = self.get_context_data()
         context['ai_response'] = ai_response
-        context['sources'] = sources
         context['last_prompt'] = prompt
-        context['attached_files'] = attached_files  # для возможного отображения после отправки
         return render(request, self.template_name, context)
 
     def get_context_data(self, **kwargs):
