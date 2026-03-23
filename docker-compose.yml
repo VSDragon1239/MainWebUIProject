@@ -8,7 +8,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      test: ["CMD-SHELL", "pg_isready -d django_db -U django_user"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -47,8 +47,8 @@ services:
     ports:
       - "8080:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: VanyaStarDragonPostGressSQL@vk.com
-      PGADMIN_DEFAULT_PASSWORD: VSDragon1239SecurityPass+++SQL
+      PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
+      PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 

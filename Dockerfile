@@ -1,5 +1,5 @@
 FROM python:3.11-slim
-LABEL authors="VanyaStarDragon1239"
+LABEL authors="VariableStarryDragon"
 
 # Установим системные зависимости (PostgreSQL client, gcc для сборки psycopg2 и т.п.)
 RUN apt-get update && apt-get install -y \
