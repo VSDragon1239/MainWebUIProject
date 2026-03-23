@@ -308,7 +308,7 @@
         let uploadedFiles = [];
         let abortController = null;
 
-        // === ЛОГИКА ЗАГРУЗКИ ФАЙЛОВ ===
+        // === ЗАГРУЗКА ФАЙЛОВ ===
         dropZone.addEventListener('click', () => fileInput.click());
 
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
@@ -334,10 +334,7 @@
             formData.append('file', file);
 
             uploadStatus.textContent = `Загрузка ${file.name}...`;
-
-            // Добавляем превью сразу (оптимистичное UI)
-            const previewId = 'preview-' + Math.random().toString(36).substr(2, 9);
-            addAttachmentPreview(file, previewId);
+            addAttachmentPreview(file, 'temp-' + Math.random());
 
             fetch('/upload-file/', {
                 method: 'POST',
@@ -352,7 +349,6 @@
                         attachedFilesInput.value = uploadedFiles.join(',');
                     } else {
                         uploadStatus.textContent = `Ошибка: ${data.error}`;
-                        document.getElementById(previewId)?.remove(); // Удаляем превью при ошибке
                     }
                 })
                 .catch(err => {
@@ -365,28 +361,25 @@
             const div = document.createElement('div');
             div.className = 'attachment-item';
             div.id = id;
-
             if (file.type.startsWith('image/')) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    div.innerHTML = `<img src="${e.target.result}" alt="${file.name}">
-                                 <div class="filename">${file.name}</div>`;
+                    div.innerHTML = `<img src="${e.target.result}" alt="${file.name}"><div class="filename">${file.name}</div>`;
                 };
                 reader.readAsDataURL(file);
             } else {
-                div.innerHTML = `<div class="doc-icon">📄</div>
-                             <div class="filename">${file.name}</div>`;
+                div.innerHTML = `<div class="doc-icon">📄</div><div class="filename">${file.name}</div>`;
             }
             attachmentsList.appendChild(div);
         }
 
-        // === ЛОГИКА ПОТОКОВОГО ЧАТА ===
+        // === ПОТОКОВЫЙ ЧАТ ===
         aiForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const prompt = promptInput.value.trim();
             if (!prompt) return;
 
-            // Подготовка UI
+            // UI Setup
             terminalContent.textContent = `> ${prompt}\n\n`;
             typingCursor.style.display = 'inline-block';
             submitBtn.textContent = 'Стоп';
@@ -396,6 +389,11 @@
             abortController = new AbortController();
             const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
+            // Формируем данные формы
+            const formData = new URLSearchParams();
+            formData.append('prompt', prompt);
+            formData.append('attached_files', attachedFilesInput.value);
+
             try {
                 const response = await fetch('/chat-stream/', {
                     method: 'POST',
@@ -403,7 +401,7 @@
                         'Content-Type': 'application/x-www-form-urlencoded',
                         'X-CSRFToken': csrftoken
                     },
-                    body: `prompt=${encodeURIComponent(prompt)}&attached_files=${encodeURIComponent(attachedFilesInput.value)}`,
+                    body: formData.toString(),
                     signal: abortController.signal
                 });
 
@@ -418,7 +416,7 @@
                     buffer += decoder.decode(value, {stream: true});
                     const lines = buffer.split('\n');
 
-                    // Оставляем последнюю часть в буфере (она может быть неполной)
+                    // Сохраняем последнюю часть в буфере
                     buffer = lines.pop();
 
                     lines.forEach(line => {
@@ -427,20 +425,20 @@
                                 const jsonStr = line.substring(6);
                                 const data = JSON.parse(jsonStr);
 
-                                // Обработка ошибок, пришедших от бэкенда
+                                // Обработка ошибок от сервера
                                 if (data.error) {
                                     terminalContent.textContent += `\n[Ошибка: ${data.error}]`;
-                                    finishChat(); // Останавливаем курсор
+                                    finishChat();
                                     return;
                                 }
 
-                                // Обработка нормального текста
+                                // В stream-chat AnythingLLM обычно присылает текст в "textResponse"
                                 if (data.textResponse) {
                                     terminalContent.textContent += data.textResponse;
                                     terminalContent.scrollTop = terminalContent.scrollHeight;
                                 }
                             } catch (parseError) {
-                                console.warn("JSON parse error:", parseError);
+                                console.warn("Parse error:", parseError, line);
                             }
                         }
                     });
@@ -449,7 +447,7 @@
                 if (err.name === 'AbortError') {
                     terminalContent.textContent += "\n[Остановлено]";
                 } else {
-                    terminalContent.textContent += "\n[Ошибка соединения с сервером]";
+                    terminalContent.textContent += "\n[Ошибка сети]";
                     console.error(err);
                 }
             } finally {
@@ -457,10 +455,9 @@
             }
         });
 
-        // Обработка кнопки Стоп
         submitBtn.addEventListener('click', (e) => {
             if (submitBtn.classList.contains('btn--stop')) {
-                e.preventDefault(); // Не отправляем форму повторно
+                e.preventDefault();
                 if (abortController) abortController.abort();
             }
         });

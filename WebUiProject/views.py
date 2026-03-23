@@ -45,36 +45,38 @@ class IndexView(View):
 class StreamChatView(View):
     def post(self, request, *args, **kwargs):
         prompt = request.POST.get('prompt', '')
+
         if not prompt:
             return JsonResponse({'error': 'Пустой запрос'}, status=400)
 
-        # Проверка наличия настроек
+        # Проверка настроек
         try:
             api_key = settings.ANYTHINGLLM_API_KEY
-            api_url = settings.ANYTHINGLLM_API_URL
+            api_base_url = settings.ANYTHINGLLM_API_URL.rstrip('/')  # Убираем слэш в конце
             workspace = settings.ANYTHINGLLM_WORKSPACE
         except AttributeError as e:
-            error_msg = f"Ошибка конфигурации сервера: отсутствует настройка {e} в settings.py"
-            logger.error(error_msg)
-            return JsonResponse({'error': error_msg}, status=500)
+            err_msg = f"Ошибка конфигурации: в settings.py не найдена переменная {e}"
+            logger.error(err_msg)
+            return JsonResponse({'error': err_msg}, status=500)
 
         def event_stream():
             try:
+                # ПРАВИЛЬНЫЙ ЭНДПОИНТ ИЗ ДОКУМЕНТАЦИИ
+                url = f"{api_base_url}/api/v1/workspace/{workspace}/stream-chat"
+
                 payload = {
                     "message": prompt,
-                    "mode": "chat",
-                    "stream": True
+                    "mode": "chat"
                 }
                 headers = {
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json"
                 }
-                url = f"{api_url}/api/v1/workspace/{workspace}/chat"
 
-                # Таймаут 30 секунд на соединение, 120 на чтение
-                response = requests.post(url, json=payload, headers=headers, stream=True, timeout=(30, 120))
+                # Выполняем запрос к AnythingLLM
+                response = requests.post(url, json=payload, headers=headers, stream=True, timeout=60)
 
-                # Если API вернуло ошибку (например 401 или 500), читаем её
+                # Если API вернуло ошибку (не 200)
                 if response.status_code != 200:
                     error_text = response.text
                     try:
@@ -85,19 +87,18 @@ class StreamChatView(View):
                     yield f"data: {json.dumps({'error': f'API Error {response.status_code}: {error_text}'})}\n\n"
                     return
 
+                # Читаем поток и передаем его клиенту
                 for line in response.iter_lines():
                     if line:
                         decoded_line = line.decode('utf-8')
-                        # Проксируем данные как есть
+                        # AnythingLLM присылает данные в формате: "data: {...}"
                         yield f"{decoded_line}\n\n"
 
-            except requests.exceptions.Timeout:
-                yield f"data: {json.dumps({'error': 'Таймаут соединения с AI сервером'})}\n\n"
             except requests.exceptions.ConnectionError:
-                yield f"data: {json.dumps({'error': 'Невозможно подключиться к AI серверу'})}\n\n"
+                yield f"data: {json.dumps({'error': 'Невозможно подключиться к AnythingLLM серверу'})}\n\n"
             except Exception as e:
                 logger.error(f"Stream error: {str(e)}", exc_info=True)
-                yield f"data: {json.dumps({'error': f'Внутренняя ошибка: {str(e)}'})}\n\n"
+                yield f"data: {json.dumps({'error': f'Внутренняя ошибка сервера: {str(e)}'})}\n\n"
 
         return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
 
@@ -111,41 +112,43 @@ class UploadFileView(View):
 
         try:
             api_key = settings.ANYTHINGLLM_API_KEY
-            api_url = settings.ANYTHINGLLM_API_URL
+            api_base_url = settings.ANYTHINGLLM_API_URL.rstrip('/')
             workspace = settings.ANYTHINGLLM_WORKSPACE
         except AttributeError as e:
             return JsonResponse({'error': f'Ошибка конфигурации: {e}'}, status=500)
 
         try:
-            # 1. Загрузка
-            upload_url = f"{api_url}/api/v1/document/upload"
-            headers = {"Authorization": f"Bearer {api_key}"}
+            # 1. Загрузка документа
+            upload_url = f"{api_base_url}/api/v1/document/upload"
+            headers = {"Authorization": f"Bearer {api_key}", "Accept": "application/json"}
             files = {'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)}
 
             response = requests.post(upload_url, files=files, headers=headers)
-
-            # Добавляем логирование ответа для отладки
             if response.status_code != 200:
-                return JsonResponse({'error': f'Ошибка загрузки в AI: {response.text}'}, status=500)
+                return JsonResponse({'error': f'Ошибка загрузки файла: {response.text}'}, status=500)
 
             upload_data = response.json()
 
+            # Получаем имя документа из ответа
             doc_name = None
             if upload_data.get('documents'):
-                doc_name = upload_data['documents'][0].get('name')
+                # Пытаемся получить name, если нет - location
+                doc_name = upload_data['documents'][0].get('name') or upload_data['documents'][0].get('location')
 
             if not doc_name:
                 return JsonResponse({'error': 'Не удалось получить имя документа из ответа API'}, status=500)
 
-            # 2. Эмбеддинг
-            embed_url = f"{api_url}/api/v1/workspace/{workspace}/update-embeddings"
+            # 2. Добавление в Workspace (Embedding)
+            embed_url = f"{api_base_url}/api/v1/workspace/{workspace}/update-embeddings"
             embed_payload = {"adds": [doc_name]}
-            requests.post(embed_url, json=embed_payload, headers=headers).raise_for_status()
+
+            response = requests.post(embed_url, json=embed_payload, headers=headers)
+            if response.status_code != 200:
+                return JsonResponse({'error': f'Ошибка встраивания: {response.text}'}, status=500)
 
             return JsonResponse({'status': 'success', 'filename': uploaded_file.name, 'doc_name': doc_name})
 
         except Exception as e:
-            logger.error(f"Upload error: {str(e)}", exc_info=True)
             return JsonResponse({'error': str(e)}, status=500)
 
 
