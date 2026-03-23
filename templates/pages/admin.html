@@ -1,0 +1,66 @@
+{% extends 'base/base_header.html' %}
+{% load static %}
+
+{% block title %}СКБ КБ - Администратору сайта{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/admin_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1><a href="{% url 'main' %}">СКБ КБ</a> -> Администратору сайта</h1>
+{% endblock %}
+
+{% block content_block_01 %}
+    <div class="content-block-01">
+        <a class="base-link link-1 border-10" href="{% url 'profile' %}">
+            <h1>Профиль</h1>
+        </a>
+    </div>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="content-block-1">
+        <div class="name-and-actions">
+            <h1>Список пользовательских аккаунтов</h1>
+            <a class="base-link link-1 border-10" href="{% url 'user_create' %}">
+                <h1>Создать аккаунт пользователя</h1>
+            </a>
+        </div>
+        <div class="items">
+            {% for user in users %}
+                <div class="item">
+                    <div class="name">
+                        <h1>{{ user.username }}<br>{{ user.first_name }}<br>{{ user.last_name }}</h1>
+                    </div>
+                    <div class="groups">
+                        Текущая роль: <br> {{ user.groups.all|join:", " }}
+                    </div>
+                    <a class="base-link link-1" href="{% url 'user_edit' user.pk %}">Редактировать пользователя</a>
+                </div>
+            {% empty %}
+                <p>Пока нет пользователей</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="content-block-1">
+        <div class="name-and-actions">
+            <h1>Список проектов</h1>
+            <a class="base-link link-1 border-10" href="{% url 'project_create' %}">
+                <h1>Добавить новый проект</h1>
+            </a>
+        </div>
+        <div class="items">
+            {% for project in projects %}
+                <div class="item">
+                    <div class="name">{{ project.name }}</div>
+                    <a class="base-link link-1 border-10" href="{% url 'project_edit' project.pk %}">
+                        <h1>Изменить проект</h1>
+                    </a>
+                </div>
+            {% empty %}
+                <p>Пока нет проектов</p>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

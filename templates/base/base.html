@@ -1,0 +1,54 @@
+<!-- app/templates/base/base.html -->
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %}СКБ-КБ{% endblock %}</title>
+
+        <!-- Базовые стили -->
+        <link rel="stylesheet" href="{% static 'css/base/style.css' %}">
+        <link rel="stylesheet" href="{% static 'css/base/base.css' %}">
+
+        <!-- Уникальные стили для каждой страницы -->
+        {% block add_css_base_header %}{% endblock %}
+        {% block add_css_base_form_content %}{% endblock %}
+        {% block add_css_base_content %}{% endblock %}
+        {% block add_css_filter_bar_content %}{% endblock %}
+        {% block add_css_items_content %}{% endblock %}
+        {% block add_css_sidebar_content %}{% endblock %}
+        {% block add_css_user_cart_content %}{% endblock %}
+        {% block add_css_user_profile_content %}{% endblock %}
+        {% block add_css_auth_content %}{% endblock %}
+        {% block extra_css %}{% endblock %}
+        {% block extra_js %}{% endblock %}
+    </head>
+	<body>
+		<header>
+            {% block header_block_1 %}{% endblock %}
+            {% block header_block_2 %}{% endblock %}
+            {% block header_block_3 %}{% endblock %}
+
+        </header>
+	    <main>
+            {% block content_top %}
+                <div class="content-top">
+                    {% block content_block_0 %}{% endblock %}
+                    {% block content_block_01 %}{% endblock %}
+                </div>
+            {% endblock %}
+        
+	        {% block content %}
+                <div class="content">
+                    {% block content_block_1 %}{% endblock %}
+                    {% block content_block_2 %}{% endblock %}
+                    {% block content_block_3 %}{% endblock %}
+                </div>
+	        {% endblock %}
+	    </main>
+	    <footer>
+            <p>&copy; ЗабГУ - СКБ &copy;<br>«КБ» <br><br><br>&copy; Разработчик &copy;<br>« VSDragon1239 » - Голубенко Иван<br>
+                <br><br>&copy; Все права защищены! &copy;<br>2025 DjangoApp - NginxEngine<br></p>
+	    </footer>
+	</body>
+</html>

@@ -1,0 +1,98 @@
+/* blog_style.css */
+
+.content {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px;
+}
+
+.blog-posts {
+    display: flex;
+    flex-direction: column; /* Лучше столбец для чтения */
+    max-width: 900px; /* Оптимальная ширина для чтения */
+    width: 100%;
+    gap: 25px; /* Отступ между постами */
+}
+
+.blog-post {
+    border: 1px solid #dcdde1;
+    border-radius: 12px;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-left: 4px solid #00cec9; /* Бирюзовый акцент */
+}
+
+.blog-post:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.blog-post-image {
+    display: flex;
+    margin-bottom: 15px;
+    gap: 10px;
+    flex-wrap: wrap; /* Адаптивность для картинок */
+}
+
+.blog-post-image img {
+    border-radius: 8px;
+    max-width: 100%;
+    height: auto;
+}
+
+.blog-post-thumb {
+    width: 120px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #dcdde1;
+}
+
+.blog-post-title {
+    margin: 0 0 10px;
+    font-size: 1.5rem;
+    color: #1e2a38; /* Темно-синий */
+    font-family: "KellySlab", serif;
+}
+
+.blog-post-meta {
+    font-size: 0.9rem;
+    color: #636e72;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 15px;
+}
+
+.blog-post-body {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    color: #2d3436;
+}
+
+.blog-post-footer {
+    font-size: 0.85rem;
+    color: #b2bec3; /* Светло-серый */
+    border-top: 1px solid #f0f2f5;
+    padding-top: 10px;
+}
+
+/* Адаптивность для блога */
+@media (max-width: 600px) {
+    .blog-post {
+        padding: 15px;
+    }
+
+    .blog-post-title {
+        font-size: 1.2rem;
+    }
+
+    .blog-post-thumb {
+        width: 100px;
+        height: 70px;
+    }
+}

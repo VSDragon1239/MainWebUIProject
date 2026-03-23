@@ -1,0 +1,52 @@
+{% extends 'base/base_header.html' %}
+{% load static %}
+
+{% block title %}СКБ КБ - Блог / Новости{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/blog_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1><a href="{% url 'main' %}">СКБ КБ</a> -> Блог / Новости</h1>
+{% endblock %}
+
+{% block content_block_01 %}
+    <div class="content-block-01">
+        <a class="base-link link-1 border-10" href="{% url 'content_manager' %}">
+            <h1>Контент-менеджеру</h1>
+        </a>
+    </div>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="blog-posts">
+        {% for blog in blogs_list %}
+            <div class="blog-post">
+                <div class="blog-post-image">
+                    {% if blog.images.first %}
+                        <div class="img-blog-image_first">
+                            <img src="{{ blog.images.first.image.url }}" width="450" alt="Превью">
+                        </div>
+                    {% endif %}
+                    <div class="img-blog-images">
+                        {% for img in blog.images.all %}
+                            {% if img.image.url == blog.images.first.image.url %}
+    
+                            {% else %}
+                                <img src="{{ img.image.url }}" width="221" height="221" alt="Изображение">
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <h2 class="blog-post-title">{{ blog.title }}</h2>
+                <p class="blog-post-meta">
+                    <span class="blog-post-author">{{ blog.author }}</span>
+                    <span class="blog-post-date">{{ blog.created_at }}</span>
+                </p>
+                <p class="blog-post-body">{{ blog.content|truncatechars:200 }}</p>
+                <p class="blog-post-footer">Техно-восток</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

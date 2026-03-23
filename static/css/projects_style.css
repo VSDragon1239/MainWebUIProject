@@ -1,0 +1,198 @@
+.content_block_2 {
+    display: flex;
+    padding: 20px;
+}
+
+.content_block_2 h1 {
+    color: white;
+}
+
+.content-item-grid {
+    display: grid; /* Сетка для блоков */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Автоматическое масштабирование */
+    /*grid-template-columns: repeat(auto-fit, minmax(100%, 1fr)); !* Автоматическое масштабирование *!*/
+    gap: 5px; /* Отступы между блоками */
+    padding: 0; /* Внутренние отступы */
+    /*background-color: var(--global-side-background-color-element); !* Светлый фон *!*/
+    border-radius: 10px; /* Скругление углов */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Тень для визуального выделения */
+}
+
+.project-item {
+    position: relative; /* Для размещения всплывающего блока */
+    color: inherit; /* Наследуем цвет текста */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2px 0;
+    background-color: var(--backgroundcolor-base-link-active); /* Цвет карточки */
+    border: 2px solid var(--backgroundcolor-base-link);
+    border-radius: 10px;
+    overflow: hidden;
+    height: 300px; /* Высота карточки */
+    width: 300px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.project-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--backgroundcolor-base-link-hover), var(--backgroundcolor-base-link));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
+}
+
+.image-placeholder img {
+    width: 300px;
+    height: auto;
+    mask-image:
+        linear-gradient(to top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 0) 100%),
+        linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 80%, rgba(0, 0, 0, 0) 100%);
+    -webkit-mask-image:
+            linear-gradient(to top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 1) 90%, rgba(0, 0, 0, 0) 100%),
+            linear-gradient(to right, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 10%, rgba(0, 0, 0, 1) 90%, rgba(0, 0, 0, 0) 100%);
+    mask-composite: intersect;
+    border-radius: 20px; /* Закругление углов контейнера */
+    -webkit-mask-composite: destination-in;
+    overflow: hidden; /* Скрывает содержимое, выходящее за границы */
+}
+
+.project-details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 90%;
+    padding: 10px 20px;
+    background: rgba(50, 50, 50, 0.7); /* Тёмный фон с прозрачностью */
+    color: var(--content-block-2-background-color-element);
+    transform: translateY(100%); /* Прячем блок за пределами карточки */
+    transition: transform 0.3s ease-in-out;
+    text-align: left;
+    backdrop-filter: blur(3px); /* Интенсивность размытия краев */
+
+}
+
+.project-item:hover .project-details {
+    transform: translateY(0); /* Показываем блок при наведении */
+}
+
+.project-title {
+    font-size: 18px;
+    margin: 0;
+}
+
+.project-price {
+    font-size: 18px;
+    margin: 5px 0;
+    color: var(--backgroundcolor-base-link);
+}
+
+.project-meta {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    font-size: 18px;
+    color: #d0d0d0;
+    display: -webkit-box;
+    -webkit-line-clamp: 5; /* сколько строк оставить */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.project-item-list {
+    color: inherit; /* Наследуем цвет текста */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2px 0;
+    background-color: var(--backgroundcolor-base-link-active); /* Цвет карточки */
+    border: 2px solid var(--backgroundcolor-base-link);
+    border-radius: 10px;
+    overflow: hidden;
+    height: 300px; /* Высота карточки */
+    width: 100%;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+
+.project-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Отступы между элементами */
+    padding: 10px; /* Внутренние отступы */
+    background-color: var(--backgroundcolor-base-link-active); /* Цвет фона */
+    border-radius: 10px; /* Скругленные углы */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Легкая тень */
+}
+
+.project-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--header-block-2-background-color); /* Фон под изображением */
+    border-radius: 10px; /* Скругление углов */
+    padding: 10px; /* Отступы вокруг изображения */
+}
+
+.project-image img {
+    width: 256px;
+    height: 256px;
+    border-radius: 10px; /* Скругление углов у изображения */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); /* Легкая тень для изображения */
+}
+
+.project-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Отступы между элементами */
+    background-color: var(--header-color-button); /* Фон блока с информацией */
+    border-radius: 10px; /* Скругление углов */
+    padding: 10px; /* Внутренние отступы */
+}
+
+.project-info p {
+    margin: 0; /* Убираем внешние отступы у параграфов */
+    font-size: 18px; /* Размер текста */
+    color: var(--header-color-button-text); /* Цвет текста */
+}
+
+.project-download {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--header-color-button);
+    border-radius: 10px;
+    padding: 10px;
+    flex-direction: column;
+}
+
+.project-download a {
+    text-decoration: none;
+    color: var(--header-color-button-text);
+    font-weight: bold;
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.project-download a:hover {
+    color: var(--header-color-button-hover);
+    transform: scale(1.05);
+}
+
+.project-download p {
+    margin: 0;
+    font-size: 16px;
+    color: var(--header-color-button-text);
+}

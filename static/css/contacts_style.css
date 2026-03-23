@@ -1,0 +1,122 @@
+:root {
+    --surface: #fff;
+    --surface-2: #fafafa;
+    --border: #e6e7eb;
+    --shadow: 0 4px 14px rgba(17, 24, 39, .06);
+    --text: #111827;
+    --muted: #6b7280;
+    --brand: #118a8c;
+}
+
+.content {
+    flex-direction: column;
+}
+
+.page-title {
+    width: min(1100px, 92%);
+    margin: 16px auto 10px;
+    font-size: 20px;
+    color: var(--text);
+}
+
+.contacts {
+    width: min(1100px, 92%);
+    margin: 8px auto;
+    display: grid;
+    gap: 16px;
+    grid-template-columns:1.1fr .9fr;
+}
+
+.contact-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+}
+
+.contact-card .row {
+    display: grid;
+    grid-template-columns:160px 1fr;
+    gap: 12px;
+    padding: 6px 0;
+}
+
+.contact-card .row span {
+    color: var(--muted);
+}
+
+.contact-card a {
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.contact-card a:hover {
+    text-decoration: underline;
+}
+
+.form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 25px;
+    box-shadow: var(--shadow);
+}
+
+.form h3 {
+    margin: 0 0 10px;
+}
+
+.form label {
+    display: block;
+    margin: 8px 0;
+    color: var(--text);
+}
+
+.form input, .form textarea {
+    width: 100%;
+    padding: 10px 0 10px 5px;
+    /* margin: 10px 0; */
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #fff;
+}
+
+.form .btn {
+    margin-top: 8px;
+    background: var(--brand);
+    color: #fff;
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 600;
+}
+
+.muted {
+    color: var(--muted);
+}
+
+.map {
+    width: min(1100px, 92%);
+    margin: 16px auto 26px;
+}
+
+.map__placeholder {
+    background: #ececec;
+    border: 1px solid #e3e3e3;
+    border-radius: 12px;
+    min-height: 320px;
+    display: grid;
+    place-items: center;
+    color: #4b5563;
+}
+
+@media (max-width: 980px) {
+    .contacts {
+        grid-template-columns:1fr;
+    }
+
+    .contact-card .row {
+        grid-template-columns:1fr;
+    }
+}

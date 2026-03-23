@@ -1,0 +1,216 @@
+{# templates/projects/project_form.html #}
+{% extends "base/base_header.html" %}
+{% load static %}
+
+{% block title %}СКБ КБ - Новый проект{% endblock %}
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/base/form_styles.css' %}">
+    <style>
+        .inline-type {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .modal {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            width: min(520px, 92vw);
+            box-shadow: var(--shadow);
+        }
+
+        .modal h2 {
+            margin: 0 0 12px 0;
+        }
+
+        .modal .grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .modal .actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 6px;
+        }
+    </style>
+{% endblock %}
+
+{% block content_block_01 %}
+    <div class="content-block-01">
+        <a class="base-link link-1 border-10" href="{% url 'admin' %}"><h1>Вернуться</h1></a>
+    </div>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="form-page">
+        <div class="form-card">
+            <h1>{{ view.object|default:"Новый проект" }}</h1>
+
+            <form id="project-form" method="post" enctype="multipart/form-data" class="form">
+                {% csrf_token %}
+
+                {# Изображение #}
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.image.id_for_label }}">{{ form.image.label }}</label>
+                    {{ form.image }}
+                    {{ form.image.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+                    {{ form.name }}
+                    {{ form.name.errors }}
+                </div>
+
+                {# Тип + кнопка добавить #}
+                <div class="form-group">
+                    <label class="form-label">{{ form.type.label }}</label>
+                    <div class="inline-type">
+                        {{ form.type }}
+                        <button type="button" class="btn btn-secondary" id="add-type-btn">+ Добавить тип</button>
+                    </div>
+                    {{ form.type.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label"
+                           for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    {{ form.description.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.leaders.id_for_label }}">{{ form.leaders.label }}</label>
+                    {{ form.leaders }}
+                    {{ form.leaders.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.members.id_for_label }}">{{ form.members.label }}</label>
+                    {{ form.members }}
+                    {{ form.members.errors }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.end_date.id_for_label }}">{{ form.end_date.label }}</label>
+                    {{ form.end_date }}
+                    {{ form.end_date.errors }}
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Модалка: новый тип проекта #}
+    <div class="modal-backdrop" id="type-modal">
+        <div class="modal">
+            <h2>Новый тип проекта</h2>
+            <form id="type-form" class="grid">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="id_pt_name">Наименование</label>
+                    <input id="id_pt_name" name="name" class="form-input" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_pt_code">Код (slug)</label>
+                    <input id="id_pt_code" name="code" class="form-input"
+                           placeholder="Если пусто — сгенерируется автоматически"/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="id_pt_desc">Описание</label>
+                    <textarea id="id_pt_desc" name="description" class="form-input" rows="3"></textarea>
+                </div>
+
+                <div id="type-errors" class="field-error" style="display:none;"></div>
+
+                <div class="actions">
+                    <button type="button" class="btn btn-secondary" id="type-cancel">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // csrf helper из доков Django
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    cookie = cookie.trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        const modal = document.getElementById('type-modal');
+        const openBtn = document.getElementById('add-type-btn');
+        const cancelBtn = document.getElementById('type-cancel');
+        const typeForm = document.getElementById('type-form');
+        const typeErrors = document.getElementById('type-errors');
+        const typeSelect = document.getElementById('{{ form.type.id_for_label }}');
+
+        openBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+        });
+        cancelBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+            typeErrors.style.display = 'none';
+            typeErrors.textContent = '';
+        });
+
+        typeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            typeErrors.style.display = 'none';
+            typeErrors.textContent = '';
+            const data = new FormData(typeForm);
+
+            try {
+                const resp = await fetch("{% url 'projecttype_create' %}", {
+                    method: 'POST',
+                    headers: {'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrftoken},
+                    body: data
+                });
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    typeErrors.style.display = 'block';
+                    typeErrors.textContent = Object.values(err.errors).flat().join(' ');
+                    return;
+                }
+                const {id, name} = await resp.json();
+
+                // добавляем опцию и выбираем её
+                const opt = new Option(name, id, true, true);
+                typeSelect.add(opt);
+                modal.style.display = 'none';
+                typeForm.reset();
+            } catch (err) {
+                typeErrors.style.display = 'block';
+                typeErrors.textContent = 'Ошибка сети. Попробуйте ещё раз.';
+            }
+        });
+    </script>
+{% endblock %}

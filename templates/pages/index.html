@@ -1,0 +1,59 @@
+{% extends 'base/base_header.html' %}
+{% load static %}
+
+{% block title %}СКБ КБ - Главная{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/index_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+<h1>СКБ КБ -> Главная</h1>
+{% endblock %}
+
+{% block content_block_1 %}
+<!-- ИНТЕРФЕЙС AI SYSTEM CORE -->
+<section class="content-block-01 ai-module" style="margin-bottom: 20px;">
+    <h1>AI System Core</h1>
+
+    <!-- Блок вывода ответа -->
+    <div class="ai-terminal"
+         style="background: #1e2a38; color: #00cec9; padding: 15px; border-radius: 8px; min-height: 100px; font-family: monospace; margin-bottom: 15px;">
+        {% if ai_response %}
+        <p style="margin:0; white-space: pre-wrap;">{{ ai_response }}</p>
+        {% else %}
+        <p style="margin:0; opacity: 0.7;">> Ожидание ввода команд...</p>
+        {% endif %}
+    </div>
+
+    <!-- Форма ввода (Pure Django, No JS) -->
+    <form method="post" action="">
+        {% csrf_token %}
+        <div style="display: flex; gap: 10px;">
+            <input type="text" name="prompt" placeholder="Введите запрос к системе..."
+                   value="{{ last_prompt|default:'' }}"
+                   style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #ccc;">
+            <button type="submit" class="btn btn--primary">Запрос</button>
+        </div>
+    </form>
+</section>
+
+<!-- НОВОСТИ -->
+<section class="block">
+    <h3 class="block__title">Новости</h3>
+    <div class="news">
+        {% for n in latest_news %}
+        <article class="news__item">
+            <h4 class="news__title"><a href="{{ n.get_absolute_url }}">{{ n.title }}</a></h4>
+            <p class="news__meta">{{ n.published_at|date:"d.m.Y" }}</p>
+        </article>
+        {% empty %}
+        <p class="muted">Новостей пока нет.</p>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}
+
+{% block content_block_2 %}{% endblock %}
+{% block content_block_3 %}{% endblock %}

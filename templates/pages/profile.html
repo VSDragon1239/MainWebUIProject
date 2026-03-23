@@ -1,0 +1,62 @@
+{% extends 'base/base_header.html' %}
+{% load static %}
+
+{% block title %}СКБ КБ - Профиль{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/profile_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1><a href="{% url 'main' %}">СКБ КБ</a> -> Профиль</h1>
+{% endblock %}
+
+{% block content_block_01 %}
+
+    <!-- Кнопка-триггер -->
+    <button id="logoutBtn" class="base-link link-4 border-10" type="button">
+        Выйти из аккаунта
+    </button>
+
+    <div class="content-block-01">
+        <!-- Скрытая форма logout (POST) -->
+        <form id="logoutForm" method="post" action="{% url 'logout' %}" style="display:none;">
+            {% csrf_token %}
+        </form>
+
+        <!-- Модальное окно подтверждения -->
+        <div id="logoutModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"
+             style="display:none;">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content" role="document" tabindex="-1">
+                <header class="modal-header">
+                    <h2 id="modalTitle">Подтвердите выход</h2>
+                </header>
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите выйти из аккаунта?</p>
+                </div>
+                <footer class="modal-footer">
+                    <button id="cancelLogout" type="button" class="btn btn-secondary">Отмена</button>
+                    <button id="confirmLogout" type="button" class="btn btn-danger">Выйти</button>
+                </footer>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/profile_script.js' %}" defer></script>
+{% endblock %}
+
+
+{% block content_block_1 %}
+    <div class="content_block_1">
+        <h1>
+            {{ user.username }} <br>
+            {{ user.get_full_name }}<br>
+            {{ user.email }} <br>
+        </h1>
+    </div>
+
+{% endblock %}
+

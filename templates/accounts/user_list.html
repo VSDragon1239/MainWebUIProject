@@ -1,0 +1,23 @@
+<!-- accounts/user_list.html -->
+{% extends "base/base_header.html" %}
+
+{% block title %}Пользователи{% endblock %}
+
+{% block content_block_1 %}
+    <h1>Список пользователей</h1>
+    <a href="{% url 'user_create' %}" class="base-link">Добавить пользователя</a>
+
+    <ul>
+        {% for user in users %}
+            <li>
+                {{ user.get_full_name }} ({{ user.username }})
+                – роли: {{ user.groups.all|join:", " }}
+                |
+                <a href="{% url 'user_edit' user.pk %}">Редактировать</a>
+                <a href="{% url 'user_delete' user.pk %}">Удалить</a>
+            </li>
+        {% empty %}
+            <li>Пока нет пользователей</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

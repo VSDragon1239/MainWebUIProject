@@ -1,0 +1,47 @@
+{% extends 'base/base_header.html' %}
+{% load static %}
+
+{% block title %}СКБ КБ - Проекты{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/projects_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1><a href="{% url 'main' %}">СКБ КБ</a> -> Проекты</h1>
+{% endblock %}
+
+{% block content_block_01 %}
+    <div class="content-block-01">
+        <a class="base-link link-1 border-10" href="{% url 'participant' %}">
+            <h1>Участнику</h1>
+        </a>
+        <a class="base-link link-2 border-10" href="{% url 'leader' %}">
+            <h1>Руководителю</h1>
+        </a>
+    </div>
+{% endblock %}
+
+{% block content_block_2 %}
+    <div class="content_block_2">
+        {% for project in projects %}
+            <a href="{% url 'project' project.id %}" class="project-item">
+                <div class="image-placeholder">
+                    {% if project.image %}
+                        <img src="{{ project.image.url }}" alt="{{ project.name }}">
+                    {% else %}
+                        <p>Нет изображения</p>
+                    {% endif %}
+                </div>
+                <div class="project-details">
+                    <div class="project-meta">
+                        <h1 class="project-title">{{ project.name }}</h1>
+                    </div>
+                    <div class="project-meta">
+                        <span class="text">{{ project.description }}</span>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+{% endblock %}

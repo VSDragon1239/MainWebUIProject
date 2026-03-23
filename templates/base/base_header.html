@@ -1,0 +1,50 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{% endblock %}
+
+{% block add_css_base_header %}
+<link rel="stylesheet" href="{% static 'css/base/base_header.css' %}">{% endblock %}
+
+{% block header_block_1 %}
+<div class="header-block-1">
+    <div class="nav-content">
+        <a class="base-link link-1" href="{% url 'application' %}">
+            <span>Области применения</span>
+        </a>
+        <a class="base-link link-2" href="{% url 'projects' %}">
+            <span>Проекты</span>
+        </a>
+        <a class="base-link link-3" href="{% url 'about' %}">
+            <span>О нас</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block header_block_2 %}
+<div class="header-block-2">
+    <a class="nav-content" href="{% url 'main' %}">
+        <!-- Добавил стиль для логотипа: высота 50px, чтобы влезал в хедер -->
+        <img src="{% static 'images/zabgu.png' %}" alt="Logo" style="height: 50px; width: auto;">
+    </a>
+</div>
+<!-- Убрал background_line и con-1, так как в base_header.css мы перешли на современную верстку без абсолютного позиционирования.
+     Если они все еще нужны для старых стилей, верни их, но лучше положиться на CSS. -->
+{% endblock %}
+
+{% block header_block_3 %}
+<div class="header-block-3">
+    <div class="nav-content">
+        <a class="base-link link-3" href="{% url 'blog' %}">
+            <span>Блог / Новости</span>
+        </a>
+        <a class="base-link link-1" href="{% url 'contacts' %}">
+            <span>Контакты</span>
+        </a>
+        <a class="base-link link-2" href="{% url 'other' %}">
+            <span>Ещё разделы</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
