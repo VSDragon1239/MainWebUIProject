@@ -1,60 +1,108 @@
 {% extends 'base/base_header.html' %}
 {% load static %}
 
-{% block title %}СКБ КБ - Контакты{% endblock %}
+{% block title %}Иван — Контакты{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/contacts_style.css' %}">
+<link rel="stylesheet" href="{% static 'css/contacts_style.css' %}">
 {% endblock %}
 
 {% block content_block_0 %}
-    <h1><a href="{% url 'main' %}">СКБ КБ</a> -> Контакты</h1>
+<h1><a href="{% url 'main' %}">Иван</a> — Контакты</h1>
+<p class="subtitle">Связь — это начало любого проекта</p>
 {% endblock %}
-{##}
-{#{% block content_block_1 %}#}
-{#<section class="contacts-page">#}
-{#  <div class="contact-card contact-card--lg">#}
-{#    <div class="contact-card__row"><span class="contact-card__key">Кафедра:</span><span class="contact-card__val">Энергетический факультет, ЗабГУ</span></div>#}
-{#    <div class="contact-card__row"><span class="contact-card__key">Адрес:</span><span class="contact-card__val">г. Чита, [уточнить адрес]</span></div>#}
-{#    <div class="contact-card__row"><span class="contact-card__key">Почта:</span><span class="contact-card__val"><a href="mailto:example@zabgu.ru">example@zabgu.ru</a></span></div>#}
-{#    <div class="contact-card__row"><span class="contact-card__key">Telegram:</span><span class="contact-card__val">@skb_energy</span></div>#}
-{#    <div class="contact-card__row"><span class="contact-card__key">Режим:</span><span class="contact-card__val">Пн–Пт, 9:00–18:00 (Мск+5)</span></div>#}
-{#  </div>#}
-{##}
-{#  <div class="map-box">#}
-{#    <!-- сюда можно вставить iframe карты -->#}
-{#    <div class="map-placeholder">Карта кафедры/корпуса</div>#}
-{#  </div>#}
-{#</section>#}
-{#{% endblock %}#}
-{##}
-{#{% block content_block_2 %}{% endblock %}#}
-{#{% block content_block_3 %}{% endblock %}#}
 
 {% block content_block_1 %}
-    <section class="contacts">
-        <div class="contact-card">
-            <div class="row"><span>Кафедра</span><b>Энергетический факультет, ЗабГУ</b></div>
-            <div class="row"><span>Адрес</span><b>г. Чита, [уточнить адрес]</b></div>
-            <div class="row"><span>Почта</span><b><a href="mailto:example@zabgu.ru">example@zabgu.ru</a></b></div>
-            <div class="row"><span>Telegram</span><b>@skb_energy</b></div>
-            <div class="row"><span>Режим</span><b>Пн–Пт: 9:00–18:00 (Мск+5)</b></div>
+<section class="contacts">
+
+    <div class="contact-card contact-card--accent">
+
+        <div class="row">
+            <span>Кто я</span>
+            <b>IT-специалист • 3D-художник • архитектор систем</b>
         </div>
 
-        <form class="form" method="post" action="#">
-            {% csrf_token %}
-            <h3>Написать нам</h3>
-            <label>Имя<input type="text" name="name" required></label>
-            <label>Почта<input type="email" name="email" required></label>
-            <label>Сообщение<textarea name="msg" rows="5" required></textarea></label>
-            <button class="btn btn--primary" type="submit">Отправить</button>
-            <p class="muted">Форма демонстрационная — подключи обработчик позже.</p>
-        </form>
-    </section>
+        <div class="row">
+            <span>Подход</span>
+            <b>Структура, логика и атмосфера — как единая система</b>
+        </div>
 
-    <section class="map">
-        <div class="map__placeholder">Здесь будет карта корпуса/кафедры</div>
-    </section>
+        <div class="row">
+            <span>Фокус</span>
+            <b>Проекты, где важны не только функции, но и ощущение</b>
+        </div>
+
+        <div class="row">
+            <span>Принцип</span>
+            <b>Доводить идеи до состояния, где они «ощущаются правильно»</b>
+        </div>
+
+        <div class="row divider"></div>
+
+        <div class="row">
+            <span>Почта</span>
+            <b><a href="t.me/VarStarDragon">Telegram</a></b>
+        </div>
+
+        <div class="row">
+            <span>Telegram</span>
+            <b>@your_username</b>
+        </div>
+
+        <div class="row">
+            <span>GitHub</span>
+            <b><a href="https://github.com/VSDragon1239">github.com/VSDragon1239</a></b>
+        </div>
+
+        <div class="row">
+            <span>Портфолио</span>
+            <b><a href="#">Скоро...</a></b>
+        </div>
+
+    </div>
+
+    <div class="contact-note">
+        <p>
+            Лучше всего писать, когда у вас есть идея, задача или даже просто ощущение,
+            что «это должно работать иначе».
+            Я ценю ясность, но не меньше — глубину.
+        </p>
+    </div>
+
+    <!--    <form class="form form&#45;&#45;glass" method="post" action="#">-->
+    <!--        {% csrf_token %}-->
+
+    <!--        <h3>Связаться</h3>-->
+
+    <!--        <label>-->
+    <!--            Имя-->
+    <!--            <input type="text" name="name" required>-->
+    <!--        </label>-->
+
+    <!--        <label>-->
+    <!--            Почта-->
+    <!--            <input type="email" name="email" required>-->
+    <!--        </label>-->
+
+    <!--        <label>-->
+    <!--            Сообщение-->
+    <!--            <textarea name="msg" rows="5" required placeholder="Кратко опишите идею или задачу..."></textarea>-->
+    <!--        </label>-->
+
+    <!--        <button class="btn btn&#45;&#45;primary" type="submit">Отправить</button>-->
+
+    <!--        <p class="muted">-->
+    <!--            Чем точнее сформулирована идея — тем глубже можно её реализовать.-->
+    <!--        </p>-->
+    <!--    </form>-->
+
+</section>
+
+<section class="map map--ambient">
+    <div class="map__placeholder">
+        Не точка на карте — а пространство, где создаются проекты
+    </div>
+</section>
 {% endblock %}
 
 {% block content_block_2 %}{% endblock %}
