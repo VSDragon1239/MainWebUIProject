@@ -19,6 +19,55 @@ from django.views import View
 from django.shortcuts import render
 
 
+def upload_file(request):
+    """Обработка загрузки файла (изображение или документ) в AnythingLLM."""
+    if request.method != 'POST' or not request.FILES.get('file'):
+        return JsonResponse({'error': 'Нет файла'}, status=400)
+
+    uploaded_file = request.FILES['file']
+    try:
+        # Подготовка запроса к AnythingLLM API для загрузки документа
+        # Документация: POST /api/v1/document/upload
+        url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/document/upload"
+        headers = {
+            "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
+        }
+        files = {
+            'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)
+        }
+        # Можно добавить параметр folderName, если нужно
+        params = {
+            'folderName': 'uploads'  # папка, куда сохранить в AnythingLLM
+        }
+        response = requests.post(url, headers=headers, files=files, params=params, timeout=30)
+        response.raise_for_status()
+        data = response.json()
+        # Возвращаем информацию о файле для отображения в интерфейсе
+        return JsonResponse({
+            'success': True,
+            'filename': uploaded_file.name,
+            'file_id': data.get('id', ''),
+            'preview': _get_preview_url(uploaded_file)  # функция для создания превью
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def _get_preview_url(uploaded_file):
+    """Вспомогательная функция для генерации URL превью изображения.
+       В реальности можно сохранить файл локально и отдать статический URL."""
+    # Если файл — изображение, возвращаем data:image или путь.
+    # Здесь простой вариант: если это изображение, возвращаем data URL (для демо).
+    if uploaded_file.content_type.startswith('image/'):
+        import base64
+        file_data = uploaded_file.read()
+        # После чтения файла нужно сбросить указатель, т.к. мы уже прочитали его выше
+        uploaded_file.seek(0)
+        data_url = f"data:{uploaded_file.content_type};base64,{base64.b64encode(file_data).decode()}"
+        return data_url
+    return None
+
+
 class IndexView(View):
     template_name = "pages/index.html"
 
@@ -28,17 +77,19 @@ class IndexView(View):
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        """Обработка запроса к AI"""
         prompt = request.POST.get('prompt', '')
+        attached_files = request.POST.get('attached_files', '').split(',')
+        attached_files = [f for f in attached_files if f]  # убираем пустые
         ai_response = None
 
         if prompt:
             try:
-                # Подготовка запроса к AnythingLLM
-                payload = {
-                    "message": prompt,
-                    "mode": "chat"           # или "query" в зависимости от задачи
-                }
+                # Формируем сообщение с учётом прикреплённых файлов
+                message = prompt
+                if attached_files:
+                    # Указываем модели, что есть прикреплённые документы
+                    message = f"[Прикреплённые файлы: {', '.join(attached_files)}]\n{message}"
+                payload = {"message": message, "mode": "chat"}
                 headers = {
                     "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
                     "Content-Type": "application/json",
@@ -47,25 +98,19 @@ class IndexView(View):
                 url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/workspace/{settings.ANYTHINGLLM_WORKSPACE}/chat"
 
                 response = requests.post(url, json=payload, headers=headers, timeout=120)
-                response.raise_for_status()   # вызовет исключение для 4xx/5xx
-
+                response.raise_for_status()
                 data = response.json()
                 ai_response = data.get('textResponse', 'Пустой ответ от AI.')
             except requests.exceptions.Timeout:
                 ai_response = "Превышено время ожидания ответа от AI-сервера."
-            except requests.exceptions.RequestException as e:
-                # Если есть тело ответа, выводим его для отладки (можно логировать)
-                error_detail = ""
-                if e.response is not None:
-                    error_detail = f" (статус: {e.response.status_code})"
-                ai_response = f"Ошибка соединения с AI ядром: {e}{error_detail}"
             except Exception as e:
-                # Любые другие ошибки (например, парсинг JSON)
-                ai_response = f"Внутренняя ошибка: {e}"
+                ai_response = f"Ошибка: {e}"
 
         context = self.get_context_data()
         context['ai_response'] = ai_response
         context['last_prompt'] = prompt
+        # передаём список файлов обратно, чтобы форма могла отобразить их после отправки
+        context['attached_files'] = attached_files
         return render(request, self.template_name, context)
 
     def get_context_data(self, **kwargs):

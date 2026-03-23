@@ -20,13 +20,14 @@ from django.contrib.auth.views import LoginView, LogoutView
 from WebUiProject.views import IndexView, ProjectsView, ContactsView, AboutView, ApplicationsView, BlogView, OtherView, \
     ProfileView, ParticipantView, LeaderView, AdminView, AuthView, ProjectDetailsView, ContentManagerView, NoAccessView, \
     AddBlogPostView, UserCreateView, UserUpdateView, UserDeleteView, ProjectUpdateView, ProjectCreateView, \
-    ProjectsDeleteView, ProjectTypeCreateView
+    ProjectsDeleteView, ProjectTypeCreateView, upload_file
 
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('', IndexView.as_view(), name='main'),
+    path('upload-file/', upload_file, name='upload_file'),
     path('sysadmin/', admin.site.urls),
     path('create/', UserCreateView.as_view(), name='user_create'),
     path('<int:pk>/edit/', UserUpdateView.as_view(), name='user_edit'),
