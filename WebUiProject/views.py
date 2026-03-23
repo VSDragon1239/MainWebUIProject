@@ -40,54 +40,61 @@ class IndexView(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class StreamChatView(View):
-    """
-    Обрабатывает POST запрос для чата и возвращает потоковый ответ (SSE-like).
-    """
+    """Потоковый чат с AnythingLLM (SSE)"""
 
     def post(self, request, *args, **kwargs):
         prompt = request.POST.get('prompt', '')
+        attached_files = request.POST.get('attached_files', '').split(',')
+        attached_files = [f for f in attached_files if f]
+
         if not prompt:
             return JsonResponse({'error': 'Пустой запрос'}, status=400)
 
         def event_stream():
             try:
+                # Формируем сообщение с учётом прикреплённых файлов
+                message = prompt
+                if attached_files:
+                    message = f"[Прикреплённые документы: {', '.join(attached_files)}]\n{message}"
+
                 payload = {
-                    "message": prompt,
+                    "message": message,
                     "mode": "chat",
-                    "stream": True  # Ключевой момент: включаем потоковую передачу в API
+                    "stream": True  # включаем поток в AnythingLLM
                 }
                 headers = {
                     "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
                 }
                 url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/workspace/{settings.ANYTHINGLLM_WORKSPACE}/chat"
 
-                # stream=True важен для requests, чтобы не ждать полного ответа
-                response = requests.post(url, json=payload, headers=headers, stream=True, timeout=120)
-                response.raise_for_status()
-
-                # Читаем ответ построчно
-                for line in response.iter_lines():
-                    if line:
-                        decoded_line = line.decode('utf-8')
-
-                        # AnythingLLM присылает данные в формате "data: {...}"
-                        if decoded_line.startswith('data: '):
-                            json_str = decoded_line[6:]
-                            try:
-                                data = json.loads(json_str)
-                                # Стандартный формат чанка AnythingLLM
-                                if 'textResponse' in data:
-                                    # Отправляем клиенту текст в формате SSE
-                                    yield f"data: {json.dumps({'text': data['textResponse']})}\n\n"
-                            except json.JSONDecodeError:
-                                continue
-
-                # Сигнал завершения
+                # stream=True в requests для построчного чтения
+                with requests.post(url, json=payload, headers=headers, stream=True, timeout=120) as response:
+                    response.raise_for_status()
+                    for line in response.iter_lines():
+                        if line:
+                            decoded_line = line.decode('utf-8')
+                            if decoded_line.startswith('data: '):
+                                json_str = decoded_line[6:]
+                                try:
+                                    data = json.loads(json_str)
+                                    # AnythingLLM может возвращать textResponse в каждом чанке
+                                    if 'textResponse' in data:
+                                        yield f"data: {json.dumps({'text': data['textResponse']})}\n\n"
+                                    # Если есть закрывающее событие (done)
+                                    if data.get('close', False):
+                                        break
+                                except json.JSONDecodeError:
+                                    continue
+                # Финальное событие
                 yield f"data: {json.dumps({'done': True})}\n\n"
 
             except requests.exceptions.RequestException as e:
-                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                error_msg = str(e)
+                if e.response is not None:
+                    error_msg = f"HTTP {e.response.status_code}: {e.response.text}"
+                yield f"data: {json.dumps({'error': error_msg})}\n\n"
             except Exception as e:
                 yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
@@ -96,7 +103,7 @@ class StreamChatView(View):
 
 @method_decorator(csrf_exempt, name='dispatch')
 class UploadFileView(View):
-    """Загрузка файлов (без изменений из предыдущего шага)"""
+    """Загрузка файлов в AnythingLLM"""
 
     def post(self, request, *args, **kwargs):
         uploaded_file = request.FILES.get('file')
@@ -109,24 +116,28 @@ class UploadFileView(View):
                 "Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}",
                 "Accept": "application/json"
             }
-            files = {'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)}
+            files = {
+                'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)
+            }
+            params = {'folderName': 'uploads'}
 
-            response = requests.post(upload_url, files=files, headers=headers)
+            response = requests.post(upload_url, files=files, headers=headers, params=params, timeout=30)
             response.raise_for_status()
             upload_data = response.json()
 
-            doc_name = None
-            if upload_data.get('documents'):
-                doc_name = upload_data['documents'][0].get('name') or upload_data['documents'][0].get('location')
+            # Генерируем превью для изображений
+            preview = None
+            if uploaded_file.content_type.startswith('image/'):
+                uploaded_file.seek(0)
+                preview = f"data:{uploaded_file.content_type};base64,{base64.b64encode(uploaded_file.read()).decode()}"
+                uploaded_file.seek(0)
 
-            if not doc_name:
-                return JsonResponse({'error': 'Не удалось получить имя документа'}, status=500)
-
-            embed_url = f"{settings.ANYTHINGLLM_API_URL}/api/v1/workspace/{settings.ANYTHINGLLM_WORKSPACE}/update-embeddings"
-            embed_payload = {"adds": [doc_name]}
-            requests.post(embed_url, json=embed_payload, headers=headers).raise_for_status()
-
-            return JsonResponse({'status': 'success', 'filename': uploaded_file.name, 'doc_name': doc_name})
+            return JsonResponse({
+                'success': True,
+                'filename': uploaded_file.name,
+                'preview': preview,
+                'file_id': upload_data.get('id', ''),
+            })
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)

@@ -5,47 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/index_style.css' %}">
-<style>
-    /* ... Стили из предыдущего ответа ... */
-    .ai-terminal {
-        position: relative;
-    }
-
-    /* Анимация курсора при печати */
-    .cursor-blink {
-        display: inline-block;
-        width: 8px;
-        height: 16px;
-        background-color: #00cec9;
-        margin-left: 2px;
-        animation: blink 1s step-end infinite;
-        vertical-align: middle;
-    }
-
-    @keyframes blink {
-        0%, 100% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0;
-        }
-    }
-
-    /* Стили для кнопки Стоп */
-    .btn--stop {
-        background: #e53e3e;
-    }
-
-    .btn--stop:hover {
-        background: #c53030;
-    }
-
-    /* Состояние загрузки формы */
-    .input-group.loading input, .input-group.loading button {
-        opacity: 0.7;
-        pointer-events: none;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/ai_interface.css' %}">
 {% endblock %}
 
 {% block content_block_0 %}
@@ -53,47 +13,38 @@
 {% endblock %}
 
 {% block content_block_1 %}
-<section class="content-block-01 ai-module">
-    <h1>AI System Core</h1>
+<section class="ai-module">
+    <h1>AI System Core (LLM + RAG)</h1>
 
-    <!-- Блок вывода ответа -->
-    <div class="ai-terminal" id="ai-terminal">
-        <div id="terminal-content">
-            {% if ai_response %}
-            {{ ai_response }}
-            {% else %}
-            > Ожидание ввода команд...
-            Система готова к анализу документов.{% endif %}
-        </div>
-        <span id="typing-cursor" style="display: none;" class="cursor-blink"></span>
+    <!-- Терминал вывода ответа -->
+    <div id="aiTerminal" class="ai-terminal">
+        <div class="ai-placeholder">> Ожидание ввода команд...</div>
     </div>
 
-    <!-- Список прикрепленных файлов -->
-    <div id="attachments-list" class="attachments-list"></div>
-    <div id="upload-status" class="status-loading"></div>
-
-    <!-- Зона загрузки -->
-    <div id="drop-zone" class="upload-zone">
-        <span class="upload-zone__icon">📂</span>
-        <p>Перетащите файлы сюда</p>
-        <input type="file" id="file-input" multiple style="display: none;">
+    <!-- Зона загрузки файлов -->
+    <div id="fileDropzone" class="file-dropzone">
+        📁 Перетащите файлы сюда или кликните для выбора
+        <input type="file" id="fileInput" multiple style="display: none;">
     </div>
 
-    <!-- Форма ввода -->
-    <form method="post" action="" id="ai-form">
+    <!-- Список загруженных файлов -->
+    <div id="fileList" class="file-list"></div>
+
+    <!-- Форма отправки запроса -->
+    <form id="chatForm">
         {% csrf_token %}
-        <input type="hidden" name="attached_files" id="attached-files-input" value="">
-
-        <div class="input-group" id="input-group">
-            <input type="text" name="prompt" id="prompt-input"
-                   placeholder="Задайте вопрос AI..."
-                   value="{{ last_prompt|default:'' }}" autocomplete="off">
-            <button type="submit" class="btn btn--primary" id="submit-btn">Отправить</button>
+        <div class="input-group">
+            <input type="text" id="promptInput" placeholder="Введите запрос к системе..." autocomplete="off">
+            <button type="submit" id="submitBtn" class="btn btn--primary">
+                <span>Запрос</span>
+                <span class="spinner" style="display: none;"></span>
+            </button>
+            <button type="button" id="stopBtn" class="btn btn--danger" style="display: none;">Стоп</button>
         </div>
+        <input type="hidden" id="attachedFilesInput" name="attached_files" value="">
     </form>
 </section>
 
-<!-- НОВОСТИ -->
 <section class="block">
     <h3 class="block__title">Новости</h3>
     <div class="news">
@@ -110,188 +61,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Элементы DOM
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        const attachmentsList = document.getElementById('attachments-list');
-        const uploadStatus = document.getElementById('upload-status');
-        const attachedFilesInput = document.getElementById('attached-files-input');
-        const aiForm = document.getElementById('ai-form');
-        const terminalContent = document.getElementById('terminal-content');
-        const typingCursor = document.getElementById('typing-cursor');
-        const submitBtn = document.getElementById('submit-btn');
-        const inputGroup = document.getElementById('input-group');
-        const promptInput = document.getElementById('prompt-input');
-
-        let uploadedFiles = [];
-        let abortController = null; // Для возможности отмены запроса
-
-        // --- Логика загрузки файлов (как в предыдущем ответе) ---
-
-        dropZone.addEventListener('click', () => fileInput.click());
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
-        });
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
-        });
-        dropZone.addEventListener('drop', handleDrop, false);
-        fileInput.addEventListener('change', (e) => handleFiles(e.target.files), false);
-
-        function handleDrop(e) {
-            handleFiles(e.dataTransfer.files);
-        }
-
-        function handleFiles(files) {
-            [...files].forEach(uploadFile);
-        }
-
-        function uploadFile(file) {
-            const url = '/upload-file/';
-            const formData = new FormData();
-            formData.append('file', file);
-            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            uploadStatus.textContent = `Загрузка ${file.name}...`;
-
-            // Превью
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => addAttachmentPreview(file.name, e.target.result, 'image');
-                reader.readAsDataURL(file);
-            } else {
-                addAttachmentPreview(file.name, null, 'doc');
-            }
-
-            fetch(url, {method: 'POST', body: formData, headers: {'X-CSRFToken': csrftoken}})
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        uploadStatus.textContent = `Файл "${data.filename}" встроен.`;
-                        uploadedFiles.push(data.doc_name);
-                        attachedFilesInput.value = uploadedFiles.join(',');
-                    } else {
-                        uploadStatus.textContent = `Ошибка: ${data.error}`;
-                    }
-                });
-        }
-
-        function addAttachmentPreview(name, src, type) {
-            const div = document.createElement('div');
-            div.className = 'attachment-item';
-            if (type === 'image' && src) {
-                div.innerHTML = `<img src="${src}" alt="${name}"><div class="filename">${name}</div>`;
-            } else {
-                div.innerHTML = `<div class="doc-icon">📄</div><div class="filename">${name}</div>`;
-            }
-            attachmentsList.appendChild(div);
-        }
-
-        // --- Потоковый Чат ---
-
-        aiForm.addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            const prompt = promptInput.value.trim();
-            if (!prompt) return;
-
-            // Визуальная подготовка
-            terminalContent.textContent = `> ${prompt}\n\n`;
-            typingCursor.style.display = 'inline-block';
-            inputGroup.classList.add('loading');
-
-            // Меняем кнопку на "Стоп"
-            submitBtn.textContent = 'Стоп';
-            submitBtn.classList.remove('btn--primary');
-            submitBtn.classList.add('btn--stop');
-
-            abortController = new AbortController();
-            const signal = abortController.signal;
-
-            try {
-                const response = await fetch('/chat-stream/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                    },
-                    body: new URLSearchParams(new FormData(aiForm)),
-                    signal: signal
-                });
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-
-                while (true) {
-                    const {done, value} = await reader.read();
-                    if (done) break;
-
-                    const chunk = decoder.decode(value);
-                    // Парсим SSE данные (формат: "data: {...}\n\n")
-                    const lines = chunk.split('\n');
-
-                    lines.forEach(line => {
-                        if (line.startsWith('data: ')) {
-                            try {
-                                const json = JSON.parse(line.substring(6));
-
-                                if (json.text) {
-                                    terminalContent.textContent += json.text;
-                                    // Авто-прокрутка вниз
-                                    terminalContent.scrollTop = terminalContent.scrollHeight;
-                                }
-                                if (json.done) {
-                                    finishChat();
-                                }
-                                if (json.error) {
-                                    terminalContent.textContent += `\n[Ошибка: ${json.error}]`;
-                                    finishChat();
-                                }
-                            } catch (e) {
-                                // Игнорируем ошибки парсинга JSON (пустые строки и т.д.)
-                            }
-                        }
-                    });
-                }
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    terminalContent.textContent += `\n[Ошибка соединения]`;
-                }
-            } finally {
-                finishChat();
-            }
-        });
-
-        // Обработка кнопки "Стоп"
-        submitBtn.addEventListener('click', function (e) {
-            // Если идет загрузка (класс loading), прерываем
-            if (inputGroup.classList.contains('loading')) {
-                if (abortController) {
-                    abortController.abort();
-                    terminalContent.textContent += "\n[Остановлено пользователем]";
-                }
-                e.preventDefault(); // Предотвращаем отправку формы, если это был клик по "Стоп"
-            }
-        });
-
-        function finishChat() {
-            typingCursor.style.display = 'none';
-            inputGroup.classList.remove('loading');
-            submitBtn.textContent = 'Отправить';
-            submitBtn.classList.remove('btn--stop');
-            submitBtn.classList.add('btn--primary');
-        }
-    });
-</script>
+<script src="{% static 'js/ai_interface.js' %}"></script>
 {% endblock %}
