@@ -162,3 +162,10 @@ MEDIAFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# settings.py
+
+# Docker internal network URL (имя сервиса из docker-compose)
+ANYTHINGLLM_API_URL = 'http://anythingllm:3001'
+ANYTHINGLLM_WORKSPACE = 'expert001'  # Слаг твоего воркспейса
+ANYTHINGLLM_API_KEY = 'FH2T4W6-4NNMA2Y-K9X3SDW-HWG7FJN'  # Твой API ключ из настроек AnythingLLM

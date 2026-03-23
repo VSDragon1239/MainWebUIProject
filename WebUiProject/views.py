@@ -12,16 +12,60 @@ from .forms import BlogPostForm, BlogPostImageFormSet, UserUpdateForm, UserCreat
 from .models import Project, Blog, BlogImage, ProjectType
 from .permissions import RoleRequiredMixin
 
-
 # Главная страница
-class IndexView(TemplateView):
+from django.views import View
+from django.shortcuts import render
+
+
+class IndexView(View):
     template_name = "pages/index.html"
 
     def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        """Отрисовка главной страницы"""
+        context = self.get_context_data()
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        """Обработка запроса к AI"""
+        prompt = request.POST.get('prompt', '')
+        ai_response = None
+
+        if prompt:
+            try:
+                # === ЗАГЛУШКА (Эмуляция работы AI) ===
+                # Раскомментируй блок ниже для реального подключения к Docker контейнеру
+                """
+                payload = {"message": prompt, "mode": "chat"}
+                headers = {"Authorization": f"Bearer {settings.ANYTHINGLLM_API_KEY}"}
+                response = requests.post(
+                    f"{settings.ANYTHINGLLM_API_URL}/api/v1/workspace/{settings.ANYTHINGLLM_WORKSPACE}/chat",
+                    json=payload,
+                    headers=headers,
+                    timeout=10
+                )
+                response.raise_for_status()
+                ai_response = response.json().get('textResponse', 'Пустой ответ от AI.')
+                """
+
+                # Логика заглушки
+                if "проект" in prompt.lower():
+                    ai_response = "Анализ данных завершен. Активных проектов: 3. Статус: Норма."
+                else:
+                    ai_response = f"Запрос '{prompt}' принят системой. API AnythingLLM отключен (режим заглушки)."
+
+            except Exception as e:
+                ai_response = f"Ошибка соединения с AI ядром: {e}"
+
+        context = self.get_context_data()
+        context['ai_response'] = ai_response
+        context['last_prompt'] = prompt
+        return render(request, self.template_name, context)
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = {
+            'stats': {'projects': 3, 'publications': 30, 'mentors': 7}
+            # Сюда можно добавить новости: 'latest_news': News.objects.all()[:3]
+        }
         return context
 
 
