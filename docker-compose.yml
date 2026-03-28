@@ -20,6 +20,7 @@ services:
       - ./:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+      - /var/run/docker.sock:/var/run/docker.sock
 #    ports:
 #      - "8000:8000"
     env_file:
@@ -40,6 +41,8 @@ services:
       - ./deploy/ssl:/etc/nginx/ssl:ro
     depends_on:
       - web
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   pgadmin:
     image: dpage/pgadmin4

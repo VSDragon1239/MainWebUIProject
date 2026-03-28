@@ -20,13 +20,15 @@ from django.contrib.auth.views import LoginView, LogoutView
 from WebUiProject.views import IndexView, ProjectsView, ContactsView, AboutView, ApplicationsView, BlogView, OtherView, \
     ProfileView, ParticipantView, LeaderView, AdminView, AuthView, ProjectDetailsView, ContentManagerView, NoAccessView, \
     AddBlogPostView, UserCreateView, UserUpdateView, UserDeleteView, ProjectUpdateView, ProjectCreateView, \
-    ProjectsDeleteView, ProjectTypeCreateView, UploadFileView, StreamChatView
+    ProjectsDeleteView, ProjectTypeCreateView, UploadFileView, StreamChatView, RagChatBotView, BlenderWorkspaceView, \
+    BlenderStartView
 
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
     path('', IndexView.as_view(), name='main'),
+    path('chat-bot/', RagChatBotView.as_view(), name='rag_chatbot'),
     path('upload-file/', UploadFileView.as_view(), name='upload_file'),
     path('chat-stream/', StreamChatView.as_view(), name='chat_stream'),
     path('sysadmin/', admin.site.urls),
@@ -39,6 +41,8 @@ urlpatterns = [
     path('projects/create/type/', ProjectTypeCreateView.as_view(), name='project_type_create'),
     path('projects/<int:pk>/edit/', ProjectUpdateView.as_view(), name='project_edit'),
     path('projects/<int:pk>/delete/', ProjectsDeleteView.as_view(), name='project_delete'),
+    path('app/blender/', BlenderWorkspaceView.as_view(), name='blender_workspace'),
+    path('start-blender/', BlenderStartView.as_view(), name='start_blender'),
     path('contacts/', ContactsView.as_view(), name='contacts'),
     path('about/', AboutView.as_view(), name='about'),
     path('application/', ApplicationsView.as_view(), name='application'),

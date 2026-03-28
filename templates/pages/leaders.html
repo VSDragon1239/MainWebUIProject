@@ -4,17 +4,41 @@
 {% block title %}СКБ КБ - Руководителю команды{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
 {% endblock %}
 
 {% block content_block_0 %}
-    <h1><a href="{% url 'main' %}">СКБ КБ</a>  ->  Руководителю команды</h1>
+<h1><a href="{% url 'main' %}">Web UI</a> -> Руководителю команды</h1>
 {% endblock %}
 
 {% block content_block_01 %}
-    <div class="content-block-01">
-        <a class="base-link link-1 border-10" href="{% url 'profile' %}">
-            <h1>Профиль</h1>
-        </a>
-    </div>
+<div class="content-block-01">
+    <a class="base-link link-1 border-10" href="{% url 'profile' %}">
+        <h1>Профиль</h1>
+    </a>
+</div>
+{% endblock %}
+
+{% block content_block_2 %}
+<div class="content_block_2">
+    {% for project in projects %}
+    <a href="{% url 'project' project.id %}" class="project-item">
+        <div class="image-placeholder">
+            {% if project.image %}
+            <img src="{{ project.image.url }}" alt="{{ project.name }}">
+            {% else %}
+            <p>Нет изображения</p>
+            {% endif %}
+        </div>
+        <div class="project-details">
+            <div class="project-meta">
+                <h1 class="project-title">{{ project.name }}</h1>
+            </div>
+            <div class="project-meta">
+                <span class="text">{{ project.description }}</span>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
 {% endblock %}

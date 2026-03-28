@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Архитектура ИИС</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a; /* Темно-синий фон как в презентации */
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Контейнер слайда (16:9) */
+        .slide-container {
+            width: 1280px;
+            height: 720px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        /* Заголовок */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(90deg, #38bdf8, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .subtitle {
+            font-size: 16px;
+            color: #94a3b8;
+        }
+
+        /* Основная сетка диаграммы */
+        .diagram-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 1fr;
+            grid-template-rows: 1fr;
+            gap: 30px;
+            flex-grow: 1;
+            position: relative;
+        }
+
+        /* Уровни (Слои) */
+        .layer {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .layer-title {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #1e293b;
+            padding: 0 12px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Блоки внутри слоев */
+        .component-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.2s;
+        }
+
+        .component-box:hover {
+            transform: translateY(-2px);
+            border-color: rgba(56, 189, 248, 0.3);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .component-box:last-child {
+            margin-bottom: 0;
+        }
+
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .text-box h3 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .text-box p {
+            margin: 0;
+            font-size: 12px;
+            color: #94a3b8;
+            line-height: 1.4;
+        }
+
+        /* Специфичные цвета для блоков */
+        /* Клиент */
+        .client-color {
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            border: 1px solid #475569;
+        }
+
+        .client-icon {
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        /* Оркестратор */
+        .orchestrator-color {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+        }
+
+        /* Экспертная система (Важно выделить) */
+        .expert-box {
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            background: rgba(34, 197, 94, 0.05);
+        }
+
+        .expert-icon {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        /* AI */
+        .ai-color {
+            background: linear-gradient(135deg, #172554 0%, #0f172a 100%);
+            border: 1px solid #3b82f6;
+        }
+
+        .ai-icon {
+            background: rgba(59, 130, 246, 0.1);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        /* Специфичные элементы */
+        .validation-loop {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: #22c55e;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        /* Легенда */
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 40px;
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="slide-container">
+    <!-- Заголовок -->
+    <div class="header">
+        <h1>Гибридная Архитектура ИИС</h1>
+        <div class="subtitle">LLM + Expert System + RAG</div>
+    </div>
+
+    <!-- Сетка диаграммы -->
+    <div class="diagram-grid">
+
+        <!-- ЛЕВЫЙ СТОЛБЕЦ: КЛИЕНТ -->
+        <div class="layer client-color">
+            <div class="layer-title">Клиентский слой</div>
+
+            <div class="component-box">
+                <div class="icon-box client-icon">
+                    <i class="material-icons">menu_book</i>
+                </div>
+                <div class="text-box">
+                    <h3>Obsidian</h3>
+                    <p>Интерфейс и база знаний<br/>WikiLinks & Markdown</p>
+                </div>
+            </div>
+
+            <div style="height: 20px; border-left: 2px dashed #475569; margin-left: 24px;"></div>
+
+            <div class="component-box">
+                <div class="icon-box client-icon">
+                    <i class="material-icons">chat</i>
+                </div>
+                <div class="text-box">
+                    <h3>Web Chat UI</h3>
+                    <p>Django Frontend<br/>Stream Response</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЦЕНТРАЛЬНЫЙ СТОЛБЕЦ: ОРКЕСТРАТОР -->
+        <div class="layer orchestrator-color">
+            <div class="layer-title">Оркестратор (Django)</div>
+
+            <!-- Роутер -->
+            <div class="component-box" style="border-color: #64748b;">
+                <div class="icon-box client-icon" style="background: rgba(100, 116, 139, 0.1);">
+                    <i class="material-icons">alt_route</i>
+                </div>
+                <div class="text-box">
+                    <h3>Request Router</h3>
+                    <p>Валидация запроса & Маршрутизация</p>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px; flex-grow: 1;">
+                <!-- Экспертная система -->
+                <div class="component-box expert-box" style="flex: 1; flex-direction: column; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <div class="icon-box expert-icon">
+                            <i class="material-icons">verified_user</i>
+                        </div>
+                        <h3 style="color: #22c55e;">Expert System</h3>
+                    </div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #94a3b8; line-height: 1.6;">
+                        <li>Проверка правил (YAML)</li>
+                        <li>Фильтр безопасности</li>
+                        <li>Валидация ответов</li>
+                    </ul>
+                </div>
+
+                <!-- Контекст -->
+                <div class="component-box ai-box"
+                     style="flex: 1; flex-direction: column; align-items: flex-start; border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.02);">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                        <div class="icon-box ai-icon">
+                            <i class="material-icons">storage</i>
+                        </div>
+                        <h3 style="color: #60a5fa;">Context Builder</h3>
+                    </div>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #94a3b8; line-height: 1.6;">
+                        <li>Гибридный поиск</li>
+                        <li>RAG Pipeline</li>
+                        <li>История диалога</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Индикатор цикла -->
+            <div class="validation-loop">
+                <i class="material-icons" style="font-size: 16px;">autorenew</i>
+                Цикл верификации
+            </div>
+        </div>
+
+        <!-- ПРАВЫЙ СТОЛБЕЦ: AI ЯДРО -->
+        <div class="layer ai-color">
+            <div class="layer-title">AI Ядро</div>
+
+            <div class="component-box">
+                <div class="icon-box ai-icon">
+                    <i class="material-icons">psychology</i>
+                </div>
+                <div class="text-box">
+                    <h3>LLM (8B - 70B)</h3>
+                    <p>Генеративная модель<br/>Llama / Mistral</p>
+                </div>
+            </div>
+
+            <div class="component-box">
+                <div class="icon-box ai-icon">
+                    <i class="material-icons">dataset</i>
+                </div>
+                <div class="text-box">
+                    <h3>Vector Database</h3>
+                    <p>Хранилище эмбеддингов<br/>Semantic Search</p>
+                </div>
+            </div>
+
+            <div class="component-box">
+                <div class="icon-box ai-icon">
+                    <i class="material-icons">settings_suggest</i>
+                </div>
+                <div class="text-box">
+                    <h3>AnythingLLM</h3>
+                    <p>Менеджер рабочего пространства<br/>& Embeddings</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SVG Слои для стрелок (поверх сетки) -->
+        <svg class="arrow-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <!-- Стрелка Клиент -> Роутер -->
+            <path d="M30 50 L50 50" class="arrow-path" marker-end="url(#arrow)"></path>
+            <!-- Стрелка Роутер -> AI -->
+            <path d="M50 50 L70 50" class="arrow-path" marker-end="url(#arrow)"></path>
+            <!-- defs для стрелок -->
+            <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6"
+                        orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" class="arrow-head"/>
+                </marker>
+            </defs>
+        </svg>
+    </div>
+
+    <!-- Легенда -->
+    <div class="legend">
+        <div class="legend-item">
+            <div class="dot" style="background: #22c55e;"></div>
+            Символьная логика (Правила)
+        </div>
+        <div class="legend-item">
+            <div class="dot" style="background: #60a5fa;"></div>
+            Нейронная логика (Вероятности)
+        </div>
+        <div class="legend-item">
+            <div class="dot" style="background: #38bdf8;"></div>
+            Интерфейсы
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

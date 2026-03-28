@@ -1,608 +1,131 @@
 {% extends 'base/base_header.html' %}
 {% load static %}
 
-{% block title %}СКБ КБ - Главная{% endblock %}
+{% block title %}Web UI - Главная{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/index_style.css' %}">
-<style>
-    /* === ОСНОВНЫЕ СТИЛИ (БЕЗ VAR) === */
-
-    /* Сброс и базовые настройки для мобилок */
-    body {
-        background-color: #0f172a;
-        color: #f1f5f9;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        -webkit-font-smoothing: antialiased;
-    }
-
-    /* Скрываем лишние блоки, если базовый шаблон навязывает свои отступы */
-    .content-block-01 {
-        background: transparent;
-        box-shadow: none;
-        border: none;
-        padding: 0;
-        margin: 0;
-        min-height: auto;
-    }
-
-    /* === МОДУЛЬ ЧАТА === */
-    .chat-wrapper {
-        max-width: 900px;
-        margin: 0 auto;
-        /* Высота на десктопе: весь экран минус примерная высота шапки сайта */
-        height: calc(100vh - 80px);
-        display: flex;
-        flex-direction: column;
-        background: #1e293b;
-        border-radius: 16px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        border: 1px solid #334155;
-    }
-
-    /* Заголовок чата */
-    .chat-header {
-        padding: 16px 24px;
-        border-bottom: 1px solid #334155;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #1e293b;
-        flex-shrink: 0; /* Не сжимать */
-    }
-
-    .chat-header h1 {
-        font-size: 18px;
-        font-weight: 600;
-        color: #f1f5f9;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .status-dot {
-        width: 8px;
-        height: 8px;
-        background: #10b981;
-        border-radius: 50%;
-        box-shadow: 0 0 8px #10b981;
-    }
-
-    /* Окно сообщений */
-    .chat-window {
-        flex: 1;
-        overflow-y: auto;
-        padding: 24px;
-        background: #0f172a;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    /* Стили скроллбара */
-    .chat-window::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .chat-window::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .chat-window::-webkit-scrollbar-thumb {
-        background: #475569;
-        border-radius: 3px;
-    }
-
-    /* Сообщение AI */
-    .ai-message {
-        background: #1e293b;
-        padding: 20px;
-        border-radius: 12px;
-        border-left: 4px solid #38bdf8;
-        line-height: 1.6;
-        font-size: 16px; /* Читаемый размер */
-        white-space: pre-wrap;
-        color: #e2e8f0;
-    }
-
-    /* Форматирование текста (Markdown) */
-    .ai-message code {
-        background: #0f172a;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-family: 'Consolas', 'Monaco', monospace;
-        font-size: 0.9em;
-        color: #f472b6;
-    }
-
-    .ai-message pre {
-        background: #0f172a;
-        padding: 12px;
-        border-radius: 6px;
-        overflow-x: auto;
-        margin: 10px 0;
-        border: 1px solid #334155;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-
-    .ai-message pre code {
-        background: transparent;
-        padding: 0;
-        color: #f1f5f9;
-    }
-
-    .ai-message strong {
-        color: white;
-        font-weight: 600;
-    }
-
-    .ai-message blockquote {
-        border-left: 3px solid #475569;
-        margin: 10px 0;
-        padding-left: 10px;
-        color: #94a3b8;
-    }
-
-    /* Курсор печати */
-    .typing-cursor {
-        display: inline-block;
-        width: 8px;
-        height: 18px;
-        background-color: #38bdf8;
-        margin-left: 2px;
-        animation: blink 1s infinite;
-        vertical-align: middle;
-    }
-
-    @keyframes blink {
-        0%, 50% {
-            opacity: 1;
-        }
-        51%, 100% {
-            opacity: 0;
-        }
-    }
-
-    /* Панель ввода */
-    .input-panel {
-        padding: 16px;
-        background: #1e293b;
-        border-top: 1px solid #334155;
-        flex-shrink: 0;
-    }
-
-    /* Превью файлов */
-    .attachments-bar {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 10px;
-        padding: 0 4px;
-        overflow-x: auto;
-        flex-wrap: wrap;
-    }
-
-    .attachment-chip {
-        background: #334155;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 13px;
-        color: #94a3b8;
-        border: 1px solid #475569;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    /* Форма */
-    .input-form {
-        display: flex;
-        gap: 12px;
-        align-items: flex-end;
-    }
-
-    /* Контейнер инпута */
-    .input-container {
-        flex: 1;
-        background: #0f172a;
-        border-radius: 12px;
-        border: 1px solid #334155;
-        display: flex;
-        align-items: center;
-        padding: 0 12px;
-        transition: border-color 0.2s;
-    }
-
-    .input-container:focus-within {
-        border-color: #38bdf8;
-    }
-
-    .file-input-hidden {
-        display: none;
-    }
-
-    /* Кнопка скрепки */
-    .attach-btn {
-        background: transparent;
-        border: none;
-        color: #94a3b8;
-        cursor: pointer;
-        padding: 8px;
-        font-size: 22px;
-        line-height: 1;
-        transition: color 0.2s;
-    }
-
-    .attach-btn:hover {
-        color: #f1f5f9;
-    }
-
-    /* Текстовое поле */
-    .prompt-input {
-        flex: 1;
-        background: transparent;
-        border: none;
-        color: #f1f5f9;
-        padding: 12px 0;
-        font-size: 16px; /* Важно для iOS, чтобы не было зума */
-        outline: none;
-        resize: none;
-        max-height: 120px;
-        line-height: 1.5;
-        font-family: inherit;
-    }
-
-    .prompt-input::placeholder {
-        color: #64748b;
-    }
-
-    /* Кнопка отправки */
-    .submit-btn {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
-        background: #38bdf8;
-        color: white;
-        border: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: background 0.2s;
-        font-size: 22px;
-        flex-shrink: 0;
-    }
-
-    .submit-btn:hover {
-        background: #0ea5e9;
-    }
-
-    .submit-btn.stop {
-        background: #ef4444;
-    }
-
-    .submit-btn.stop:hover {
-        background: #dc2626;
-    }
-
-    /* === АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ === */
-    @media (max-width: 768px) {
-        /* На мобильном убираем скругления и делаем во весь экран */
-        .chat-wrapper {
-            height: 100vh; /* На всю высоту окна */
-            max-width: 100%;
-            border-radius: 0;
-            border: none;
-        }
-
-        /* Уменьшаем отступы */
-        .chat-header {
-            padding: 12px 16px;
-        }
-
-        .chat-header h1 {
-            font-size: 16px;
-        }
-
-        .chat-window {
-            padding: 16px;
-        }
-
-        .ai-message {
-            padding: 14px;
-            font-size: 15px;
-        }
-
-        .input-panel {
-            padding: 12px;
-            /* Фикс для iPhone X+ (чтобы не налезало на полоску снизу) */
-            padding-bottom: calc(12px + env(safe-area-inset-bottom));
-            background: #1e293b;
-        }
-
-        /* Кнопки чуть больше для пальцев */
-        .submit-btn {
-            width: 48px;
-            height: 48px;
-        }
-    }
-
-    /* Новости */
-    .news-section {
-        margin-top: 30px;
-        padding: 20px;
-        background: #1e293b;
-        border-radius: 12px;
-    }
-
-    .news-section h3 {
-        color: #f1f5f9;
-        margin-top: 0;
-    }
-
-    .news__meta {
-        color: #94a3b8;
-    }
-
-    .news__title a {
-        color: #38bdf8;
-        text-decoration: none;
-    }
-</style>
 {% endblock %}
 
 {% block content_block_0 %}
-<!-- Если нужно скрыть заголовок base.html, можно оставить пустым или настроить CSS -->
+<!-- Скрытие заголовка base.html, если необходимо -->
 {% endblock %}
 
 {% block content_block_1 %}
-<div class="chat-wrapper">
-    <!-- Header -->
-    <div class="chat-header">
-        <h1>
-            <span class="status-dot"></span>
-            AI System Core
-        </h1>
-        <span style="font-size: 12px; color: #94a3b8;">Online</span>
-    </div>
 
-    <!-- Chat Window -->
-    <div class="chat-window" id="chat-window">
-        <div class="ai-message" id="initial-message">
-            Добро пожаловать. Я готов к работе. Введите запрос или прикрепите документ.
+<!-- Основной контейнер страницы -->
+<section class="mb-5">
+    <h2 class="h3 mb-3 border-bottom pb-2">Доступные модули</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+
+        <!-- Карточка модуля 1: Проекты -->
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">📁 Управление Проектами</h5>
+                    <p class="card-text text-muted">
+                        Доступ к файловой структуре, логам и настройкам активных проектов.
+                    </p>
+                    <a href="{% url 'projects' %}" class="btn btn-outline-primary stretched-link">Перейти</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Карточка модуля 2: Документация / База знаний -->
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">📚 База знаний</h5>
+                    <p class="card-text text-muted">
+                        Статьи, инструкции и техническая документация по разработке.
+                    </p>
+                    <a href="#" class="btn btn-outline-primary stretched-link">Открыть</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Карточка модуля 3: Аналитика / Графики -->
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">📊 Мониторинг</h5>
+                    <p class="card-text text-muted">
+                        Визуализация данных, состояние серверов и логи в реальном времени.
+                    </p>
+                    <a href="#" class="btn btn-outline-primary stretched-link">Смотреть</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ==================== БЛОК 3: Основная информация (Биография / О проекте) ==================== -->
+<section class="row mb-5">
+    <div class="col-lg-8">
+        <div class="card bg-light border-0">
+            <div class="card-body">
+                <h3 class="card-title mb-3">О системе</h3>
+                <p class="card-text">
+                    Это универсальный веб-интерфейс, объединяющий различные инструменты автоматизации.
+                    Сайт служит центральным хабом для доступа к скриптам, базам данных и управлению файлами.
+                    Построен на Django с использованием модульной архитектуры.
+                </p>
+                <p class="card-text">
+                    Текущая версия: <strong>Alpha 0.1</strong> | Последнее обновление: <strong>2026-03-28</strong>
+                </p>
+                <hr>
+                <h5>Ключевые особенности:</h5>
+                <ul>
+                    <li>Модульность — легкое добавление новых разделов.</li>
+                    <li>Интеграция с файловой системой.</li>
+                    <li>Логирование действий в реальном времени.</li>
+                </ul>
+            </div>
         </div>
     </div>
 
-    <!-- Input Panel -->
-    <div class="input-panel">
-        <div class="attachments-bar" id="attachments-bar"></div>
-
-        <form id="ai-form" class="input-form">
-            {% csrf_token %}
-
-            <div class="input-container">
-                <label for="file-input" class="attach-btn" title="Прикрепить файл">📎</label>
-                <input type="file" id="file-input" class="file-input-hidden" multiple>
-
-                <textarea
-                        id="prompt-input"
-                        class="prompt-input"
-                        placeholder="Введите сообщение..."
-                        rows="1"
-                        autocomplete="off"
-                ></textarea>
+    <!-- ==================== БЛОК 4: Сайдбар (Статус и События) ==================== -->
+    <div class="col-lg-4">
+        <!-- Статус системы -->
+        <div class="card mb-4">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0">Состояние системы</h5>
             </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Основной сервер
+                    <span class="badge bg-success rounded-pill">Online</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    База данных
+                    <span class="badge bg-success rounded-pill">Connected</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Фоновые задачи
+                    <span class="badge bg-warning text-dark rounded-pill">Pending</span>
+                </li>
+            </ul>
+        </div>
 
-            <button type="submit" id="submit-btn" class="submit-btn">➤</button>
-        </form>
-    </div>
-</div>
-
-<section class="news-section">
-    <h3>Новости</h3>
-    <div class="news">
-        {% for n in blogs_list %}
-        <article class="news__item">
-            <div class="blog-posts">
-                {% for blog in blogs_list %}
-                <div class="blog-post">
-                    <div class="blog-post-image">
-                        {% if blog.images.first %}
-                        <div class="img-blog-image_first">
-                            <img src="{{ blog.images.first.image.url }}" width="450" alt="Превью">
-                        </div>
-                        {% endif %}
-                        <div class="img-blog-images">
-                            {% for img in blog.images.all %}
-                            {% if img.image.url == blog.images.first.image.url %}
-
-                            {% else %}
-                            <img src="{{ img.image.url }}" width="221" height="221" alt="Изображение">
-                            {% endif %}
-                            {% endfor %}
-                        </div>
-                    </div>
-                    <h2 class="blog-post-title">{{ blog.title }}</h2>
-                    <p class="blog-post-meta">
-                        <span class="blog-post-author">{{ blog.author }}</span>
-                        <span class="blog-post-date">{{ blog.created_at }}</span>
-                    </p>
-                    <p class="blog-post-body">{{ blog.content|truncatechars:200|urlize }}</p>
-                    <p class="blog-post-footer">Магические причуды</p>
+        <!-- Последние события (Логи) -->
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0">Последние события</h5>
+            </div>
+            <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                <div class="small text-muted mb-2">
+                    <span class="text-success">[INFO]</span> 15:10:35 - Папка "LearnData" открыта.
                 </div>
-                {% endfor %}
+                <div class="small text-muted mb-2">
+                    <span class="text-warning">[WARN]</span> 15:10:39 - Таймаут окна HWND.
+                </div>
+                <div class="small text-muted mb-2">
+                    <span class="text-primary">[USER]</span> 15:10:34 - Авторизация пройдена.
+                </div>
             </div>
-        </article>
-        {% empty %}
-        <p style="color: #94a3b8;">Новостей нет.</p>
-        {% endfor %}
+        </div>
     </div>
 </section>
-{% endblock %}
 
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const chatWindow = document.getElementById('chat-window');
-        const initialMessage = document.getElementById('initial-message');
-        const aiForm = document.getElementById('ai-form');
-        const promptInput = document.getElementById('prompt-input');
-        const submitBtn = document.getElementById('submit-btn');
-        const fileInput = document.getElementById('file-input');
-        const attachmentsBar = document.getElementById('attachments-bar');
-
-        let uploadedFiles = [];
-        let abortController = null;
-
-        // Авто-высота textarea
-        promptInput.addEventListener('input', function () {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
-
-        // Отправка по Enter
-        promptInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                aiForm.dispatchEvent(new Event('submit'));
-            }
-        });
-
-        // Файлы
-        fileInput.addEventListener('change', (e) => {
-            [...e.target.files].forEach(file => {
-                const chip = document.createElement('div');
-                chip.className = 'attachment-chip';
-                chip.innerHTML = `<span>📄</span> ${file.name}`;
-                attachmentsBar.appendChild(chip);
-                uploadFile(file);
-            });
-            fileInput.value = '';
-        });
-
-        function uploadFile(file) {
-            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            const formData = new FormData();
-            formData.append('file', file);
-
-            fetch('/upload-file/', {
-                method: 'POST',
-                body: formData,
-                headers: {'X-CSRFToken': csrftoken}
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        uploadedFiles.push(data.doc_name);
-                    } else {
-                        console.error("Upload error", data.error);
-                    }
-                });
-        }
-
-        // Чат
-        aiForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const prompt = promptInput.value.trim();
-            if (!prompt && uploadedFiles.length === 0) return;
-
-            if (initialMessage) initialMessage.style.display = 'none';
-
-            promptInput.value = '';
-            promptInput.style.height = 'auto';
-
-            const responseDiv = document.createElement('div');
-            responseDiv.className = 'ai-message';
-            const cursor = document.createElement('span');
-            cursor.className = 'typing-cursor';
-            responseDiv.appendChild(cursor);
-            chatWindow.appendChild(responseDiv);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-
-            submitBtn.classList.add('stop');
-            submitBtn.innerHTML = '■';
-            abortController = new AbortController();
-
-            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            const formData = new URLSearchParams();
-            formData.append('prompt', prompt);
-            formData.append('attached_files', uploadedFiles.join(','));
-
-            try {
-                const response = await fetch('/chat-stream/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': csrftoken
-                    },
-                    body: formData.toString(),
-                    signal: abortController.signal
-                });
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-                let fullText = '';
-
-                while (true) {
-                    const {done, value} = await reader.read();
-                    if (done) break;
-
-                    buffer += decoder.decode(value, {stream: true});
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop();
-
-                    lines.forEach(line => {
-                        if (line.startsWith('data: ')) {
-                            try {
-                                const data = JSON.parse(line.substring(6));
-                                if (data.error) fullText += `\n[Ошибка: ${data.error}]`;
-                                else if (data.textResponse) fullText += data.textResponse;
-
-                                responseDiv.innerHTML = formatMarkdown(fullText);
-                                responseDiv.appendChild(cursor);
-                                chatWindow.scrollTop = chatWindow.scrollHeight;
-                            } catch (err) {
-                            }
-                        }
-                    });
-                }
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    responseDiv.innerText = "[Ошибка соединения]";
-                }
-            } finally {
-                cursor.remove();
-                submitBtn.classList.remove('stop');
-                submitBtn.innerHTML = '➤';
-                abortController = null;
-            }
-        });
-
-        submitBtn.addEventListener('click', () => {
-            if (submitBtn.classList.contains('stop') && abortController) {
-                abortController.abort();
-            }
-        });
-
-        // Markdown
-        function formatMarkdown(text) {
-            if (!text) return '';
-            let safe = text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;");
-
-            safe = safe.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-            safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
-            safe = safe.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-            safe = safe.replace(/\n/g, '<br>');
-            return safe;
-        }
-    });
-</script>
 {% endblock %}

@@ -8,18 +8,55 @@
 {% endblock %}
 
 {% block content_block_0 %}
-    <h1><a href="{% url 'main' %}">СКБ КБ</a> -> Проекты</h1>
+    <h1><a href="{% url 'main' %}">Web UI</a> -> Проекты</h1>
 {% endblock %}
 
 {% block content_block_01 %}
-    <div class="content-block-01">
-        <a class="base-link link-1 border-10" href="{% url 'participant' %}">
-            <h1>Участнику</h1>
-        </a>
-        <a class="base-link link-2 border-10" href="{% url 'leader' %}">
-            <h1>Руководителю</h1>
-        </a>
+<!-- Контейнер с отступами сверху и снизу (py-5) -->
+<div class="container py-5">
+
+    <!-- Строка сетки. g-4 добавляет отступы между колонками -->
+    <div class="row g-4 justify-content-center">
+
+        <!-- Колонка 1: Участнику -->
+        <!-- col-md-6: на средних и больших экранах занимает половину ширины (2 в ряд) -->
+        <!-- col-12: на мобильных занимает всю ширину (1 в ряд) -->
+        <div class="col-md-6 col-12">
+            <!-- Ссылка-карточка -->
+            <!-- d-flex, align-items-center, justify-content-center: выравнивание текста по центру -->
+            <!-- h-100: высота на всю высоту колонки (чтобы карточки были одной высоты) -->
+            <!-- shadow: мягкая тень, rounded: скругление углов -->
+            <!-- text-decoration-none: убираем подчеркивание ссылки -->
+            <a href="{% url 'participant' %}"
+               class="d-flex align-items-center justify-content-center h-100 p-5 link-success text-decoration-none bg-light rounded-3 shadow-sm hover-shadow transition">
+
+                <!-- Визуальная иконка (опционально, для красоты) -->
+                <div class="me-3 fs-1">👤</div>
+
+                <!-- Текст заголовка -->
+                <div>
+                    <h2 class="h1 mb-0 fw-bold">Участнику</h2>
+                    <small class="text-muted d-none d-md-block">Информация для участников</small>
+                </div>
+            </a>
+        </div>
+
+        <!-- Колонка 2: Руководителю -->
+        <div class="col-md-6 col-12">
+            <a href="{% url 'leader' %}"
+               class="d-flex align-items-center justify-content-center h-100 p-5 link-primary text-decoration-none bg-light rounded-3 shadow-sm hover-shadow transition">
+
+                <div class="me-3 fs-1">👔</div>
+
+                <div>
+                    <h2 class="h1 mb-0 fw-bold">Руководителю</h2>
+                    <small class="text-muted d-none d-md-block">Данные для руководства</small>
+                </div>
+            </a>
+        </div>
+
     </div>
+</div>
 {% endblock %}
 
 {% block content_block_2 %}

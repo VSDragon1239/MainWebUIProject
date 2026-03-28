@@ -1,5 +1,6 @@
 import base64
 import logging
+import time
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User, Group
@@ -24,11 +25,29 @@ from django.views import View
 from django.http import StreamingHttpResponse
 from django.conf import settings
 
+import docker
+import uuid
+from django.http import JsonResponse
+
 logger = logging.getLogger(__name__)
 
 
 class IndexView(TemplateView):
     template_name = "pages/index.html"
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        return render(request, self.template_name, context)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        blogs_list = Blog.objects.all()
+        context["blogs_list"] = blogs_list
+        return context
+
+
+class RagChatBotView(TemplateView):
+    template_name = "pages/chatbot.html"
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
@@ -302,6 +321,7 @@ class LeaderView(RoleRequiredMixin, TemplateView):
 #   Список руководителей    -   добавить (роль), изменить (роль), удалить (если нет других ролей - удаление учётной записи),
 #   Контент-менеджеров      -   добавить (роль), изменить (роль), удалить (зависит от других ролей, если их нет - удаление учётной записи),
 #   Участников в системе    -   добавить (создание учётной записи в систему), изменить (профиль), удалить (саму учётную запись)
+#   Работа с проектами (создание, изменени, удаление) и назначение ролей
 class AdminView(RoleRequiredMixin, TemplateView):
     required_roles = ['Администраторы']
     template_name = "pages/admin.html"
@@ -311,9 +331,23 @@ class AdminView(RoleRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["users"] = User.objects.all().select_related()
-        context["groups"] = Group.objects.all()
-        context["projects"] = Project.objects.all()
+
+        # Проекты
+        context["projects"] = Project.objects.all().select_related('type').prefetch_related('leaders', 'members')
+
+        # Группы (для фильтрации)
+        leaders_group = Group.objects.get(name='Руководители')
+        managers_group = Group.objects.get(name='Контент менеджер')
+        members_group = Group.objects.get(name='Участники')
+
+        # Пользователи по категориям
+        context["leaders"] = User.objects.filter(groups=leaders_group)
+        context["managers"] = User.objects.filter(groups=managers_group)
+        context["members"] = User.objects.filter(groups=members_group)
+
+        # Все пользователи (для быстрого поиска)
+        context["users"] = User.objects.all()
+
         return context
 
 
@@ -531,3 +565,133 @@ class NoAccessView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
+
+
+class BlenderWorkspaceView(TemplateView):
+    template_name = "pages/blender_workspace.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+# class BlenderStartView(View):
+#     def post(self, request):
+#         client = docker.from_env()
+#
+#         # Генерируем уникальный порт (или используем случайный свободный)
+#         # Для простоты примера возьмем диапазон 6901-6999, но лучше проверять занятость
+#         # В продакшне лучше использовать Docker API для автоматического назначения порта
+#         host_port = 6901
+#         container_name = f"blender_user_{request.user.id}_{uuid.uuid4().hex[:6]}"
+#
+#         # Пароль для сессии KasmVNC
+#         vnc_password = "secure_password_123"
+#
+#         try:
+#             container = client.containers.run(
+#                 # image="kasmweb/blender:latest",
+#                 # image="kasmweb/chrome:1.15.0",
+#                 image="my-blender-image",  # Имя вашего собранного образа
+#                 name=container_name,
+#                 environment={"VNC_PW": vnc_password},
+#                 ports={'6901/tcp': None},
+#                 detach=True,
+#                 remove=True,
+#                 shm_size="512m",
+#                 # Важно для производительности Blender:
+#                 runtime="nvidia"  # Раскомментировать, если есть NVIDIA GPU на сервере
+#             )
+#
+#             # URL, по которому Nginx проксирует к этому порту
+#             # Структура URL будет описана в Nginx на следующем этапе
+#             iframe_url = f"https://{request.get_host()}/kasm-session/{host_port}/"
+#
+#             return JsonResponse({
+#                 'status': 'success',
+#                 'iframe_url': iframe_url,
+#                 'password': vnc_password  # В реальном приложении пароль лучше не отдавать, если включен SSO
+#             })
+#
+#         except Exception as e:
+#             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+# class BlenderStartView(View):
+#     def post(self, request):
+#         client = docker.from_env()
+#         container_name = f"blender_user_{request.user.id}_{uuid.uuid4().hex[:6]}"
+#         vnc_password = "password"
+#
+#         try:
+#             # 1. Запускаем контейнер
+#             container = client.containers.run(
+#                 image="my-blender-image",  # Имя вашего собранного образа
+#                 name=container_name,
+#                 environment={
+#                     "VNC_PW": vnc_password,
+#                     # ГЛАВНОЕ ИСПРАВЛЕНИЕ:
+#                     # Отключаем HTTPS внутри Kasm, чтобы Nginx мог проксировать HTTP
+#                     "VNC_DISABLE_HTTPS": "1",
+#                 },
+#                 # Автоматический выбор свободного порта
+#                 ports={'6901/tcp': None},
+#                 detach=True,
+#                 remove=True,
+#                 shm_size="512m"
+#             )
+#
+#             # 2. Получаем динамический порт
+#             container.reload()
+#             ports_info = container.attrs['NetworkSettings']['Ports']['6901/tcp']
+#             host_port = ports_info[0]['HostPort']
+#
+#             # 3. Формируем URL (Nginx проксирует HTTP, браузер видит HTTPS)
+#             iframe_url = f"https://{request.get_host()}/kasm-session/{host_port}/"
+#
+#             return JsonResponse({
+#                 'status': 'success',
+#                 'iframe_url': iframe_url,
+#                 'password': vnc_password
+#             })
+#
+#         except Exception as e:
+#             print(f"DOCKER ERROR: {str(e)}")
+#             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+class BlenderStartView(View):
+    def post(self, request):
+        client = docker.from_env()
+        container_name = f"blender_user_{request.user.id}_{uuid.uuid4().hex[:6]}"
+        vnc_password = "password"
+
+        try:
+            container = client.containers.run(
+                image="my-blender-image",
+                name=container_name,
+                environment={
+                    "VNC_PW": vnc_password,
+                    "VNC_DISABLE_HTTPS": "0",
+                    "KASM_URL_PREFIX": f"/kasm-session/{container_name}",  # статический префикс
+                },
+                detach=True,
+                remove=True,
+                shm_size="512m",
+                network="mainwebuiproject_default"
+            )
+            time.sleep(5)
+
+            # Формируем URL с именем контейнера
+            iframe_url = f"https://{request.get_host()}/kasm-session/{container_name}/"
+
+            return JsonResponse({
+                'status': 'success',
+                'iframe_url': iframe_url,
+                'password': vnc_password
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
