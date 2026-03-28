@@ -32,7 +32,7 @@
                     <div class="img-blog-images">
                         {% for img in blog.images.all %}
                             {% if img.image.url == blog.images.first.image.url %}
-    
+
                             {% else %}
                                 <img src="{{ img.image.url }}" width="221" height="221" alt="Изображение">
                             {% endif %}

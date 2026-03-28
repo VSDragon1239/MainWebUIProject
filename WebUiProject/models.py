@@ -37,7 +37,7 @@ class ProjectType(models.Model):
 class Project(models.Model):
     image = ProcessedImageField(
         upload_to=project_image_upload_to,
-        processors=[ResizeToFit(800, 600)],
+        processors=[ResizeToFit(128, 128)],
         format='JPEG',
         options={'quality': 85},
         blank=True,

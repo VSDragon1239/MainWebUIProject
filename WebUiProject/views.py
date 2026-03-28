@@ -27,7 +27,7 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 
-class IndexView(View):
+class IndexView(TemplateView):
     template_name = "pages/index.html"
 
     def get(self, request, *args, **kwargs):
@@ -35,10 +35,10 @@ class IndexView(View):
         return render(request, self.template_name, context)
 
     def get_context_data(self, **kwargs):
-        return {
-            'stats': {'projects': 3, 'publications': 30, 'mentors': 7},
-            # 'latest_news': News.objects.all()[:3]
-        }
+        context = super().get_context_data(**kwargs)
+        blogs_list = Blog.objects.all()
+        context["blogs_list"] = blogs_list
+        return context
 
 
 @method_decorator(csrf_exempt, name='dispatch')
