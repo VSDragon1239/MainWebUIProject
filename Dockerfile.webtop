@@ -1,0 +1,10 @@
+FROM lscr.io/linuxserver/webtop:ubuntu-xfce
+
+# Устанавливаем Blender
+RUN apt-get update && \
+    apt-get install -y blender && \
+    rm -rf /var/lib/apt/lists/*
+
+# Настройки окружения (опционально)
+ENV TITLE="Blender Workspace"
+# ENV PASSWORD="password" # Можно задать пароль, если нужно

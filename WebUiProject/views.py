@@ -666,32 +666,46 @@ class BlenderWorkspaceView(TemplateView):
 class BlenderStartView(View):
     def post(self, request):
         client = docker.from_env()
-        container_name = f"blender_user_{request.user.id}_{uuid.uuid4().hex[:6]}"
-        vnc_password = "password"
+        container_name = f"blender_webtop_{request.user.id}_{uuid.uuid4().hex[:6]}"
 
         try:
+            # 1. Запускаем контейнер в сети Nginx
             container = client.containers.run(
-                image="my-blender-image",
+                image="my-webtop-blender",  # Наш новый образ
                 name=container_name,
                 environment={
-                    "VNC_PW": vnc_password,
-                    "VNC_DISABLE_HTTPS": "0",
-                    "KASM_URL_PREFIX": f"/kasm-session/{container_name}",  # статический префикс
+                    # Webtop по умолчанию не требует пароль, но можно поставить:
+                    # "PASSWORD": "secure123",
+                    "PUID": "1000",
+                    "PGID": "1000",
                 },
                 detach=True,
                 remove=True,
-                shm_size="512m",
-                network="mainwebuiproject_default"
+                shm_size="1gb",  # Webtop тоже нужна память
+                network="mainwebuiproject_default"  # Подключаем к сети Nginx
             )
+
+            # 2. Даем контейнеру 5 секунд на старт (Webtop запускается быстро)
             time.sleep(5)
 
-            # Формируем URL с именем контейнера
-            iframe_url = f"https://{request.get_host()}/kasm-session/{container_name}/"
+            # 3. Получаем IP-адрес
+            container.reload()
+            networks = container.attrs['NetworkSettings']['Networks']
+
+            if "mainwebuiproject_default" in networks:
+                ip_address = networks["mainwebuiproject_default"]['IPAddress']
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Container network error'}, status=500)
+
+            # 4. Формируем URL (проксируем через Nginx, чтобы избежать Mixed Content)
+            iframe_url = f"https://{request.get_host()}/webtop-session/{ip_address}/"
 
             return JsonResponse({
                 'status': 'success',
                 'iframe_url': iframe_url,
-                'password': vnc_password
+                'password': ''  # Пароль не нужен, если не задали в ENV
             })
+
         except Exception as e:
+            print(f"DOCKER ERROR: {str(e)}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
