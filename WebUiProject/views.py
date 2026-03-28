@@ -11,8 +11,6 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, FormView, CreateView, ListView, UpdateView, DeleteView
 from django.contrib import messages
-from django.http import JsonResponse
-from django.urls import reverse_lazy
 
 from .forms import BlogPostForm, BlogPostImageFormSet, UserUpdateForm, UserCreateForm, ProjectForm, ProjectTypeForm
 from .models import Project, Blog, BlogImage, ProjectType
@@ -25,9 +23,6 @@ from django.views import View
 from django.http import StreamingHttpResponse
 from django.conf import settings
 
-import docker
-import uuid
-from django.http import JsonResponse
 
 logger = logging.getLogger(__name__)
 
@@ -665,47 +660,9 @@ class BlenderWorkspaceView(TemplateView):
 
 class BlenderStartView(View):
     def post(self, request):
-        client = docker.from_env()
-        container_name = f"blender_webtop_{request.user.id}_{uuid.uuid4().hex[:6]}"
-
-        try:
-            # 1. Запускаем контейнер в сети Nginx
-            container = client.containers.run(
-                image="my-webtop-blender",  # Наш новый образ
-                name=container_name,
-                environment={
-                    # Webtop по умолчанию не требует пароль, но можно поставить:
-                    # "PASSWORD": "secure123",
-                    "PUID": "1000",
-                    "PGID": "1000",
-                },
-                detach=True,
-                remove=True,
-                shm_size="1gb",  # Webtop тоже нужна память
-                network="mainwebuiproject_default"  # Подключаем к сети Nginx
-            )
-
-            # 2. Даем контейнеру 5 секунд на старт (Webtop запускается быстро)
-            time.sleep(5)
-
-            # 3. Получаем IP-адрес
-            container.reload()
-            networks = container.attrs['NetworkSettings']['Networks']
-
-            if "mainwebuiproject_default" in networks:
-                ip_address = networks["mainwebuiproject_default"]['IPAddress']
-            else:
-                return JsonResponse({'status': 'error', 'message': 'Container network error'}, status=500)
-
-            # 4. Формируем URL (проксируем через Nginx, чтобы избежать Mixed Content)
-            iframe_url = f"https://{request.get_host()}/webtop-session/{ip_address}/"
-
-            return JsonResponse({
-                'status': 'success',
-                'iframe_url': iframe_url,
-                'password': ''  # Пароль не нужен, если не задали в ENV
-            })
-
-        except Exception as e:
-            print(f"DOCKER ERROR: {str(e)}")
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        # Просто возвращаем статичный URL нашего сервиса
+        return JsonResponse({
+            'status': 'success',
+            'iframe_url': f"https://{request.get_host()}/lxdesk/",
+            'password': ''  # Если задали пароль в compose, можете вернуть его тут или не возвращать
+        })

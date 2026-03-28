@@ -55,8 +55,25 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
+  lxdesk:
+    build:
+      context: .
+      dockerfile: Dockerfile.webtop
+    container_name: blender_workspace
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Moscow
+      # Можно задать пароль для входа:
+      # - PASSWORD=securepassword
+    volumes:
+      - lxdesk_data:/config
+    shm_size: "1gb"
+
 volumes:
   postgres_data:
   static_volume:
   media_volume:
   pgadmin_data:
+  lxdesk_data:
