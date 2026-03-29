@@ -69,6 +69,10 @@ services:
       - LIBGL_ALWAYS_SOFTWARE=0
       # Можно задать пароль для входа:
       # - PASSWORD=PWD
+    devices:
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-modeset:/dev/nvidia-modeset
     volumes:
       - lxdesk_data:/config
     shm_size: "4gb"
