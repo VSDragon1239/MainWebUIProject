@@ -69,7 +69,6 @@ services:
       - LIBGL_ALWAYS_SOFTWARE=0
       # Можно задать пароль для входа:
       # - PASSWORD=PWD
-    runtime: nvidia
     volumes:
       - lxdesk_data:/config
     shm_size: "4gb"
