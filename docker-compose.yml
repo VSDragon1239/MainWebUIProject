@@ -66,16 +66,10 @@ services:
       - TZ=Europe/Moscow
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
-      - PATH=/usr/lib/wsl/lib:$PATH
-      - LD_LIBRARY_PATH=/usr/lib/wsl/lib:$LD_LIBRARY_PATH
       # Можно задать пароль для входа:
-      # - PASSWORD=securepassword
-    devices:
-      - /dev/dxg:/dev/dxg
+      # - PASSWORD=PWD
     volumes:
       - lxdesk_data:/config
-      - /usr/lib/wsl:/usr/lib/wsl
-      # Проброс драйверов из Windows
     shm_size: "4gb"
 
 volumes:
