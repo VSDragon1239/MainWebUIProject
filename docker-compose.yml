@@ -73,6 +73,13 @@ services:
       - /dev/nvidia0:/dev/nvidia0
       - /dev/nvidiactl:/dev/nvidiactl
       - /dev/nvidia-modeset:/dev/nvidia-modeset
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1 # или all
+              capabilities: [ gpu ]
     volumes:
       - lxdesk_data:/config
     shm_size: "4gb"
