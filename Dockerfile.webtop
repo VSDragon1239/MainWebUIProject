@@ -2,7 +2,7 @@ FROM lscr.io/linuxserver/webtop:ubuntu-xfce
 
 # Устанавливаем Blender
 RUN apt-get update && \
-    apt-get install -y blender && \
+    apt-get install -y blender nvidia-cuda-toolkit && \
     rm -rf /var/lib/apt/lists/*
 
 ENV NVIDIA_VISIBLE_DEVICES=all
