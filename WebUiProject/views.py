@@ -23,7 +23,6 @@ from django.views import View
 from django.http import StreamingHttpResponse
 from django.conf import settings
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -661,8 +660,13 @@ class BlenderWorkspaceView(TemplateView):
 class BlenderStartView(View):
     def post(self, request):
         # Просто возвращаем статичный URL нашего сервиса
+        # return JsonResponse({
+        #     'status': 'success',
+        #     'iframe_url': f"https://{request.get_host()}/lxdesk/",
+        #     'password': ''  # Если задали пароль в compose, можете вернуть его тут или не возвращать
+        # })
         return JsonResponse({
             'status': 'success',
-            'iframe_url': f"https://{request.get_host()}/lxdesk/",
-            'password': ''  # Если задали пароль в compose, можете вернуть его тут или не возвращать
+            'iframe_url': 'https://194.87.214.67:8083/',
+            'password': ''
         })
