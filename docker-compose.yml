@@ -66,8 +66,7 @@ services:
       - TZ=Europe/Moscow
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
-      # Можно задать пароль для входа:
-      # - PASSWORD=PWD
+      - PASSWORD=${MY_WORKSPACE_PASSWORD}
     devices:
       - /dev/nvidia0:/dev/nvidia0
       - /dev/nvidiactl:/dev/nvidiactl
