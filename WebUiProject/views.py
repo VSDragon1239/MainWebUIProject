@@ -667,6 +667,6 @@ class BlenderStartView(View):
         # })
         return JsonResponse({
             'status': 'success',
-            'iframe_url': 'https://194.87.214.67:8083/',
+            'iframe_url': 'http://194.87.214.67:8083/',
             'password': ''
         })
