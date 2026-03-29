@@ -660,13 +660,14 @@ class BlenderWorkspaceView(TemplateView):
 class BlenderStartView(View):
     def post(self, request):
         # Просто возвращаем статичный URL нашего сервиса
-        # return JsonResponse({
-        #     'status': 'success',
-        #     'iframe_url': f"https://{request.get_host()}/lxdesk/",
-        #     'password': ''  # Если задали пароль в compose, можете вернуть его тут или не возвращать
-        # })
+        iframe_url = f"https://{request.get_host()}/lxdesk/"
         return JsonResponse({
             'status': 'success',
-            'iframe_url': 'http://194.87.214.67:8083/',
+            'iframe_url': iframe_url,
             'password': ''
         })
+        # return JsonResponse({
+        #     'status': 'success',
+        #     'iframe_url': 'https://194.87.214.67:8083/',
+        #     'password': ''
+        # })
