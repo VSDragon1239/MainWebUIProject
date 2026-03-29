@@ -71,6 +71,8 @@ services:
     volumes:
       - lxdesk_data:/config
     shm_size: "4gb"
+    ports:
+      - "8083:3000"
 
 volumes:
   postgres_data:
