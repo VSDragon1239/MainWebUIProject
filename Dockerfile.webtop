@@ -8,7 +8,7 @@ RUN apt-get update && \
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=all
 
-ENV LIBGL_ALWAYS_SOFTWARE=0
+ENV LIBGL_ALWAYS_SOFTWARE=1
 
 ENV TITLE="Blender Workspace"
 # ENV PASSWORD="password" # Можно задать пароль, если нужно
