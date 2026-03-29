@@ -660,7 +660,8 @@ class BlenderWorkspaceView(TemplateView):
 class BlenderStartView(View):
     def post(self, request):
         # Просто возвращаем статичный URL нашего сервиса
-        iframe_url = f"https://{request.get_host()}/lxdesk/"
+        # iframe_url = f"https://{request.get_host()}/lxdesk/"
+        iframe_url = f"https://194.87.214.67:8443/lxdesk/"
         return JsonResponse({
             'status': 'success',
             'iframe_url': iframe_url,
