@@ -12,4 +12,3 @@ ENV LIBGL_ALWAYS_SOFTWARE=0
 
 ENV TITLE="Blender Workspace"
 # ENV PASSWORD="password" # Можно задать пароль, если нужно
-
