@@ -54,39 +54,8 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
-  lxdesk:
-    build:
-      context: .
-      dockerfile: Dockerfile.webtop
-    container_name: blender_workspace
-    restart: unless-stopped
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Moscow
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=all
-      - PASSWORD=${MY_WORKSPACE_PASSWORD}
-    devices:
-      - /dev/nvidia0:/dev/nvidia0
-      - /dev/nvidiactl:/dev/nvidiactl
-      - /dev/nvidia-modeset:/dev/nvidia-modeset
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1 # или all
-              capabilities: [ gpu ]
-    volumes:
-      - lxdesk_data:/config
-    shm_size: "4gb"
-    ports:
-      - "8083:3000"
-
 volumes:
   postgres_data:
   static_volume:
   media_volume:
   pgadmin_data:
-  lxdesk_data:
