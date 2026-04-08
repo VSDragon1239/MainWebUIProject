@@ -17,44 +17,61 @@ Including another URLconf
 from django.urls import path
 from django.contrib import admin
 from django.contrib.auth.views import LoginView, LogoutView
-from WebUiProject.views import IndexView, ProjectsView, ContactsView, AboutView, ApplicationsView, BlogView, OtherView, \
-    ProfileView, ParticipantView, LeaderView, AdminView, AuthView, ProjectDetailsView, ContentManagerView, NoAccessView, \
-    AddBlogPostView, UserCreateView, UserUpdateView, UserDeleteView, ProjectUpdateView, ProjectCreateView, \
-    ProjectsDeleteView, ProjectTypeCreateView, UploadFileView, StreamChatView, RagChatBotView, BlenderWorkspaceView, \
-    BlenderStartView
+from WebUiProject.views import IndexView, ContactsView, AboutView, ApplicationsView, BlogView, OtherView, \
+    ProfileView, ParticipantView, AdminView, ContentManagerView, NoAccessView, UploadFileView, \
+    AddBlogPostView, UserCreateView, UserUpdateView, UserDeleteView, AchievementsView, CategoriesEventsView, \
+    EventsView, EcoHabitsTrackerView, CategoriesView, EcoHabitsView, EventDetailsView, \
+    EcoTasksTrackerView, EcoTaskDetailsView
 
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('', IndexView.as_view(), name='main'),
-    path('chat-bot/', RagChatBotView.as_view(), name='rag_chatbot'),
-    path('upload-file/', UploadFileView.as_view(), name='upload_file'),
-    path('chat-stream/', StreamChatView.as_view(), name='chat_stream'),
+    # Роли пользователей:
     path('sysadmin/', admin.site.urls),
+    path('admin/', AdminView.as_view(), name='admin'),
+    path('participant/', ParticipantView.as_view(), name='participant'),
+    path('content_manager/', ContentManagerView.as_view(), name='content_manager'),             # Управляющий событиями
+    # path('leader/', LeaderView.as_view(), name='leader'),
+    # Управление пользователями:
     path('create/', UserCreateView.as_view(), name='user_create'),
     path('<int:pk>/edit/', UserUpdateView.as_view(), name='user_edit'),
     path('<int:pk>/delete/', UserDeleteView.as_view(), name='user_delete'),
 
-    path('projects/', ProjectsView.as_view(), name='projects'),
-    path('projects/create/', ProjectCreateView.as_view(), name='project_create'),
-    path('projects/create/type/', ProjectTypeCreateView.as_view(), name='project_type_create'),
-    path('projects/<int:pk>/edit/', ProjectUpdateView.as_view(), name='project_edit'),
-    path('projects/<int:pk>/delete/', ProjectsDeleteView.as_view(), name='project_delete'),
-    path('app/blender/', BlenderWorkspaceView.as_view(), name='blender_workspace'),
-    path('start-blender/', BlenderStartView.as_view(), name='start_blender'),
+    # Для пользователей:
+    path('profile/', ProfileView.as_view(), name='profile'),                                                          # Профиль пользователя
+    path('achievements/', AchievementsView.as_view(), name='achievements'),                                              # Список достижений
+    path('categories-events/', CategoriesEventsView.as_view(), name='categories_events'),                                  # Список категорий событий / мероприятий
+    path('categories-events/<int:pk>/events/', EventsView.as_view(), name='events'),                                        # Список событий / мероприятий
+    path('categories-events/<int:pk>/events/<int:pk>/event-details/', EventDetailsView.as_view(), name='event_details'),    # Список событий / мероприятий
+    path('eco-habits-tracker/', EcoHabitsTrackerView.as_view(), name='eco_habits_tracker'),                                 # Трекер зеленых привычек
+    path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),                                 # Трекер зеленых заданий
+    path('eco-task-details/', EcoTaskDetailsView.as_view(), name='eco_task_details'),                                 # Детали зелённого задание
+
+    # Главная, основные страницы
+    path('', IndexView.as_view(), name='main'),
+    path('categories/', CategoriesView.as_view(), name='categories'),    # Зеленый вуз
+    path('eco-habits/', EcoHabitsView.as_view(), name='eco_habits'),    # Сортировка бу вещей / мусора
+
+    # Информирование
+    path('news/', BlogView.as_view(), name='blog'),     # Лента событий, мероприятий и т.п
+    path('add_news_post/', AddBlogPostView.as_view(), name='add_news_post'),
+
+    # Системные страницы
+    path('upload-file/', UploadFileView.as_view(), name='upload_file'),
+    path('no-access/', NoAccessView.as_view(), name='no-access'),
+
+    # path('projects/', ProjectsView.as_view(), name='projects'),
+    # path('projects/create/', ProjectCreateView.as_view(), name='project_create'),
+    # path('projects/create/type/', ProjectTypeCreateView.as_view(), name='project_type_create'),
+    # path('projects/<int:pk>/edit/', ProjectUpdateView.as_view(), name='project_edit'),
+    # path('projects/<int:pk>/delete/', ProjectsDeleteView.as_view(), name='project_delete'),
+    # path('app/blender/', BlenderWorkspaceView.as_view(), name='blender_workspace'),
+    # path('start-blender/', BlenderStartView.as_view(), name='start_blender'),
     path('contacts/', ContactsView.as_view(), name='contacts'),
     path('about/', AboutView.as_view(), name='about'),
     path('application/', ApplicationsView.as_view(), name='application'),
-    path('blog/', BlogView.as_view(), name='blog'),
     path('other/', OtherView.as_view(), name='other'),
-    path('profile/', ProfileView.as_view(), name='profile'),
-    path('participant/', ParticipantView.as_view(), name='participant'),
-    path('leader/', LeaderView.as_view(), name='leader'),
-    path('admin/', AdminView.as_view(), name='admin'),
-    path('content_manager/', ContentManagerView.as_view(), name='content_manager'),
-    path('add_blog_post/', AddBlogPostView.as_view(), name='add_blog_post'),
-    path('no-access/', NoAccessView.as_view(), name='no-access'),
     path(
         'login/',
         LoginView.as_view(
@@ -71,11 +88,11 @@ urlpatterns = [
         ),
         name="logout",
     ),
-    path(
-        "projects/<int:pk>/",
-        ProjectDetailsView.as_view(),
-        name="project"
-    ),
+    # path(
+    #     "projects/<int:pk>/",
+    #     ProjectDetailsView.as_view(),
+    #     name="project"
+    # ),
 ]
 
 if settings.DEBUG:
