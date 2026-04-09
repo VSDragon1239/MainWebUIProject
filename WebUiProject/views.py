@@ -1,7 +1,7 @@
-import base64
+# import base64
 import logging
-import os
-import time
+# import os
+# import time
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User, Group
@@ -18,10 +18,10 @@ from .models import Project, Blog, BlogImage, ProjectType
 from .permissions import RoleRequiredMixin
 
 import requests
-import json
+# import json
 from django.shortcuts import render
 from django.views import View
-from django.http import StreamingHttpResponse
+# from django.http import StreamingHttpResponse
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -41,80 +41,80 @@ class IndexView(TemplateView):
         return context
 
 
-class RagChatBotView(TemplateView):
-    template_name = "pages/chatbot.html"
+# class RagChatBotView(TemplateView):
+#     template_name = "pages/chatbot.html"
+#
+#     def get(self, request, *args, **kwargs):
+#         context = self.get_context_data()
+#         return render(request, self.template_name, context)
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         blogs_list = Blog.objects.all()
+#         context["blogs_list"] = blogs_list
+#         return context
 
-    def get(self, request, *args, **kwargs):
-        context = self.get_context_data()
-        return render(request, self.template_name, context)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        blogs_list = Blog.objects.all()
-        context["blogs_list"] = blogs_list
-        return context
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class StreamChatView(View):
-    def post(self, request, *args, **kwargs):
-        prompt = request.POST.get('prompt', '')
-
-        if not prompt:
-            return JsonResponse({'error': 'Пустой запрос'}, status=400)
-
-        # Проверка настроек
-        try:
-            api_key = settings.ANYTHINGLLM_API_KEY
-            api_base_url = settings.ANYTHINGLLM_API_URL.rstrip('/')  # Убираем слэш в конце
-            workspace = settings.ANYTHINGLLM_WORKSPACE
-        except AttributeError as e:
-            err_msg = f"Ошибка конфигурации: в settings.py не найдена переменная {e}"
-            logger.error(err_msg)
-            return JsonResponse({'error': err_msg}, status=500)
-
-        def event_stream():
-            try:
-                # ПРАВИЛЬНЫЙ ЭНДПОИНТ ИЗ ДОКУМЕНТАЦИИ
-                url = f"{api_base_url}/api/v1/workspace/{workspace}/stream-chat"
-
-                payload = {
-                    "message": prompt,
-                    "mode": "chat"
-                }
-                headers = {
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json"
-                }
-
-                # Выполняем запрос к AnythingLLM
-                response = requests.post(url, json=payload, headers=headers, stream=True, timeout=60)
-
-                # Если API вернуло ошибку (не 200)
-                if response.status_code != 200:
-                    error_text = response.text
-                    try:
-                        error_json = response.json()
-                        error_text = error_json.get('error', error_text)
-                    except:
-                        pass
-                    yield f"data: {json.dumps({'error': f'API Error {response.status_code}: {error_text}'})}\n\n"
-                    return
-
-                # Читаем поток и передаем его клиенту
-                for line in response.iter_lines():
-                    if line:
-                        decoded_line = line.decode('utf-8')
-                        # AnythingLLM присылает данные в формате: "data: {...}"
-                        yield f"{decoded_line}\n\n"
-
-            except requests.exceptions.ConnectionError:
-                yield f"data: {json.dumps({'error': 'Невозможно подключиться к AnythingLLM серверу'})}\n\n"
-            except Exception as e:
-                logger.error(f"Stream error: {str(e)}", exc_info=True)
-                yield f"data: {json.dumps({'error': f'Внутренняя ошибка сервера: {str(e)}'})}\n\n"
-
-        return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
+# @method_decorator(csrf_exempt, name='dispatch')
+# class StreamChatView(View):
+#     def post(self, request, *args, **kwargs):
+#         prompt = request.POST.get('prompt', '')
+#
+#         if not prompt:
+#             return JsonResponse({'error': 'Пустой запрос'}, status=400)
+#
+#         # Проверка настроек
+#         try:
+#             api_key = settings.ANYTHINGLLM_API_KEY
+#             api_base_url = settings.ANYTHINGLLM_API_URL.rstrip('/')  # Убираем слэш в конце
+#             workspace = settings.ANYTHINGLLM_WORKSPACE
+#         except AttributeError as e:
+#             err_msg = f"Ошибка конфигурации: в settings.py не найдена переменная {e}"
+#             logger.error(err_msg)
+#             return JsonResponse({'error': err_msg}, status=500)
+#
+#         def event_stream():
+#             try:
+#                 # ПРАВИЛЬНЫЙ ЭНДПОИНТ ИЗ ДОКУМЕНТАЦИИ
+#                 url = f"{api_base_url}/api/v1/workspace/{workspace}/stream-chat"
+#
+#                 payload = {
+#                     "message": prompt,
+#                     "mode": "chat"
+#                 }
+#                 headers = {
+#                     "Authorization": f"Bearer {api_key}",
+#                     "Content-Type": "application/json"
+#                 }
+#
+#                 # Выполняем запрос к AnythingLLM
+#                 response = requests.post(url, json=payload, headers=headers, stream=True, timeout=60)
+#
+#                 # Если API вернуло ошибку (не 200)
+#                 if response.status_code != 200:
+#                     error_text = response.text
+#                     try:
+#                         error_json = response.json()
+#                         error_text = error_json.get('error', error_text)
+#                     except:
+#                         pass
+#                     yield f"data: {json.dumps({'error': f'API Error {response.status_code}: {error_text}'})}\n\n"
+#                     return
+#
+#                 # Читаем поток и передаем его клиенту
+#                 for line in response.iter_lines():
+#                     if line:
+#                         decoded_line = line.decode('utf-8')
+#                         # AnythingLLM присылает данные в формате: "data: {...}"
+#                         yield f"{decoded_line}\n\n"
+#
+#             except requests.exceptions.ConnectionError:
+#                 yield f"data: {json.dumps({'error': 'Невозможно подключиться к AnythingLLM серверу'})}\n\n"
+#             except Exception as e:
+#                 logger.error(f"Stream error: {str(e)}", exc_info=True)
+#                 yield f"data: {json.dumps({'error': f'Внутренняя ошибка сервера: {str(e)}'})}\n\n"
+#
+#         return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -167,39 +167,39 @@ class UploadFileView(View):
 
 
 # Страница с проектами "projects"
-class ProjectsView(TemplateView):
-    template_name = "pages/projects.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        projects = Project.objects.all()
-        context["projects"] = projects
-        return context
+# class ProjectsView(TemplateView):
+#     template_name = "pages/projects.html"
+#
+#     def get(self, request, *args, **kwargs):
+#         return super().get(request, *args, **kwargs)
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         projects = Project.objects.all()
+#         context["projects"] = projects
+#         return context
 
 
 # Страница с деталями проекта по его id и данным
-class ProjectDetailsView(TemplateView):
-    template_name = "pages/project_details.html"
-    project = None
+# class ProjectDetailsView(TemplateView):
+#     template_name = "pages/project_details.html"
+#     project = None
+#
+#     def get(self, request, *args, **kwargs):
+#         project_id = kwargs.get('pk')
+#         self.project = Project.objects.get(pk=project_id)
+#         return self.render_to_response({
+#             'pk': project_id,
+#             'project': self.project,
+#         })
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context["project"] = self.project
+#         return context
 
-    def get(self, request, *args, **kwargs):
-        project_id = kwargs.get('pk')
-        self.project = Project.objects.get(pk=project_id)
-        return self.render_to_response({
-            'pk': project_id,
-            'project': self.project,
-        })
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["project"] = self.project
-        return context
-
-
-# Страница об предприятии (СКБ КБ)
+# Страница об предприятии
 class AboutView(TemplateView):
     template_name = "pages/about.html"
 
@@ -562,15 +562,15 @@ class NoAccessView(TemplateView):
         return context
 
 
-class BlenderWorkspaceView(TemplateView):
-    template_name = "pages/blender_workspace.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
+# class BlenderWorkspaceView(TemplateView):
+#     template_name = "pages/blender_workspace.html"
+#
+#     def get(self, request, *args, **kwargs):
+#         return super().get(request, *args, **kwargs)
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         return context
 
 
 # class BlenderStartView(View):
@@ -658,26 +658,26 @@ class BlenderWorkspaceView(TemplateView):
 #             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
-class BlenderStartView(View):
-    def post(self, request):
-        password = os.getenv('MY_WORKSPACE_PASSWORD', 'default_password')
-        # Просто возвращаем статичный URL нашего сервиса
-        # iframe_url = f"https://{request.get_host()}/lxdesk/"
-        iframe_url = f"https://194.87.214.67:8443/lxdesk/"
-        return JsonResponse({
-            'status': 'success',
-            'iframe_url': iframe_url,
-            'password': password
-        })
-        # return JsonResponse({
-        #     'status': 'success',
-        #     'iframe_url': 'https://194.87.214.67:8083/',
-        #     'password': ''
-        # })
+# class BlenderStartView(View):
+#     def post(self, request):
+#         password = os.getenv('MY_WORKSPACE_PASSWORD', 'default_password')
+#         # Просто возвращаем статичный URL нашего сервиса
+#         # iframe_url = f"https://{request.get_host()}/lxdesk/"
+#         iframe_url = f"https://194.87.214.67:8443/lxdesk/"
+#         return JsonResponse({
+#             'status': 'success',
+#             'iframe_url': iframe_url,
+#             'password': password
+#         })
+#         # return JsonResponse({
+#         #     'status': 'success',
+#         #     'iframe_url': 'https://194.87.214.67:8083/',
+#         #     'password': ''
+#         # })
 
 
 class AchievementsView(TemplateView):
-    template_name = "pages/index.html"
+    template_name = "pages/achievements.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -688,7 +688,7 @@ class AchievementsView(TemplateView):
 
 
 class CategoriesEventsView(TemplateView):
-    template_name = "pages/index.html"
+    template_name = "pages/categories_events.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -699,40 +699,7 @@ class CategoriesEventsView(TemplateView):
 
 
 class EventsView(TemplateView):
-    template_name = "pages/index.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class EcoHabitsTrackerView(TemplateView):
-    template_name = "pages/index.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class CategoriesView(TemplateView):
-    template_name = "pages/index.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class EcoHabitsView(TemplateView):
-    template_name = "pages/index.html"
+    template_name = "pages/events.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -743,7 +710,51 @@ class EcoHabitsView(TemplateView):
 
 
 class EventDetailsView(TemplateView):
-    template_name = "pages/index.html"
+    template_name = "pages/event_details.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class EcoHabitsTrackerView(TemplateView):
+    template_name = "pages/eco_habits_tracker.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class EcoHabitsCategoriesView(TemplateView):
+    template_name = "pages/eco_habits_categories.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class EcoHabitsView(TemplateView):
+    template_name = "pages/eco_habits.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class EcoHabitDetailsView(TemplateView):
+    template_name = "pages/eco_habit_details.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -754,7 +765,7 @@ class EventDetailsView(TemplateView):
 
 
 class EcoTasksTrackerView(TemplateView):
-    template_name = "pages/index.html"
+    template_name = "pages/eco_tasks_tracker.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -765,7 +776,7 @@ class EcoTasksTrackerView(TemplateView):
 
 
 class EcoTaskDetailsView(TemplateView):
-    template_name = "pages/index.html"
+    template_name = "pages/eco_task_details.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)

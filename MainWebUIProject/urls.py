@@ -20,8 +20,8 @@ from django.contrib.auth.views import LoginView, LogoutView
 from WebUiProject.views import IndexView, ContactsView, AboutView, ApplicationsView, BlogView, OtherView, \
     ProfileView, ParticipantView, AdminView, ContentManagerView, NoAccessView, UploadFileView, \
     AddBlogPostView, UserCreateView, UserUpdateView, UserDeleteView, AchievementsView, CategoriesEventsView, \
-    EventsView, EcoHabitsTrackerView, CategoriesView, EcoHabitsView, EventDetailsView, \
-    EcoTasksTrackerView, EcoTaskDetailsView
+    EventsView, EcoHabitsTrackerView, EcoHabitsCategoriesView, EcoHabitsView, EventDetailsView, \
+    EcoTasksTrackerView, EcoTaskDetailsView, EcoHabitDetailsView
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -43,15 +43,16 @@ urlpatterns = [
     path('achievements/', AchievementsView.as_view(), name='achievements'),                                              # Список достижений
     path('categories-events/', CategoriesEventsView.as_view(), name='categories_events'),                                  # Список категорий событий / мероприятий
     path('categories-events/<int:pk>/events/', EventsView.as_view(), name='events'),                                        # Список событий / мероприятий
-    path('categories-events/<int:pk>/events/<int:pk>/event-details/', EventDetailsView.as_view(), name='event_details'),    # Список событий / мероприятий
+    path('categories-events/<int:pk1>/events/<int:pk2>/event-details/', EventDetailsView.as_view(), name='event_details'),    # Список событий / мероприятий
     path('eco-habits-tracker/', EcoHabitsTrackerView.as_view(), name='eco_habits_tracker'),                                 # Трекер зеленых привычек
     path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),                                 # Трекер зеленых заданий
     path('eco-task-details/', EcoTaskDetailsView.as_view(), name='eco_task_details'),                                 # Детали зелённого задание
 
     # Главная, основные страницы
     path('', IndexView.as_view(), name='main'),
-    path('categories/', CategoriesView.as_view(), name='categories'),    # Зеленый вуз
-    path('eco-habits/', EcoHabitsView.as_view(), name='eco_habits'),    # Сортировка бу вещей / мусора
+    path('eco-habits-categories/', EcoHabitsCategoriesView.as_view(), name='eco_habits_categories'),    # Зеленый вуз
+    path('categories/<int:pk>/eco-habits/', EcoHabitsView.as_view(), name='eco_habits'),    # Сортировка бу вещей / мусора
+    path('categories/<int:pk1>/eco-habits/<int:pk2>/details', EcoHabitDetailsView.as_view(), name='eco_habit_details'),    # Детали экологических привычек
 
     # Информирование
     path('news/', BlogView.as_view(), name='blog'),     # Лента событий, мероприятий и т.п
