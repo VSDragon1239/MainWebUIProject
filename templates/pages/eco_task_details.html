@@ -8,7 +8,14 @@
 {% endblock %}
 
 {% block content_block_0 %}
-    <!-- Скрытие заголовка base.html, если необходимо -->
+    <h1>
+        МЗП ->
+        <a href="{% url 'profile' %}">Профиль</a> ->
+        <a href="{% url 'profile' %}">Профиль</a> ->
+        <a href="{% url 'profile' %}">Трекер задания: "pk"</a> ->
+        <a href="{% url 'eco_tasks_tracker' %}">Трекер задания: "pk"</a> ->
+        Детали задания
+    </h1>
 {% endblock %}
 
 {% block content_block_1 %}
