@@ -1,6 +1,5 @@
 import os
 import uuid
-from decimal import Decimal
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -165,11 +164,9 @@ class EcoWallet(models.Model):
         related_name="eco_wallet",
         verbose_name="Владелец"
     )
-    # ВАЖНО: DecimalField, а не Integer или Float!
-    balance = models.DecimalField(
-        max_digits=20,
-        decimal_places=4,
-        default=Decimal("0.0000"),
+    # ВАЖНО: Integer, так как это баллы, а не дубли с копейками!
+    balance = models.IntegerField(
+        default=0,
         verbose_name="Текущий баланс"
     )
 
@@ -205,10 +202,8 @@ class EcoCoinTransaction(models.Model):
         related_name="transactions",
         verbose_name="Кошелек"
     )
-    amount = models.DecimalField(
-        max_digits=20,
-        decimal_places=4,
-        verbose_name="Сумма (со знаком)"
+    amount = models.IntegerField(
+        verbose_name="Сумма (целое число)"
     )
     tx_type = models.CharField(
         max_length=30,
@@ -247,10 +242,8 @@ class EcoTask(models.Model):
     """Задание, которое создает Админ"""
     title = models.CharField(max_length=255, verbose_name="Название задания")
     description = models.TextField(blank=True, verbose_name="Описание")
-    reward = models.DecimalField(
-        max_digits=20,
-        decimal_places=4,
-        default=Decimal("10.0000"),
+    reward = models.IntegerField(
+        default=10,
         verbose_name="Награда (ECO)"
     )
     is_active = models.BooleanField(default=True, verbose_name="Активно")

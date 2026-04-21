@@ -1,7 +1,6 @@
 # import base64
 import logging
 from datetime import datetime
-from decimal import Decimal
 
 # import os
 # import time
@@ -896,8 +895,8 @@ class EcoTaskDetailsView(TemplateView):
         return context
 
 
-class MarkHabitDoneView(LoginRequiredMixin,
-                        View):  # LoginRequiredMixin гарантирует, что метод сработает только для авторизованных пользователей
+class MarkHabitDoneView(LoginRequiredMixin, View):  # LoginRequiredMixin гарантирует,
+                                                    # что метод сработает только для авторизованных пользователей
     def post(self, request, habit_id):
         try:
             # external_id формируем так: habit:5:user:2 (чтобы за один день за одну привычку дать коины 1 раз)
@@ -905,7 +904,7 @@ class MarkHabitDoneView(LoginRequiredMixin,
 
             new_balance = EcoCoinService.credit(
                 user=request.user,
-                amount=Decimal("5.0000"),
+                amount=5,
                 tx_type=EcoTransactionType.HABIT_TRACKED,
                 external_id=ext_id
             )
