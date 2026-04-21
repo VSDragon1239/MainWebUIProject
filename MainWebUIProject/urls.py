@@ -21,7 +21,7 @@ from WebUiProject.views import IndexView, ContactsView, AboutView, ApplicationsV
     ProfileView, ParticipantView, AdminView, ContentManagerView, NoAccessView, UploadFileView, \
     AddBlogPostView, UserCreateView, UserUpdateView, UserDeleteView, AchievementsView, CategoriesEventsView, \
     EventsView, EcoHabitsTrackerView, EcoHabitsCategoriesView, EcoHabitsView, EventDetailsView, \
-    EcoTasksTrackerView, EcoTaskDetailsView, EcoHabitDetailsView
+    EcoTasksTrackerView, EcoTaskDetailsView, EcoHabitDetailsView, CompleteEcoTaskView
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -46,7 +46,9 @@ urlpatterns = [
     path('categories-events/<int:pk1>/events/<int:pk2>/event-details/', EventDetailsView.as_view(), name='event_details'),    # Список событий / мероприятий
     path('eco-habits-tracker/', EcoHabitsTrackerView.as_view(), name='eco_habits_tracker'),                                 # Трекер зеленых привычек
     path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),                                 # Трекер зеленых заданий
-    path('eco-task-details/', EcoTaskDetailsView.as_view(), name='eco_task_details'),                                 # Детали зелённого задание
+    path('eco-task-details/<int:pk>/', EcoTaskDetailsView.as_view(), name='eco_task_details'),                          # Детали зелённого задание
+    # URL для AJAX запроса при нажатии на кнопку
+    path('eco-tasks/complete/<int:task_id>/', CompleteEcoTaskView.as_view(), name='eco_task_complete'),
 
     # Главная, основные страницы
     path('', IndexView.as_view(), name='main'),

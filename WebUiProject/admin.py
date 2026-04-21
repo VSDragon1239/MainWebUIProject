@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ProjectType, Project, Blog, BlogImage
+from .models import ProjectType, Project, Blog, BlogImage, EcoTask, UserTaskCompletion, EcoCoinTransaction
 
 
 @admin.register(ProjectType)
@@ -22,3 +22,16 @@ class BlogAdmin(admin.ModelAdmin):
 @admin.register(BlogImage)
 class BlogImageAdmin(admin.ModelAdmin):
     list_display = ("blog", "caption")
+
+
+@admin.register(EcoTask)
+class EcoTaskAdmin(admin.ModelAdmin):
+    list_display = ('title', 'reward', 'is_active')
+    list_filter = ('is_active',)
+    search_fields = ('title',)
+
+
+@admin.register(UserTaskCompletion)
+class UserTaskCompletionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'task', 'completed_at')
+    readonly_fields = ('user', 'task', 'completed_at')

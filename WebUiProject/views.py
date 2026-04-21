@@ -1,5 +1,8 @@
 # import base64
 import logging
+from datetime import datetime
+from decimal import Decimal
+
 # import os
 # import time
 
@@ -10,11 +13,13 @@ from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import TemplateView, FormView, CreateView, ListView, UpdateView, DeleteView
+from django.views.generic import TemplateView, FormView, CreateView, ListView, UpdateView, DeleteView, DetailView
 from django.contrib import messages
+from django.db import transaction as db_transaction, IntegrityError
+from django.shortcuts import get_object_or_404
 
 from .forms import BlogPostForm, BlogPostImageFormSet, UserUpdateForm, UserCreateForm, ProjectForm, ProjectTypeForm
-from .models import Project, Blog, BlogImage, ProjectType
+from .models import Project, Blog, BlogImage, ProjectType, EcoTransactionType, EcoTask, UserTaskCompletion
 from .permissions import RoleRequiredMixin
 
 import requests
@@ -23,6 +28,8 @@ from django.shortcuts import render
 from django.views import View
 # from django.http import StreamingHttpResponse
 from django.conf import settings
+
+from .services import EcoCoinService
 
 logger = logging.getLogger(__name__)
 
@@ -280,6 +287,16 @@ class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
 
         user = self.request.user
         context['user'] = user
+
+        # 1. Баланс пользователя
+        context['eco_balance'] = EcoCoinService.get_balance(user)
+
+        # 2. Выполненные задания (сортируем от новых к старым)
+        # select_related('task') забирает данные о самом задании одним запросом (оптимизация)
+        context['completed_tasks'] = UserTaskCompletion.objects.filter(
+            user=user
+        ).select_related('task').order_by('-completed_at')
+
         return context
 
 
@@ -772,7 +789,100 @@ class EcoTasksTrackerView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        completed_ids = UserTaskCompletion.objects.filter(
+            user=self.request.user
+        ).values_list('task_id', flat=True)
+
+        # 2. Выводим ТОЛЬКО те активные задания, которых НЕТ в списке выполненных
+        tasks = EcoTask.objects.filter(is_active=True).exclude(pk__in=completed_ids)
+
+        context['tasks'] = tasks
+        context['completed_task_ids'] = set(completed_ids)
         return context
+
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #
+    #     # Берем только активные задания
+    #     tasks = EcoTask.objects.filter(is_active=True)
+    #
+    #     # Получаем ID заданий, которые ТЕКУЩИЙ пользователь уже выполнил
+    #     completed_ids = UserTaskCompletion.objects.filter(
+    #         user=self.request.user
+    #     ).values_list('task_id', flat=True)
+    #
+    #     context['tasks'] = tasks
+    #     context['completed_task_ids'] = set(completed_ids)  # Используем set для быстрого поиска в шаблоне
+    #
+    #     return context
+
+
+class EcoTaskDetailsView(LoginRequiredMixin, DetailView):   # DetailView от Django — он сам найдет задачу в БД по ID из URL или выдаст красивую ошибку 404, если задача не существует.
+    """Детальная страница конкретного задания"""
+    model = EcoTask
+    template_name = "pages/eco_task_details.html"
+    context_object_name = 'task'  # В шаблоне объект будет доступен как {{ task }}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Проверяем, выполнил ли текущий пользователь ЭТУ задачу
+        is_completed = UserTaskCompletion.objects.filter(
+            user=self.request.user,
+            task=self.object
+        ).exists()
+
+        context['is_completed'] = is_completed
+        return context
+
+
+class CompleteEcoTaskView(LoginRequiredMixin, View):
+    """
+    Эта вьюха срабатывает когда пользователь нажимает кнопку "Выполнить".
+    """
+
+    def post(self, request, task_id):
+        task = get_object_or_404(EcoTask, pk=task_id, is_active=True)
+
+        # 1. Проверка на уровне приложения (чтобы не гонять лишние SQL запросы к БД)
+        if UserTaskCompletion.objects.filter(user=request.user, task=task).exists():
+            return JsonResponse({"error": "Вы уже выполнили это задание"}, status=400)
+
+        # 2. Формируем уникальный ключ для нашего сервиса
+        external_id = f"task:{task.id}:user:{request.user.id}"
+
+        try:
+            # Оборачиваем в atomic: если коины не начислятся, факт выполнения тоже не запишется
+            with db_transaction.atomic():
+
+                # Вызываем наш сервис! Он заблокирует кошелек и обновит баланс
+                new_balance = EcoCoinService.credit(
+                    user=request.user,
+                    amount=task.reward,
+                    tx_type=EcoTransactionType.TASK_COMPLETED,
+                    external_id=external_id
+                )
+
+                # Записываем факт выполнения ТОЛЬКО если транзакция с коинами прошла успешно
+                UserTaskCompletion.objects.create(user=request.user, task=task)
+
+            # Возвращаем успешный ответ и НОВЫЙ баланс для обновления на экране
+            return JsonResponse({
+                "status": "success",
+                "message": f"+{task.reward} ECO получено!",
+                "new_balance": str(new_balance)
+            })
+
+        except IntegrityError:
+            # Срабатывает, если concurrent-запрос (две открытые вкладки) прошли проверку выше одновременно,
+            # но база данных (через UniqueConstraint в сервисе или unique_together) отдала ошибку дубликата.
+            return JsonResponse({"error": "Задание уже было выполнено (система)"}, status=400)
+
+        except Exception as e:
+            # Логируем непредвиденную ошибку (например, падение БД)
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error completing task {task_id}: {str(e)}")
+            return JsonResponse({"error": "Произошла ошибка на сервере"}, status=500)
 
 
 class EcoTaskDetailsView(TemplateView):
@@ -784,3 +894,23 @@ class EcoTaskDetailsView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
+
+
+class MarkHabitDoneView(LoginRequiredMixin,
+                        View):  # LoginRequiredMixin гарантирует, что метод сработает только для авторизованных пользователей
+    def post(self, request, habit_id):
+        try:
+            # external_id формируем так: habit:5:user:2 (чтобы за один день за одну привычку дать коины 1 раз)
+            ext_id = f"habit:{habit_id}:user:{request.user.id}:date:{datetime.now().strftime('%Y-%m-%d')}"
+
+            new_balance = EcoCoinService.credit(
+                user=request.user,
+                amount=Decimal("5.0000"),
+                tx_type=EcoTransactionType.HABIT_TRACKED,
+                external_id=ext_id
+            )
+            return JsonResponse({"status": "success", "new_balance": str(new_balance)})
+
+        except Exception as e:
+            # Если попытка дублирования (UniqueConstraint) или другая ошибка
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)

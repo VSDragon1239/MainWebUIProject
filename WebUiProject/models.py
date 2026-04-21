@@ -1,5 +1,6 @@
 import os
 import uuid
+from decimal import Decimal
 
 from django.db import models
 from django.contrib.auth.models import User
@@ -45,10 +46,12 @@ class Project(models.Model):
         verbose_name="Изображение"
     )
     name = models.CharField("Название", max_length=200)
-    type = models.ForeignKey(ProjectType, on_delete=models.SET_NULL, null=True, verbose_name="Тип проекта",)
+    type = models.ForeignKey(ProjectType, on_delete=models.SET_NULL, null=True, verbose_name="Тип проекта", )
     description = models.TextField(blank=True)
-    leaders = models.ManyToManyField(User, related_name="led_projects", limit_choices_to=Q(groups__name="Руководители"), verbose_name="Руководители",)
-    members = models.ManyToManyField(User, related_name="projects", limit_choices_to=Q(groups__name="Участники"), verbose_name="Участники",)
+    leaders = models.ManyToManyField(User, related_name="led_projects", limit_choices_to=Q(groups__name="Руководители"),
+                                     verbose_name="Руководители", )
+    members = models.ManyToManyField(User, related_name="projects", limit_choices_to=Q(groups__name="Участники"),
+                                     verbose_name="Участники", )
     start_date = models.DateField("Дата начала", auto_now_add=True)
     end_date = models.DateField("Дата завершения", null=True, blank=True)
 
@@ -113,3 +116,168 @@ class BlogImage(models.Model):
 
     def __str__(self):
         return f"Изображение для {self.blog.title}"
+
+
+# --- СИСТЕМА ЭКО-КОИНОВ --- 0
+
+
+# class EcoWallet(models.Model):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="eco_wallet")
+#     balance = models.DecimalField(max_digits=20, decimal_places=4, default=Decimal("0.0000"))
+#
+#     class Meta:
+#         verbose_name = "Кошелек эко-коинов"
+#         verbose_name_plural = "Кошельки эко-коинов"
+#
+#     def __str__(self):
+#         return f"{self.user.username}: {self.balance} ECO"
+
+
+# class EcoTransactionType(models.TextChoices):
+#     BLOG_CREATED = "blog_created", "Создание статьи"
+#     PROJECT_CREATED = "project_created", "Создание проекта"
+#     TASK_COMPLETED = "task_completed", "Выполнение эко-задачи"
+#     HABIT_TRACKED = "habit_tracked", "Отметка эко-привычки"
+#     SHOP_PURCHASE = "shop_purchase", "Покупка в магазине"
+
+
+# class EcoCoinTransaction(models.Model):
+#     wallet = models.ForeignKey(EcoWallet, on_delete=models.PROTECT, related_name="transactions")
+#     amount = models.DecimalField(max_digits=20, decimal_places=4)
+#     tx_type = models.CharField(max_length=30, choices=EcoTransactionType.choices)
+#     external_id = models.CharField(max_length=255, blank=True, null=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#
+#     class Meta:
+#         verbose_name = "Транзакция эко-коинов"
+#         verbose_name_plural = "Транзакции эко-коинов"
+#         constraints = [
+#             models.UniqueConstraint(
+#                 fields=['wallet', 'tx_type', 'external_id'],
+#                 condition=models.Q(external_id__isnull=False),
+#                 name='unique_eco_transaction'
+#             )
+#         ]
+class EcoWallet(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="eco_wallet",
+        verbose_name="Владелец"
+    )
+    # ВАЖНО: DecimalField, а не Integer или Float!
+    balance = models.DecimalField(
+        max_digits=20,
+        decimal_places=4,
+        default=Decimal("0.0000"),
+        verbose_name="Текущий баланс"
+    )
+
+    class Meta:
+        verbose_name = "Кошелек эко-коинов"
+        verbose_name_plural = "Кошельки эко-коинов"
+
+    def __str__(self):
+        return f"Кошелек: {self.user.username} ({self.balance} ECO)"
+
+
+class EcoTransactionType(models.TextChoices):
+    # Начисления
+    PROJECT_CREATED = "project_created", "Создание проекта"
+    BLOG_PUBLISHED = "blog_published", "Публикация статьи"
+    DAILY_BONUS = "daily_bonus", "Ежедневный бонус"
+    MANUAL_REWARD = "manual_reward", "Ручное начисление (админом)"
+    # Списания
+    SHOP_PURCHASE = "shop_purchase", "Покупка в магазине"
+    # Переводы
+    TRANSFER_OUT = "transfer_out", "Перевод другому"
+    TRANSFER_IN = "transfer_in", "Перевод от другого"
+    TASK_COMPLETED = "task_completed", "Выполнение эко-задачи"
+
+
+class EcoCoinTransaction(models.Model):
+    """
+    Журнал операций (Ledger). Никогда не изменяйте записи в этой таблице (только CREATE).
+    """
+    wallet = models.ForeignKey(
+        EcoWallet,
+        on_delete=models.PROTECT,
+        related_name="transactions",
+        verbose_name="Кошелек"
+    )
+    amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=4,
+        verbose_name="Сумма (со знаком)"
+    )
+    tx_type = models.CharField(
+        max_length=30,
+        choices=EcoTransactionType.choices,
+        verbose_name="Тип операции"
+    )
+    # Идемпотентность: позволяет не дать баллы дважды за одно действие
+    external_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="ID связанной сущности",
+        help_text="Например: 'blog:15' или 'project:42'"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата операции")
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Транзакция эко-коинов"
+        verbose_name_plural = "Транзакции эко-коинов"
+        # Защита от дублей на уровне БД
+        constraints = [
+            models.UniqueConstraint(
+                fields=['wallet', 'tx_type', 'external_id'],
+                condition=models.Q(external_id__isnull=False),
+                name='unique_eco_transaction_for_entity'
+            )
+        ]
+
+    def __str__(self):
+        sign = "+" if self.amount > 0 else ""
+        return f"{self.wallet.user.username}: {sign}{self.amount} ({self.get_tx_type_display()})"
+
+
+class EcoTask(models.Model):
+    """Задание, которое создает Админ"""
+    title = models.CharField(max_length=255, verbose_name="Название задания")
+    description = models.TextField(blank=True, verbose_name="Описание")
+    reward = models.DecimalField(
+        max_digits=20,
+        decimal_places=4,
+        default=Decimal("10.0000"),
+        verbose_name="Награда (ECO)"
+    )
+    is_active = models.BooleanField(default=True, verbose_name="Активно")
+
+    class Meta:
+        verbose_name = "Эко-задание"
+        verbose_name_plural = "Эко-задания"
+
+    def __str__(self):
+        return f"{self.title} (+{self.reward} ECO)"
+
+
+class UserTaskCompletion(models.Model):
+    """
+    Связующая таблица. Нужна для двух вещей:
+    1. Чтобы в UI скрывать уже выполненные задания.
+    2. Двойной контроль (наряду с external_id в транзакциях).
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="completed_tasks")
+    task = models.ForeignKey(EcoTask, on_delete=models.PROTECT, related_name="completions")
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Выполненное задание"
+        verbose_name_plural = "Выполненные задания"
+        # Пользователь может выполнить конкретное задание только ОДИН раз
+        unique_together = ['user', 'task']
+
+    def __str__(self):
+        return f"{self.user.username} выполнил '{self.task.title}'"
