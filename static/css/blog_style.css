@@ -1,98 +1,86 @@
-/* blog_style.css */
-
 .content {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 100%;
-    padding: 20px;
+    width: 99%;
 }
+
+/*.blog-posts {*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*    width: 715px;*/
+/*}*/
 
 .blog-posts {
     display: flex;
-    flex-direction: column; /* Лучше столбец для чтения */
-    max-width: 900px; /* Оптимальная ширина для чтения */
-    width: 100%;
-    gap: 25px; /* Отступ между постами */
+    flex-direction: row;
+    width: 715px;
+    align-content: center;
+    justify-content: center;
 }
 
 .blog-post {
-    border: 1px solid #dcdde1;
-    border-radius: 12px;
-    padding: 20px;
-    background-color: white;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    transition: transform 0.2s, box-shadow 0.2s;
-    border-left: 4px solid #00cec9; /* Бирюзовый акцент */
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 24px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: box-shadow 0.2s ease-in-out;
 }
 
 .blog-post:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 .blog-post-image {
     display: flex;
-    margin-bottom: 15px;
-    gap: 10px;
-    flex-wrap: wrap; /* Адаптивность для картинок */
+    margin-bottom: 12px;
+    gap: 8px;
+    flex-wrap: nowrap;
+    flex-direction: row;
 }
 
 .blog-post-image img {
-    border-radius: 8px;
-    max-width: 100%;
-    height: auto;
+    border-radius: 10px;
 }
 
+.blog-post-image
+
 .blog-post-thumb {
-    width: 120px;
-    height: 80px;
+    width: 100px;
+    height: 70px;
     object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid #dcdde1;
+    border-radius: 4px;
+    border: 1px solid #ccc;
 }
 
 .blog-post-title {
-    margin: 0 0 10px;
-    font-size: 1.5rem;
-    color: #1e2a38; /* Темно-синий */
-    font-family: "KellySlab", serif;
+    margin: 0 0 8px;
+    font-size: 1.4rem;
+    color: #003366; /* синий — как ты любишь */
 }
 
 .blog-post-meta {
     font-size: 0.9rem;
-    color: #636e72;
-    margin-bottom: 15px;
-    display: flex;
-    gap: 15px;
+    color: #666;
+    margin-bottom: 12px;
+}
+
+.blog-post-meta span {
+    margin-right: 12px;
 }
 
 .blog-post-body {
     font-size: 1rem;
-    line-height: 1.6;
-    margin-bottom: 15px;
-    color: #2d3436;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    color: #333;
 }
 
 .blog-post-footer {
     font-size: 0.85rem;
-    color: #b2bec3; /* Светло-серый */
-    border-top: 1px solid #f0f2f5;
-    padding-top: 10px;
-}
-
-/* Адаптивность для блога */
-@media (max-width: 600px) {
-    .blog-post {
-        padding: 15px;
-    }
-
-    .blog-post-title {
-        font-size: 1.2rem;
-    }
-
-    .blog-post-thumb {
-        width: 100px;
-        height: 70px;
-    }
+    color: #999;
+    border-top: 1px solid #eee;
+    padding-top: 8px;
 }

@@ -22,7 +22,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG') == 'True'
+# DEBUG = os.getenv('DEBUG') == 'True'
+DEBUG = True
 
 hosts = os.getenv(
     'DJANGO_ALLOWED_HOSTS',
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'WebUiProject.apps.WebUiProjectConfig',
+    'WebUIProjectGreenZabGU.apps.WebuiprojectgreenzabguConfig',
     'imagekit',
 ]
 
@@ -74,7 +76,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'WebUiProject.context_processors.eco_balance',  # Теперь в любом HTML шаблоне вы можете писать: {{ user_eco_balance }} ECO.
+                'WebUIProjectGreenZabGU.context_processors.eco_balance',  # Теперь в любом HTML шаблоне вы можете писать: {{ user_eco_balance }} ECO.
             ],
         },
     },

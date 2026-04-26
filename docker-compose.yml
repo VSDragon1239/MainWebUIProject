@@ -14,7 +14,7 @@ services:
 
   web:
     build: .
-    command: gunicorn MainWebUIProject.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120
+    command: gunicorn MainWebUIProject.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120 --reload
     volumes:
       - ./:/app
       - static_volume:/app/staticfiles

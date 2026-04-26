@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.db import transaction as db_transaction
 from django.db.models import F
 from django.utils import timezone
-from .models import EcoWallet, EcoCoinTransaction, EcoTransactionType, UserHabitLog
+from WebUiProject.models import EcoWallet, EcoCoinTransaction, EcoTransactionType, UserHabitLog
 
 
 class InsufficientFundsError(Exception):

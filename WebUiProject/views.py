@@ -1,44 +1,75 @@
-# import base64
 import logging
-from datetime import datetime
-
-# import os
-# import time
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User, Group
-from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.utils import timezone
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import TemplateView, FormView, CreateView, ListView, UpdateView, DeleteView, DetailView
+from django.views.generic import TemplateView, FormView, CreateView, ListView, UpdateView, DeleteView
 from django.contrib import messages
-from django.db import transaction as db_transaction, IntegrityError
-from django.shortcuts import get_object_or_404
-from django.http import Http404
 
-from .forms import BlogPostForm, BlogPostImageFormSet, UserUpdateForm, UserCreateForm, ProjectForm, ProjectTypeForm, \
+from WebUIProjectGreenZabGU.forms import UserUpdateForm, UserCreateForm, \
     ProfileAvatarForm
-from .models import Project, Blog, BlogImage, ProjectType, EcoTransactionType, EcoTask, UserTaskCompletion, Profile, \
-    EcoHabit, UserHabitLog, EcoHabitCategory
-from .permissions import RoleRequiredMixin
+from .models import Blog, UserTaskCompletion, Profile
+from WebUIProjectGreenZabGU.permissions import RoleRequiredMixin
 
-import requests
-# import json
 from django.shortcuts import render
 from django.views import View
-# from django.http import StreamingHttpResponse
-from django.conf import settings
 
-from .services import EcoCoinService
+from WebUIProjectGreenZabGU.services import EcoCoinService
 
 logger = logging.getLogger(__name__)
 
 
+# @method_decorator(csrf_exempt, name='dispatch')
+# class UploadFileView(View):
+#     def post(self, request, *args, **kwargs):
+#         uploaded_file = request.FILES.get('file')
+#         if not uploaded_file:
+#             return JsonResponse({'error': 'Файл не найден'}, status=400)
+#
+#         try:
+#             api_key = settings.ANYTHINGLLM_API_KEY
+#             api_base_url = settings.ANYTHINGLLM_API_URL.rstrip('/')
+#             workspace = settings.ANYTHINGLLM_WORKSPACE
+#         except AttributeError as e:
+#             return JsonResponse({'error': f'Ошибка конфигурации: {e}'}, status=500)
+#
+#         try:
+#             # 1. Загрузка документа
+#             upload_url = f"{api_base_url}/api/v1/document/upload"
+#             headers = {"Authorization": f"Bearer {api_key}", "Accept": "application/json"}
+#             files = {'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)}
+#
+#             response = requests.post(upload_url, files=files, headers=headers)
+#             if response.status_code != 200:
+#                 return JsonResponse({'error': f'Ошибка загрузки файла: {response.text}'}, status=500)
+#
+#             upload_data = response.json()
+#
+#             # Получаем имя документа из ответа
+#             doc_name = None
+#             if upload_data.get('documents'):
+#                 # Пытаемся получить name, если нет - location
+#                 doc_name = upload_data['documents'][0].get('name') or upload_data['documents'][0].get('location')
+#
+#             if not doc_name:
+#                 return JsonResponse({'error': 'Не удалось получить имя документа из ответа API'}, status=500)
+#
+#             # 2. Добавление в Workspace (Embedding)
+#             embed_url = f"{api_base_url}/api/v1/workspace/{workspace}/update-embeddings"
+#             embed_payload = {"adds": [doc_name]}
+#
+#             response = requests.post(embed_url, json=embed_payload, headers=headers)
+#             if response.status_code != 200:
+#                 return JsonResponse({'error': f'Ошибка встраивания: {response.text}'}, status=500)
+#
+#             return JsonResponse({'status': 'success', 'filename': uploaded_file.name, 'doc_name': doc_name})
+#
+#         except Exception as e:
+#             return JsonResponse({'error': str(e)}, status=500)
+
 class IndexView(TemplateView):
-    template_name = "pages/index.html"
+    template_name = "webuiproject/pages/index.html"
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data()
@@ -49,164 +80,6 @@ class IndexView(TemplateView):
         blogs_list = Blog.objects.all()
         context["blogs_list"] = blogs_list
         return context
-
-
-# class RagChatBotView(TemplateView):
-#     template_name = "pages/chatbot.html"
-#
-#     def get(self, request, *args, **kwargs):
-#         context = self.get_context_data()
-#         return render(request, self.template_name, context)
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         blogs_list = Blog.objects.all()
-#         context["blogs_list"] = blogs_list
-#         return context
-
-
-# @method_decorator(csrf_exempt, name='dispatch')
-# class StreamChatView(View):
-#     def post(self, request, *args, **kwargs):
-#         prompt = request.POST.get('prompt', '')
-#
-#         if not prompt:
-#             return JsonResponse({'error': 'Пустой запрос'}, status=400)
-#
-#         # Проверка настроек
-#         try:
-#             api_key = settings.ANYTHINGLLM_API_KEY
-#             api_base_url = settings.ANYTHINGLLM_API_URL.rstrip('/')  # Убираем слэш в конце
-#             workspace = settings.ANYTHINGLLM_WORKSPACE
-#         except AttributeError as e:
-#             err_msg = f"Ошибка конфигурации: в settings.py не найдена переменная {e}"
-#             logger.error(err_msg)
-#             return JsonResponse({'error': err_msg}, status=500)
-#
-#         def event_stream():
-#             try:
-#                 # ПРАВИЛЬНЫЙ ЭНДПОИНТ ИЗ ДОКУМЕНТАЦИИ
-#                 url = f"{api_base_url}/api/v1/workspace/{workspace}/stream-chat"
-#
-#                 payload = {
-#                     "message": prompt,
-#                     "mode": "chat"
-#                 }
-#                 headers = {
-#                     "Authorization": f"Bearer {api_key}",
-#                     "Content-Type": "application/json"
-#                 }
-#
-#                 # Выполняем запрос к AnythingLLM
-#                 response = requests.post(url, json=payload, headers=headers, stream=True, timeout=60)
-#
-#                 # Если API вернуло ошибку (не 200)
-#                 if response.status_code != 200:
-#                     error_text = response.text
-#                     try:
-#                         error_json = response.json()
-#                         error_text = error_json.get('error', error_text)
-#                     except:
-#                         pass
-#                     yield f"data: {json.dumps({'error': f'API Error {response.status_code}: {error_text}'})}\n\n"
-#                     return
-#
-#                 # Читаем поток и передаем его клиенту
-#                 for line in response.iter_lines():
-#                     if line:
-#                         decoded_line = line.decode('utf-8')
-#                         # AnythingLLM присылает данные в формате: "data: {...}"
-#                         yield f"{decoded_line}\n\n"
-#
-#             except requests.exceptions.ConnectionError:
-#                 yield f"data: {json.dumps({'error': 'Невозможно подключиться к AnythingLLM серверу'})}\n\n"
-#             except Exception as e:
-#                 logger.error(f"Stream error: {str(e)}", exc_info=True)
-#                 yield f"data: {json.dumps({'error': f'Внутренняя ошибка сервера: {str(e)}'})}\n\n"
-#
-#         return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
-
-
-@method_decorator(csrf_exempt, name='dispatch')
-class UploadFileView(View):
-    def post(self, request, *args, **kwargs):
-        uploaded_file = request.FILES.get('file')
-        if not uploaded_file:
-            return JsonResponse({'error': 'Файл не найден'}, status=400)
-
-        try:
-            api_key = settings.ANYTHINGLLM_API_KEY
-            api_base_url = settings.ANYTHINGLLM_API_URL.rstrip('/')
-            workspace = settings.ANYTHINGLLM_WORKSPACE
-        except AttributeError as e:
-            return JsonResponse({'error': f'Ошибка конфигурации: {e}'}, status=500)
-
-        try:
-            # 1. Загрузка документа
-            upload_url = f"{api_base_url}/api/v1/document/upload"
-            headers = {"Authorization": f"Bearer {api_key}", "Accept": "application/json"}
-            files = {'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)}
-
-            response = requests.post(upload_url, files=files, headers=headers)
-            if response.status_code != 200:
-                return JsonResponse({'error': f'Ошибка загрузки файла: {response.text}'}, status=500)
-
-            upload_data = response.json()
-
-            # Получаем имя документа из ответа
-            doc_name = None
-            if upload_data.get('documents'):
-                # Пытаемся получить name, если нет - location
-                doc_name = upload_data['documents'][0].get('name') or upload_data['documents'][0].get('location')
-
-            if not doc_name:
-                return JsonResponse({'error': 'Не удалось получить имя документа из ответа API'}, status=500)
-
-            # 2. Добавление в Workspace (Embedding)
-            embed_url = f"{api_base_url}/api/v1/workspace/{workspace}/update-embeddings"
-            embed_payload = {"adds": [doc_name]}
-
-            response = requests.post(embed_url, json=embed_payload, headers=headers)
-            if response.status_code != 200:
-                return JsonResponse({'error': f'Ошибка встраивания: {response.text}'}, status=500)
-
-            return JsonResponse({'status': 'success', 'filename': uploaded_file.name, 'doc_name': doc_name})
-
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-
-
-# Страница с проектами "projects"
-# class ProjectsView(TemplateView):
-#     template_name = "pages/projects.html"
-#
-#     def get(self, request, *args, **kwargs):
-#         return super().get(request, *args, **kwargs)
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         projects = Project.objects.all()
-#         context["projects"] = projects
-#         return context
-
-
-# Страница с деталями проекта по его id и данным
-# class ProjectDetailsView(TemplateView):
-#     template_name = "pages/project_details.html"
-#     project = None
-#
-#     def get(self, request, *args, **kwargs):
-#         project_id = kwargs.get('pk')
-#         self.project = Project.objects.get(pk=project_id)
-#         return self.render_to_response({
-#             'pk': project_id,
-#             'project': self.project,
-#         })
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context["project"] = self.project
-#         return context
 
 
 # Страница об предприятии
@@ -263,31 +136,12 @@ class BlogView(ListView):
         return super().get_queryset().prefetch_related("images")
 
 
-# Другая страница
-class OtherView(TemplateView):
-    template_name = "pages/other.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
 # Страница профиля (доступна всем (Участнику, Руководителю, Контент-менеджеру, Администратору))
 class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
     required_roles = ["Участники", "Руководители", "Администраторы", "Контент менеджер"]
     login_url = "/login/"  # куда перенаправлять
     redirect_field_name = "next"  # параметр с origin
     template_name = "pages/profile.html"
-
-    # @property
-    # def get_role_name(self):
-    #     group = self.user.groups.first()
-    #     if self.user.is_superuser:
-    #         return "Системный Администратор"
-    #     return group.name if group else "Пользователь"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -328,25 +182,6 @@ class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
         return context
 
 
-# class EditProfileView(LoginRequiredMixin, UpdateView):
-#     model = Profile
-#     form_class = ProfileAvatarForm
-#     template_name = "pages/profile_edit.html"
-#     success_url = reverse_lazy('profile')  # Перенаправит обратно в профиль
-#
-#     def get_object(self, queryset=None):
-#         # Чтобы пользователь мог редактировать ТОЛЬКО свой профиль
-#         profile, _ = Profile.objects.get_or_create(user=request.user)
-#         return self.request.user.profile
-#     #
-#     # def get(self, request, *args, **kwargs):
-#     #     return super().get(request, *args, **kwargs)
-#     #
-#     # def get_context_data(self, **kwargs):
-#     #     context = super().get_context_data(**kwargs)
-#     #     return context
-
-
 class EditProfileView(LoginRequiredMixin, View):
     """Вьюха для обработки ДВУХ форм одновременно"""
 
@@ -379,69 +214,6 @@ class EditProfileView(LoginRequiredMixin, View):
         return render(request, 'pages/profile_edit.html', context)
 
 
-# Страница для участников
-#   Список проектов в которых участвуете, информация, доступ к документам, их редактирование, и т.д.
-class ParticipantView(RoleRequiredMixin, TemplateView):
-    required_roles = ['Участники']
-    template_name = "pages/participant.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-# Страница для руководителя проекта (-ов)
-#   Список проектов     -   добавить (в систему), изменить (данные (кто участвует), ссылки, документы), удалить (вместе со всем),
-#   Участников проекта  -   добавить (зарегистрировать в систему и добавить к проекту), изменить (в каком проекте участвует, в каком уже нет), удалить (из системы учетную запись)
-class LeaderView(RoleRequiredMixin, TemplateView):
-    required_roles = ['Руководители']
-    template_name = "pages/leaders.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-# Страница для администратора сайта
-#   Список руководителей    -   добавить (роль), изменить (роль), удалить (если нет других ролей - удаление учётной записи),
-#   Контент-менеджеров      -   добавить (роль), изменить (роль), удалить (зависит от других ролей, если их нет - удаление учётной записи),
-#   Участников в системе    -   добавить (создание учётной записи в систему), изменить (профиль), удалить (саму учётную запись)
-#   Работа с проектами (создание, изменени, удаление) и назначение ролей
-class AdminView(RoleRequiredMixin, TemplateView):
-    required_roles = ['Администраторы']
-    template_name = "pages/admin.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        # Проекты
-        context["projects"] = Project.objects.all().select_related('type').prefetch_related('leaders', 'members')
-
-        # Группы (для фильтрации)
-        leaders_group = Group.objects.get(name='Руководители')
-        managers_group = Group.objects.get(name='Контент менеджер')
-        members_group = Group.objects.get(name='Участники')
-
-        # Пользователи по категориям
-        context["leaders"] = User.objects.filter(groups=leaders_group)
-        context["managers"] = User.objects.filter(groups=managers_group)
-        context["members"] = User.objects.filter(groups=members_group)
-
-        # Все пользователи (для быстрого поиска)
-        context["users"] = User.objects.all()
-
-        return context
-
-
 class UserCreateView(RoleRequiredMixin, CreateView):
     required_roles = ['Администраторы', "Руководители"]
     template_name = "accounts/user_create_form.html"
@@ -455,70 +227,6 @@ class UserCreateView(RoleRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["groups"] = Group.objects.all()
-        return context
-
-
-class ProjectTypeCreateView(RoleRequiredMixin, CreateView):
-    required_roles = ['Администраторы']
-    model = ProjectType
-    form_class = ProjectTypeForm
-    template_name = "projects/project_type_create_form.html"  # не обязателен, будем бить через AJAX
-
-    def form_valid(self, form):
-        obj = form.save()
-        # если AJAX — возвращаем JSON, иначе редирект
-        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
-            return JsonResponse({"id": obj.pk, "name": obj.name}, status=201)
-        return super().form_valid(form)
-
-    def form_invalid(self, form):
-        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
-            return JsonResponse({"errors": form.errors}, status=400)
-        return super().form_invalid(form)
-
-
-class ProjectCreateView(RoleRequiredMixin, CreateView):
-    required_roles = ['Администраторы']
-    template_name = "projects/project_create_form.html"
-    form_class = ProjectForm
-    model = Project
-    success_url = reverse_lazy("admin")
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class ProjectUpdateView(RoleRequiredMixin, UpdateView):
-    required_roles = ['Администраторы', "Руководители"]
-    model = Project
-    form_class = ProjectForm
-    template_name = "projects/project__update_form.html"
-    success_url = reverse_lazy("admin")
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class ProjectsDeleteView(RoleRequiredMixin, UpdateView):
-    required_roles = ['Администраторы', "Руководители"]
-    model = Project
-    form_class = ProjectForm
-    template_name = "projects/project__update_form.html"
-    success_url = reverse_lazy("admin")
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
         return context
 
 
@@ -585,52 +293,6 @@ class UserDeleteView(RoleRequiredMixin, DeleteView):
         return resp
 
 
-class ContentManagerView(RoleRequiredMixin, TemplateView):
-    required_roles = ['Контент менеджер']
-    template_name = "pages/content_manager.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class AddBlogPostView(RoleRequiredMixin, CreateView):
-    required_roles = ['Контент менеджер']
-    template_name = "pages/add_blog_post.html"
-    model = Blog
-    form_class = BlogPostForm
-    success_url = reverse_lazy("blog")
-
-    def get(self, request, *args, **kwargs):
-        # form = self.form_class()
-        # formset = BlogPostImageFormSet()
-        # request["form"] = form
-        # request["formset"] = formset
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.POST:
-            context["formset"] = BlogPostImageFormSet(self.request.POST, self.request.FILES)
-        else:
-            context["formset"] = BlogPostImageFormSet()
-        return context
-
-    def form_valid(self, form):
-        context = self.get_context_data()
-        formset = context["formset"]
-        if formset.is_valid():
-            self.object = form.save()
-            formset.instance = self.object
-            formset.save()
-            return super().form_valid(form)
-        else:
-            return self.form_invalid(form)
-
-
 # Страница входа (доступно только тем кто не авторизован)
 class AuthView(FormView):
     template_name = "pages/auth.html"
@@ -656,442 +318,3 @@ class NoAccessView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
-
-
-# class BlenderWorkspaceView(TemplateView):
-#     template_name = "pages/blender_workspace.html"
-#
-#     def get(self, request, *args, **kwargs):
-#         return super().get(request, *args, **kwargs)
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         return context
-
-
-# class BlenderStartView(View):
-#     def post(self, request):
-#         client = docker.from_env()
-#
-#         # Генерируем уникальный порт (или используем случайный свободный)
-#         # Для простоты примера возьмем диапазон 6901-6999, но лучше проверять занятость
-#         # В продакшне лучше использовать Docker API для автоматического назначения порта
-#         host_port = 6901
-#         container_name = f"blender_user_{request.user.id}_{uuid.uuid4().hex[:6]}"
-#
-#         # Пароль для сессии KasmVNC
-#         vnc_password = "secure_password_123"
-#
-#         try:
-#             container = client.containers.run(
-#                 # image="kasmweb/blender:latest",
-#                 # image="kasmweb/chrome:1.15.0",
-#                 image="my-blender-image",  # Имя вашего собранного образа
-#                 name=container_name,
-#                 environment={"VNC_PW": vnc_password},
-#                 ports={'6901/tcp': None},
-#                 detach=True,
-#                 remove=True,
-#                 shm_size="512m",
-#                 # Важно для производительности Blender:
-#                 runtime="nvidia"  # Раскомментировать, если есть NVIDIA GPU на сервере
-#             )
-#
-#             # URL, по которому Nginx проксирует к этому порту
-#             # Структура URL будет описана в Nginx на следующем этапе
-#             iframe_url = f"https://{request.get_host()}/kasm-session/{host_port}/"
-#
-#             return JsonResponse({
-#                 'status': 'success',
-#                 'iframe_url': iframe_url,
-#                 'password': vnc_password  # В реальном приложении пароль лучше не отдавать, если включен SSO
-#             })
-#
-#         except Exception as e:
-#             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-
-# class BlenderStartView(View):
-#     def post(self, request):
-#         client = docker.from_env()
-#         container_name = f"blender_user_{request.user.id}_{uuid.uuid4().hex[:6]}"
-#         vnc_password = "password"
-#
-#         try:
-#             # 1. Запускаем контейнер
-#             container = client.containers.run(
-#                 image="my-blender-image",  # Имя вашего собранного образа
-#                 name=container_name,
-#                 environment={
-#                     "VNC_PW": vnc_password,
-#                     # ГЛАВНОЕ ИСПРАВЛЕНИЕ:
-#                     # Отключаем HTTPS внутри Kasm, чтобы Nginx мог проксировать HTTP
-#                     "VNC_DISABLE_HTTPS": "1",
-#                 },
-#                 # Автоматический выбор свободного порта
-#                 ports={'6901/tcp': None},
-#                 detach=True,
-#                 remove=True,
-#                 shm_size="512m"
-#             )
-#
-#             # 2. Получаем динамический порт
-#             container.reload()
-#             ports_info = container.attrs['NetworkSettings']['Ports']['6901/tcp']
-#             host_port = ports_info[0]['HostPort']
-#
-#             # 3. Формируем URL (Nginx проксирует HTTP, браузер видит HTTPS)
-#             iframe_url = f"https://{request.get_host()}/kasm-session/{host_port}/"
-#
-#             return JsonResponse({
-#                 'status': 'success',
-#                 'iframe_url': iframe_url,
-#                 'password': vnc_password
-#             })
-#
-#         except Exception as e:
-#             print(f"DOCKER ERROR: {str(e)}")
-#             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-
-
-# class BlenderStartView(View):
-#     def post(self, request):
-#         password = os.getenv('MY_WORKSPACE_PASSWORD', 'default_password')
-#         # Просто возвращаем статичный URL нашего сервиса
-#         # iframe_url = f"https://{request.get_host()}/lxdesk/"
-#         iframe_url = f"https://194.87.214.67:8443/lxdesk/"
-#         return JsonResponse({
-#             'status': 'success',
-#             'iframe_url': iframe_url,
-#             'password': password
-#         })
-#         # return JsonResponse({
-#         #     'status': 'success',
-#         #     'iframe_url': 'https://194.87.214.67:8083/',
-#         #     'password': ''
-#         # })
-
-
-class AchievementsView(TemplateView):
-    template_name = "pages/achievements.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class CategoriesEventsView(TemplateView):
-    template_name = "pages/categories_events.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class EventsView(TemplateView):
-    template_name = "pages/events.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class EventDetailsView(TemplateView):
-    template_name = "pages/event_details.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class EcoHabitsTrackerView(TemplateView):
-    template_name = "pages/eco_habits_tracker.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-# class EcoHabitsCategoriesView(TemplateView):
-#     template_name = "pages/eco_habits_categories.html"
-#
-#     def get(self, request, *args, **kwargs):
-#         return super().get(request, *args, **kwargs)
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         return context
-#
-#
-# class EcoHabitsView(TemplateView):
-#     template_name = "pages/eco_habits.html"
-#
-#     def get(self, request, *args, **kwargs):
-#         return super().get(request, *args, **kwargs)
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         return context
-#
-#
-# class EcoHabitDetailsView(TemplateView):
-#     template_name = "pages/eco_habit_details.html"
-#
-#     def get(self, request, *args, **kwargs):
-#         return super().get(request, *args, **kwargs)
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         return context
-
-
-class EcoTasksTrackerView(TemplateView):
-    template_name = "pages/eco_tasks_tracker.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        completed_ids = UserTaskCompletion.objects.filter(
-            user=self.request.user
-        ).values_list('task_id', flat=True)
-
-        # 2. Выводим ТОЛЬКО те активные задания, которых НЕТ в списке выполненных
-        tasks = EcoTask.objects.filter(is_active=True).exclude(pk__in=completed_ids)
-
-        context['tasks'] = tasks
-        context['completed_task_ids'] = set(completed_ids)
-        return context
-
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #
-    #     # Берем только активные задания
-    #     tasks = EcoTask.objects.filter(is_active=True)
-    #
-    #     # Получаем ID заданий, которые ТЕКУЩИЙ пользователь уже выполнил
-    #     completed_ids = UserTaskCompletion.objects.filter(
-    #         user=self.request.user
-    #     ).values_list('task_id', flat=True)
-    #
-    #     context['tasks'] = tasks
-    #     context['completed_task_ids'] = set(completed_ids)  # Используем set для быстрого поиска в шаблоне
-    #
-    #     return context
-
-
-class EcoTaskDetailsView(LoginRequiredMixin,
-                         DetailView):  # DetailView от Django — он сам найдет задачу в БД по ID из URL или выдаст красивую ошибку 404, если задача не существует.
-    """Детальная страница конкретного задания"""
-    model = EcoTask
-    template_name = "pages/eco_task_details.html"
-    context_object_name = 'task'  # В шаблоне объект будет доступен как {{ task }}
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Проверяем, выполнил ли текущий пользователь ЭТУ задачу
-        is_completed = UserTaskCompletion.objects.filter(
-            user=self.request.user,
-            task=self.object
-        ).exists()
-
-        context['is_completed'] = is_completed
-        return context
-
-
-class CompleteEcoTaskView(LoginRequiredMixin, View):
-    """
-    Эта вьюха срабатывает когда пользователь нажимает кнопку "Выполнить".
-    """
-
-    def post(self, request, task_id):
-        task = get_object_or_404(EcoTask, pk=task_id, is_active=True)
-
-        # 1. Проверка на уровне приложения (чтобы не гонять лишние SQL запросы к БД)
-        if UserTaskCompletion.objects.filter(user=request.user, task=task).exists():
-            return JsonResponse({"error": "Вы уже выполнили это задание"}, status=400)
-
-        # 2. Формируем уникальный ключ для нашего сервиса
-        external_id = f"task:{task.id}:user:{request.user.id}"
-
-        try:
-            # Оборачиваем в atomic: если коины не начислятся, факт выполнения тоже не запишется
-            with db_transaction.atomic():
-
-                # Вызываем наш сервис! Он заблокирует кошелек и обновит баланс
-                new_balance = EcoCoinService.credit(
-                    user=request.user,
-                    amount=task.reward,
-                    tx_type=EcoTransactionType.TASK_COMPLETED,
-                    external_id=external_id
-                )
-
-                # Записываем факт выполнения ТОЛЬКО если транзакция с коинами прошла успешно
-                UserTaskCompletion.objects.create(user=request.user, task=task)
-
-            # Возвращаем успешный ответ и НОВЫЙ баланс для обновления на экране
-            return JsonResponse({
-                "status": "success",
-                "message": f"+{task.reward} ECO получено!",
-                "new_balance": str(new_balance)
-            })
-
-        except IntegrityError:
-            # Срабатывает, если concurrent-запрос (две открытые вкладки) прошли проверку выше одновременно,
-            # но база данных (через UniqueConstraint в сервисе или unique_together) отдала ошибку дубликата.
-            return JsonResponse({"error": "Задание уже было выполнено (система)"}, status=400)
-
-        except Exception as e:
-            # Логируем непредвиденную ошибку (например, падение БД)
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Error completing task {task_id}: {str(e)}")
-            return JsonResponse({"error": "Произошла ошибка на сервере"}, status=500)
-
-
-# class EcoTaskDetailsView(TemplateView):
-#     template_name = "pages/eco_task_details.html"
-#
-#     def get(self, request, *args, **kwargs):
-#         return super().get(request, *args, **kwargs)
-#
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         return context
-
-
-class MarkHabitDoneView(LoginRequiredMixin, View):  # LoginRequiredMixin гарантирует,
-    # что метод сработает только для авторизованных пользователей
-    def post(self, request, habit_id):
-        try:
-            # external_id формируем так: habit:5:user:2 (чтобы за один день за одну привычку дать коины 1 раз)
-            ext_id = f"habit:{habit_id}:user:{request.user.id}:date:{datetime.now().strftime('%Y-%m-%d')}"
-
-            new_balance = EcoCoinService.credit(
-                user=request.user,
-                amount=5,
-                tx_type=EcoTransactionType.HABIT_TRACKED,
-                external_id=ext_id
-            )
-            return JsonResponse({"status": "success", "new_balance": str(new_balance)})
-
-        except Exception as e:
-            # Если попытка дублирования (UniqueConstraint) или другая ошибка
-            return JsonResponse({"status": "error", "message": str(e)}, status=400)
-
-
-class EcoHabitsCategoriesView(LoginRequiredMixin, ListView):
-    """Страница выбора категории привычек"""
-    model = EcoHabitCategory
-    template_name = "pages/eco_habits_categories.html"
-    context_object_name = 'categories'
-
-
-class EcoHabitsView(LoginRequiredMixin, ListView):
-    """Список привычек внутри конкретной категории"""
-    model = EcoHabit
-    template_name = "pages/eco_habits.html"
-    context_object_name = 'habits'
-
-    def get_queryset(self):
-        # Получаем категории из URL (pk)
-        category_id = self.kwargs.get('pk')
-        return EcoHabit.objects.filter(is_active=True, category_id=category_id)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['category'] = get_object_or_404(EcoHabitCategory, pk=self.kwargs.get('pk'))
-
-        # Получаем сегодняшние серии для всех привычек разом (оптимизация запросов)
-        today = timezone.localdate()
-        logs_today = UserHabitLog.objects.filter(
-            user=self.request.user,
-            date_completed=today,
-            habit__in=context['habits']
-        ).values_list('habit_id', flat=True)
-
-        context['completed_today_ids'] = set(logs_today)
-        return context
-
-
-class EcoHabitDetailsView(LoginRequiredMixin, DetailView):
-    """Детальная страница привычки с инфой о серии"""
-    model = EcoHabit
-    template_name = "pages/eco_habit_details.html"
-    context_object_name = 'habit'
-
-    def get_object(self, queryset=None):
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        # Берем pk2 из URL (категория нам здесь для загрузки объекта не нужна)
-        pk = self.kwargs.get('pk2')
-        queryset = queryset.filter(pk=pk)
-
-        try:
-            obj = queryset.get()
-        except queryset.model.DoesNotExist:
-            raise Http404("Привычка не найдена")
-
-        return obj
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-
-        # Отмечено ли сегодня?
-        today = timezone.localdate()
-        context['is_completed_today'] = UserHabitLog.objects.filter(
-            user=user, habit=self.object, date_completed=today
-        ).exists()
-
-        # Текущая серия (берем самый свежий лог)
-        last_log = UserHabitLog.objects.filter(user=user, habit=self.object).first()
-        context['current_streak'] = last_log.streak_count if last_log else 0
-
-        return context
-
-
-class LogEcoHabitView(LoginRequiredMixin, View):
-    """AJAX обработчик нажатия кнопки 'Отметить'"""
-
-    def post(self, request, pk):
-        habit = get_object_or_404(EcoHabit, pk=pk, is_active=True)
-
-        try:
-            result = EcoCoinService.log_habit_and_credit(request.user, habit)
-
-            streak_text = f"Серия: {result['streak']} дн.!"
-            if result['is_new_streak'] and result['streak'] % 7 == 0:
-                streak_text += " 🔥 Неделя!"
-
-            return JsonResponse({
-                "status": "success",
-                "message": f"+{result['reward']} ECO. {streak_text}",
-                "new_balance": str(result['balance']),
-                "new_streak": result['streak']
-            })
-
-        except ValueError as e:
-            return JsonResponse({"error": str(e)}, status=400)
-        except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Habit Log Error: {str(e)}", exc_info=True)
-            return JsonResponse({"error": "Ошибка сервера"}, status=500)

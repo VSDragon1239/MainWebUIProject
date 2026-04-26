@@ -1,146 +1,146 @@
-/* base_header.css */
 
-/* Контейнер шапки с эффектом размытия (Glassmorphism) */
-header {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background: rgba(30, 42, 56, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px 0;
+.header-block-1, .header-block-2, .header-block-3 {
+    display: flex;
+    align-items: center;
+    background-color: var(--header-block-2-background-color);
+}
+
+.header-block-1 {
+    margin-left: 173px;
+    margin-right: 74px;
+    z-index: 2;
+}
+
+.header-block-2 {
+    position: absolute;
+    left: 50%;
+    right: 50%;
+    top: 60px;
+    height: 90px;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+}
+
+.header-block-3 {
+    margin-left: 74px;
+    margin-right: 173px;
+    z-index: 2;
 }
 
 .nav-content {
     display: flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: space-between;
-    max-width: 1240px;
-    margin: 0 auto;
-    padding: 0 20px;
-    gap: 15px;
+    background-color: rgba(28,196,193,0);
+    z-index: 1;
 }
 
-/* Блоки для идеальной центровки */
-.header-block-1, .header-block-3 {
-    flex: 1; /* Растягиваются поровну, выталкивая блок-2 в центр */
-    display: flex;
-    align-items: center;
+.background_line {
+    width: 1905px;
+    height: 100px;
+    position: absolute;
+    top: 57px;
+    background-color: rgb(126,36,124);
+    z-index: 0;
 }
 
-.header-block-3 {
-    justify-content: flex-end;
+.background_line_2 {
+    width: 214px;
+    height: 100px;
+    position: absolute;
+    top: 57px;
+    background-color: rgba(126,36,124, 47%);
+    transition: background 0.1s ease;
+    z-index: 1;
 }
 
-/* Центральный блок с кнопками */
-.header-block-2 {
-    display: flex;
-    align-items: center;
+.background_line_2:hover {
+    background-color: rgba(126,36,124, 0%);
+}
+
+.con-1, .con-2 {
+    font-size: 24px;
+    position: absolute;
+    color: black;
+    right: 50%;
+    height: 90px;
+    width: 300px;
     justify-content: center;
-    gap: 10px;
+    align-items: center;
 }
 
-/* Ссылка-кнопка */
+.con-1 {
+    top: 16px;
+    left: 31%;
+}
+
+.con-2 {
+    width: 400px;
+    right: 24%;
+    top: 160px;
+}
+
 .base-link {
-    display: inline-flex;
-    align-items: center;
+    display: flex;
+    position: relative;
     justify-content: center;
-    padding: 10px 22px;
-    min-height: 44px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
-    font-family: "KellySlab", serif;
-    font-size: 14px;
-    font-weight: 500;
-    text-transform: uppercase;
-    text-decoration: none;
-    letter-spacing: 0.8px;
-    white-space: nowrap;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    align-items: center;
+    width: 225px;
+    /*padding: 0 16px;*/
+    margin: 9px;
+    height: 48px;
+
+    /*color: var(--color-base-link);*/
+    box-shadow: 5px 5px 3px rgba(0, 0, 0, 0.3); /* небольшая тень */
 }
 
-/* Эффекты при наведении */
-.base-link:hover {
-    background: #00cec9;
-    color: #1e2a38;
-    transform: translateY(-3px);
-    box-shadow: 0 10px 20px rgba(0, 206, 201, 0.3);
-    border-color: transparent;
-}
-
-.base-link:active {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(0, 206, 201, 0.2);
-}
-
-/* Цветовые акценты */
 .link-1 {
-    background: #00cec9;
-    color: #1e2a38;
+    background-color: rgb(0,135,151);
 }
 
 .link-2 {
-    background: #6c5ce7;
+    background-color: rgb(21,135,129);
 }
 
 .link-3 {
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: var(--backgroundcolor-base-link);
 }
 
-/* --- АДАПТИВНОСТЬ --- */
-
-/* Планшеты: разрешаем перенос кнопок в центре */
-@media (max-width: 1024px) {
-    .header-block-2 {
-        flex-wrap: wrap;
-        max-width: 500px;
-    }
+.link-4 {
+    background: var(--backgroundcolor-base-link);
+    width: 300px;
 }
 
-/* Мобильные устройства: перестраиваем в колонку */
-@media (max-width: 768px) {
-    header {
-        padding: 20px 0;
-    }
+.border-10 {
+    border-radius: 10px;
+}
 
-    .nav-content {
-        flex-direction: column;
-        gap: 20px;
-    }
+.header-block-2 a {
+    height: 100%;
+}
 
-    .header-block-1, .header-block-3 {
-        flex: none;
-        width: 100%;
-        justify-content: center;
-    }
+.base-link::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; /* чтобы не мешал клику */
+    transition: background 0.1s ease;
+}
 
-    .header-block-2 {
-        width: 100%;
-        flex-direction: column;
-        gap: 12px;
-    }
+.base-link:hover::after {
+    background: rgba(0, 0, 0, 0.2); /* лёгкое затемнение */
+}
 
-    .base-link {
-        width: 100%;
-        max-width: 340px; /* Чтобы кнопки не были слишком длинными на больших телефонах */
-        font-size: 16px;
-        padding: 14px;
-    }
+.base-link:active {
+    transform: translate(3px, 3px); /* лёгкий сдвиг */
+}
 
-    /* Меняем порядок: Логотип сверху, кнопки посередине, доп. элементы снизу */
-    .header-block-1 {
-        order: 1;
-    }
+.base-link:active::after {
+    background: rgba(255, 255, 255, 0.5); /* сильнее затемнение */
+}
 
-    .header-block-2 {
-        order: 2;
-    }
-
-    .header-block-3 {
-        order: 3;
-    }
+h1:active {
+    color: white;
 }

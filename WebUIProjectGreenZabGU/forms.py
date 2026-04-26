@@ -3,7 +3,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, User
 from django.contrib.auth.models import User, Group
 from django.template.defaultfilters import slugify
 
-from .models import Blog, BlogImage, Project, ProjectType, Profile
+from WebUiProject.models import Blog, BlogImage, Project, ProjectType, Profile
 
 from django.forms.models import inlineformset_factory
 

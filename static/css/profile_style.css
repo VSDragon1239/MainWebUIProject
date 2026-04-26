@@ -1,10 +1,9 @@
-/* profile_style.css */
-
-/* Родительский контейнер */
+/* Родительский контейнер, если нужен */
 .content-block-01 {
-    /* Убрал position: fixed, чтобы не ломать поток, если это не нужно */
-    display: flex;
-    flex-direction: column;
+    position: fixed; /* или fixed, если модалка вне потока */
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
 }
 
 .flex-container-line {
@@ -12,89 +11,76 @@
     flex-direction: row;
 }
 
-/* Само модальное окно */
+/* Само модальное окно — фон + контейнер для контента */
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    display: flex; /* Flexbox для центрирования */
-    align-items: center;
-    justify-content: center;
+    display: flex;
+    align-items: center;       /* вертикальный центр */
+    justify-content: center;   /* горизонтальный центр */
     z-index: 1000;
-    background: rgba(30, 42, 56, 0.8); /* Темно-синий полупрозрачный фон */
-    backdrop-filter: blur(5px); /* Эффект размытия фона ( modern ) */
+    pointer-events: auto;
 }
 
-/* Окно с контентом */
+/* Темная полупрозрачная подложка за контентом */
+.modal-backdrop {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* Окно с контентом поверх подложки */
 .modal-content {
     position: relative;
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 30px;
-    max-width: 450px;
+    top: 30vh;
+    left: 38vw;
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    max-width: 400px;
     width: 90%;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    border-top: 4px solid #6c5ce7; /* Фиолетовый акцент */
-    animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-    from {
-        transform: translateY(-20px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1001; /* выше backdrop */
+    outline: none;
 }
 
 /* Заголовок */
 .modal-header h2 {
-    margin: 0 0 15px;
-    font-size: 24px;
-    font-family: "KellySlab", serif;
-    color: #1e2a38;
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
 }
 
 /* Тело */
 .modal-body p {
-    margin: 0 0 20px;
-    color: #636e72;
+    margin: 0 0 1.5rem;
 }
 
-/* Футер */
+/* Футер (кнопки) */
 .modal-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 0.5rem;
 }
 
-/* Кнопки внутри модалки */
-.modal-footer .btn {
-    padding: 10px 20px;
+/* Стили кнопок */
+.btn {
+    padding: 0.5rem 1rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 4px;
     cursor: pointer;
-    font-family: "KellySlab", serif;
 }
 
 .btn-secondary {
-    background: #dcdde1;
-    color: #2d3436;
-}
-
-.btn-secondary:hover {
-    background: #b2bec3;
+    background: #ccc;
+    color: #333;
 }
 
 .btn-danger {
-    background: #ff7675;
+    background: #e53e3e;
     color: #fff;
-}
-
-.btn-danger:hover {
-    background: #d63031;
 }
