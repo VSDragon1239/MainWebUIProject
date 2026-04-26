@@ -10,15 +10,19 @@ from django.contrib.auth.models import User, Group
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, FormView, CreateView, ListView, UpdateView, DeleteView, DetailView
 from django.contrib import messages
 from django.db import transaction as db_transaction, IntegrityError
 from django.shortcuts import get_object_or_404
+from django.http import Http404
 
-from .forms import BlogPostForm, BlogPostImageFormSet, UserUpdateForm, UserCreateForm, ProjectForm, ProjectTypeForm
-from .models import Project, Blog, BlogImage, ProjectType, EcoTransactionType, EcoTask, UserTaskCompletion
+from .forms import BlogPostForm, BlogPostImageFormSet, UserUpdateForm, UserCreateForm, ProjectForm, ProjectTypeForm, \
+    ProfileAvatarForm
+from .models import Project, Blog, BlogImage, ProjectType, EcoTransactionType, EcoTask, UserTaskCompletion, Profile, \
+    EcoHabit, UserHabitLog, EcoHabitCategory
 from .permissions import RoleRequiredMixin
 
 import requests
@@ -278,25 +282,101 @@ class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
     redirect_field_name = "next"  # параметр с origin
     template_name = "pages/profile.html"
 
+    # @property
+    # def get_role_name(self):
+    #     group = self.user.groups.first()
+    #     if self.user.is_superuser:
+    #         return "Системный Администратор"
+    #     return group.name if group else "Пользователь"
+
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
         user = self.request.user
         context['user'] = user
 
-        # 1. Баланс пользователя
+        # БЕЗОПАСНОЕ получение профиля
+        profile, _ = Profile.objects.get_or_create(user=user)
+        context['profile'] = profile
+
+        # Баланс
         context['eco_balance'] = EcoCoinService.get_balance(user)
 
-        # 2. Выполненные задания (сортируем от новых к старым)
-        # select_related('task') забирает данные о самом задании одним запросом (оптимизация)
+        # Выполненные задания
         context['completed_tasks'] = UserTaskCompletion.objects.filter(
             user=user
         ).select_related('task').order_by('-completed_at')
 
+        # Приоритеты ролей (если у пользователя несколько групп)
+        roles_priority = {
+            'Администраторы': ('Администратор', 'danger'),
+            'Контент менеджер': ('Контент-менеджер', 'info'),
+            'Руководители': ('Руководитель', 'warning'),
+            'Участники': ('Участник', 'secondary'),
+        }
+
+        user_groups = user.groups.values_list('name', flat=True)
+        context['display_role'] = ('Без роли', 'light')  # Значение по умолчанию
+
+        for group_name in user_groups:
+            if group_name in roles_priority:
+                context['display_role'] = roles_priority[group_name]
+                break
+
         return context
+
+
+# class EditProfileView(LoginRequiredMixin, UpdateView):
+#     model = Profile
+#     form_class = ProfileAvatarForm
+#     template_name = "pages/profile_edit.html"
+#     success_url = reverse_lazy('profile')  # Перенаправит обратно в профиль
+#
+#     def get_object(self, queryset=None):
+#         # Чтобы пользователь мог редактировать ТОЛЬКО свой профиль
+#         profile, _ = Profile.objects.get_or_create(user=request.user)
+#         return self.request.user.profile
+#     #
+#     # def get(self, request, *args, **kwargs):
+#     #     return super().get(request, *args, **kwargs)
+#     #
+#     # def get_context_data(self, **kwargs):
+#     #     context = super().get_context_data(**kwargs)
+#     #     return context
+
+
+class EditProfileView(LoginRequiredMixin, View):
+    """Вьюха для обработки ДВУХ форм одновременно"""
+
+    def get(self, request):
+        # get_or_create для защиты от отсутствия профиля
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        p_form = ProfileAvatarForm(instance=profile)
+
+        context = {
+            'p_form': p_form,
+        }
+        return render(request, 'pages/profile_edit.html', context)
+
+    def post(self, request):
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+
+        # ВАЖНО: request.FILES обязателен для загрузки картинок!
+        p_form = ProfileAvatarForm(request.POST, request.FILES, instance=profile)
+
+        if p_form.is_valid():
+            p_form.save()
+            messages.success(request, 'Ваш профиль успешно обновлен!')
+            return redirect('profile')
+        else:
+            messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
+
+        context = {
+            'p_form': p_form,
+        }
+        return render(request, 'pages/profile_edit.html', context)
 
 
 # Страница для участников
@@ -747,37 +827,37 @@ class EcoHabitsTrackerView(TemplateView):
         return context
 
 
-class EcoHabitsCategoriesView(TemplateView):
-    template_name = "pages/eco_habits_categories.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class EcoHabitsView(TemplateView):
-    template_name = "pages/eco_habits.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
-class EcoHabitDetailsView(TemplateView):
-    template_name = "pages/eco_habit_details.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
+# class EcoHabitsCategoriesView(TemplateView):
+#     template_name = "pages/eco_habits_categories.html"
+#
+#     def get(self, request, *args, **kwargs):
+#         return super().get(request, *args, **kwargs)
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         return context
+#
+#
+# class EcoHabitsView(TemplateView):
+#     template_name = "pages/eco_habits.html"
+#
+#     def get(self, request, *args, **kwargs):
+#         return super().get(request, *args, **kwargs)
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         return context
+#
+#
+# class EcoHabitDetailsView(TemplateView):
+#     template_name = "pages/eco_habit_details.html"
+#
+#     def get(self, request, *args, **kwargs):
+#         return super().get(request, *args, **kwargs)
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         return context
 
 
 class EcoTasksTrackerView(TemplateView):
@@ -816,7 +896,8 @@ class EcoTasksTrackerView(TemplateView):
     #     return context
 
 
-class EcoTaskDetailsView(LoginRequiredMixin, DetailView):   # DetailView от Django — он сам найдет задачу в БД по ID из URL или выдаст красивую ошибку 404, если задача не существует.
+class EcoTaskDetailsView(LoginRequiredMixin,
+                         DetailView):  # DetailView от Django — он сам найдет задачу в БД по ID из URL или выдаст красивую ошибку 404, если задача не существует.
     """Детальная страница конкретного задания"""
     model = EcoTask
     template_name = "pages/eco_task_details.html"
@@ -884,19 +965,19 @@ class CompleteEcoTaskView(LoginRequiredMixin, View):
             return JsonResponse({"error": "Произошла ошибка на сервере"}, status=500)
 
 
-class EcoTaskDetailsView(TemplateView):
-    template_name = "pages/eco_task_details.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
+# class EcoTaskDetailsView(TemplateView):
+#     template_name = "pages/eco_task_details.html"
+#
+#     def get(self, request, *args, **kwargs):
+#         return super().get(request, *args, **kwargs)
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         return context
 
 
 class MarkHabitDoneView(LoginRequiredMixin, View):  # LoginRequiredMixin гарантирует,
-                                                    # что метод сработает только для авторизованных пользователей
+    # что метод сработает только для авторизованных пользователей
     def post(self, request, habit_id):
         try:
             # external_id формируем так: habit:5:user:2 (чтобы за один день за одну привычку дать коины 1 раз)
@@ -913,3 +994,104 @@ class MarkHabitDoneView(LoginRequiredMixin, View):  # LoginRequiredMixin гар�
         except Exception as e:
             # Если попытка дублирования (UniqueConstraint) или другая ошибка
             return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
+
+class EcoHabitsCategoriesView(LoginRequiredMixin, ListView):
+    """Страница выбора категории привычек"""
+    model = EcoHabitCategory
+    template_name = "pages/eco_habits_categories.html"
+    context_object_name = 'categories'
+
+
+class EcoHabitsView(LoginRequiredMixin, ListView):
+    """Список привычек внутри конкретной категории"""
+    model = EcoHabit
+    template_name = "pages/eco_habits.html"
+    context_object_name = 'habits'
+
+    def get_queryset(self):
+        # Получаем категории из URL (pk)
+        category_id = self.kwargs.get('pk')
+        return EcoHabit.objects.filter(is_active=True, category_id=category_id)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['category'] = get_object_or_404(EcoHabitCategory, pk=self.kwargs.get('pk'))
+
+        # Получаем сегодняшние серии для всех привычек разом (оптимизация запросов)
+        today = timezone.localdate()
+        logs_today = UserHabitLog.objects.filter(
+            user=self.request.user,
+            date_completed=today,
+            habit__in=context['habits']
+        ).values_list('habit_id', flat=True)
+
+        context['completed_today_ids'] = set(logs_today)
+        return context
+
+
+class EcoHabitDetailsView(LoginRequiredMixin, DetailView):
+    """Детальная страница привычки с инфой о серии"""
+    model = EcoHabit
+    template_name = "pages/eco_habit_details.html"
+    context_object_name = 'habit'
+
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        # Берем pk2 из URL (категория нам здесь для загрузки объекта не нужна)
+        pk = self.kwargs.get('pk2')
+        queryset = queryset.filter(pk=pk)
+
+        try:
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404("Привычка не найдена")
+
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        # Отмечено ли сегодня?
+        today = timezone.localdate()
+        context['is_completed_today'] = UserHabitLog.objects.filter(
+            user=user, habit=self.object, date_completed=today
+        ).exists()
+
+        # Текущая серия (берем самый свежий лог)
+        last_log = UserHabitLog.objects.filter(user=user, habit=self.object).first()
+        context['current_streak'] = last_log.streak_count if last_log else 0
+
+        return context
+
+
+class LogEcoHabitView(LoginRequiredMixin, View):
+    """AJAX обработчик нажатия кнопки 'Отметить'"""
+
+    def post(self, request, pk):
+        habit = get_object_or_404(EcoHabit, pk=pk, is_active=True)
+
+        try:
+            result = EcoCoinService.log_habit_and_credit(request.user, habit)
+
+            streak_text = f"Серия: {result['streak']} дн.!"
+            if result['is_new_streak'] and result['streak'] % 7 == 0:
+                streak_text += " 🔥 Неделя!"
+
+            return JsonResponse({
+                "status": "success",
+                "message": f"+{result['reward']} ECO. {streak_text}",
+                "new_balance": str(result['balance']),
+                "new_streak": result['streak']
+            })
+
+        except ValueError as e:
+            return JsonResponse({"error": str(e)}, status=400)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Habit Log Error: {str(e)}", exc_info=True)
+            return JsonResponse({"error": "Ошибка сервера"}, status=500)

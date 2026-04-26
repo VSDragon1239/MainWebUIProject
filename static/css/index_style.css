@@ -3,6 +3,7 @@
 .content {
     flex-direction: column;
     align-items: center;
+    /*width: auto;*/
 }
 
 /* ===== БАЗА (Hardcoded Colors) ===== */

@@ -21,7 +21,7 @@ from WebUiProject.views import IndexView, ContactsView, AboutView, ApplicationsV
     ProfileView, ParticipantView, AdminView, ContentManagerView, NoAccessView, UploadFileView, \
     AddBlogPostView, UserCreateView, UserUpdateView, UserDeleteView, AchievementsView, CategoriesEventsView, \
     EventsView, EcoHabitsTrackerView, EcoHabitsCategoriesView, EcoHabitsView, EventDetailsView, \
-    EcoTasksTrackerView, EcoTaskDetailsView, EcoHabitDetailsView, CompleteEcoTaskView
+    EcoTasksTrackerView, EcoTaskDetailsView, EcoHabitDetailsView, CompleteEcoTaskView, EditProfileView, LogEcoHabitView
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -40,11 +40,13 @@ urlpatterns = [
 
     # Для пользователей:
     path('profile/', ProfileView.as_view(), name='profile'),                                                          # Профиль пользователя
+    path('profile/edit/', EditProfileView.as_view(), name='profile_edit'),                                               # Управление профилем
     path('achievements/', AchievementsView.as_view(), name='achievements'),                                              # Список достижений
     path('categories-events/', CategoriesEventsView.as_view(), name='categories_events'),                                  # Список категорий событий / мероприятий
     path('categories-events/<int:pk>/events/', EventsView.as_view(), name='events'),                                        # Список событий / мероприятий
     path('categories-events/<int:pk1>/events/<int:pk2>/event-details/', EventDetailsView.as_view(), name='event_details'),    # Список событий / мероприятий
     path('eco-habits-tracker/', EcoHabitsTrackerView.as_view(), name='eco_habits_tracker'),                                 # Трекер зеленых привычек
+    path('eco-habits/log/<int:pk>/', LogEcoHabitView.as_view(), name='eco_habit_log'),
     path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),                                 # Трекер зеленых заданий
     path('eco-task-details/<int:pk>/', EcoTaskDetailsView.as_view(), name='eco_task_details'),                          # Детали зелённого задание
     # URL для AJAX запроса при нажатии на кнопку

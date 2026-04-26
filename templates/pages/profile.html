@@ -58,18 +58,28 @@
                 <div class="card-body text-center p-4">
 
                     <!-- Аватар с защитой от отсутствия картинки -->
-                    {% if user.profile.avatar %}
-                        <img src="{{ user.profile.avatar.url }}"
-                             class="rounded-circle mb-3 shadow"
-                             style="width: 150px; height: 150px; object-fit: cover;"
-                             alt="Аватар {{ user.username }}">
-                    {% else %}
-                        <!-- Заглушка, если фото нет (показывает первую букву имени) -->
-                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center mx-auto mb-3 shadow"
-                             style="width: 150px; height: 150px; font-size: 4rem; font-weight: bold;">
-                            {{ user.username.0|upper }}
-                        </div>
-                    {% endif %}
+                    <div class="position-relative d-inline-block">
+                        {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}"
+                                 class="rounded-circle mb-3 shadow"
+                                 style="width: 150px; height: 150px; object-fit: cover;"
+                                 alt="Аватар {{ user.username }}">
+                        {% else %}
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center mx-auto mb-3 shadow"
+                                 style="width: 150px; height: 150px; font-size: 4rem; font-weight: bold;">
+                                {{ user.username.0|upper }}
+                            </div>
+                        {% endif %}
+
+                        <!-- Кнопка добавления/редактирования -->
+                        <a href="{% url 'profile_edit' %}"
+                           class="position-absolute bottom-0 end-0 bg-white rounded-circle shadow p-2 text-primary d-flex align-items-center justify-content-center"
+                           style="width: 40px; height: 40px; transform: translate(-10%, -50%); border: 1px solid #eee;"
+                           title="Изменить фото">
+                            <i class="bi bi-camera-fill"></i> <!-- Иконка (нужен Bootstrap Icons) -->
+                            <span style="font-size: 1.2rem;">+</span>
+                        </a>
+                    </div>
 
                     <!-- Имя и контактные данные -->
                     <h3 class="mb-1">
@@ -77,6 +87,7 @@
                             {{ user.get_full_name }}
                         {% else %}
                             {{ user.username }}
+
                         {% endif %}
                     </h3>
                     <p class="text-muted mb-2">@{{ user.username }}</p>
@@ -84,6 +95,9 @@
                     <p class="text-muted small mb-3">
                         <i class="bi bi-envelope me-1"></i> {{ user.email|default:"Email не указан" }}
                     </p>
+                    <span class="badge bg-{{ display_role.1 }} fs-6 mb-3 px-3 py-2 rounded-pill">
+                        {{ display_role.0 }}
+                    </span>
 
                     <!-- О себе -->
                     {% if user.profile.description %}
@@ -97,8 +111,8 @@
                     {% endif %}
 
                     <!-- Кнопка редактирования (заглушка под будущую вьюху) -->
-                    <a href="#" class="btn btn-outline-primary w-100 mt-2">
-                        <i class="bi bi-gear me-1"></i> Редактировать профиль
+                    <a href="{% url 'profile_edit' %}" class="btn btn-outline-primary w-100 mt-2">
+                        <i class="bi bi-pencil-square me-1"></i> Редактировать
                     </a>
                 </div>
             </div>
@@ -120,7 +134,7 @@
                             </h2>
                         </div>
                         <a href="{% url 'eco_tasks_tracker' %}" class="btn btn-success mt-2 mt-lg-0">
-                            <i class="bi bi-plus-circle me-1"></i> Выполнить задание
+                            <i class="bi bi-plus-circle me-1"></i> Перейти к трекеру зелёных заданий
                         </a>
                     </div>
                 </div>

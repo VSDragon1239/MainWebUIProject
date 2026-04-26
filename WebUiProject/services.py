@@ -1,7 +1,10 @@
 # WebUiProject/services.py
+from datetime import timedelta
+
 from django.db import transaction as db_transaction
 from django.db.models import F
-from .models import EcoWallet, EcoCoinTransaction
+from django.utils import timezone
+from .models import EcoWallet, EcoCoinTransaction, EcoTransactionType, UserHabitLog
 
 
 class InsufficientFundsError(Exception):
@@ -53,3 +56,58 @@ class EcoCoinService:
     @staticmethod
     def debit(user, amount: int, tx_type: str, external_id: str = None):
         return EcoCoinService.process_transaction(user, -abs(amount), tx_type, external_id)
+
+    @staticmethod
+    @db_transaction.atomic
+    def log_habit_and_credit(user, habit):
+        today = timezone.localdate()
+
+        # external_id формируется так, чтобы сработал UniqueConstraint из модели EcoCoinTransaction
+        external_id = f"habit:{habit.id}:user:{user.id}:date:{today}"
+
+        # 1. Проверяем, не отмечал ли уже сегодня (на уровне БД лога)
+        if UserHabitLog.objects.filter(user=user, habit=habit, date_completed=today).exists():
+            raise ValueError("Привычка уже отмечена сегодня")
+
+        # 2. Считаем серию (Streak)
+        yesterday = today - timedelta(days=1)
+        last_log = UserHabitLog.objects.filter(
+            user=user,
+            habit=habit,
+            date_completed__lte=yesterday  # Ищем в прошлом
+        ).order_by('-date_completed').first()
+
+        if last_log and last_log.date_completed == yesterday:
+            # Если отмечал вчера — серия продолжается
+            current_streak = last_log.streak_count + 1
+        else:
+            # Если вчера не отмечал (или вообще никогда) — серия сбрасывается на 1
+            current_streak = 1
+
+        # 3. Считаем награду (Базовая + Бонус, но не больше МаксБонуса)
+        calculated_bonus = min(current_streak * habit.streak_bonus, habit.max_bonus)
+        total_reward = habit.base_reward + calculated_bonus
+
+        # 4. Начисляем монеты через наш надежный сервис
+        new_balance = EcoCoinService.credit(
+            user=user,
+            amount=total_reward,
+            tx_type=EcoTransactionType.HABIT_TRACKED,
+            external_id=external_id
+        )
+
+        # 5. Сохраняем лог серии
+        UserHabitLog.objects.create(
+            user=user,
+            habit=habit,
+            date_completed=today,
+            streak_count=current_streak,
+            reward_earned=total_reward
+        )
+
+        return {
+            "balance": new_balance,
+            "streak": current_streak,
+            "reward": total_reward,
+            "is_new_streak": current_streak > 1
+        }

@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import ProjectType, Project, Blog, BlogImage, EcoTask, UserTaskCompletion, EcoCoinTransaction
+from .models import ProjectType, Project, Blog, BlogImage, EcoTask, UserTaskCompletion, EcoCoinTransaction, \
+    EcoHabitCategory, EcoHabit
 
 
 @admin.register(ProjectType)
@@ -35,3 +36,13 @@ class EcoTaskAdmin(admin.ModelAdmin):
 class UserTaskCompletionAdmin(admin.ModelAdmin):
     list_display = ('user', 'task', 'completed_at')
     readonly_fields = ('user', 'task', 'completed_at')
+
+    @admin.register(EcoHabitCategory)
+    class EcoHabitCategoryAdmin(admin.ModelAdmin):
+        list_display = ('name', 'icon')
+        prepopulated_fields = {}  # Если захотите добавить slug
+
+    @admin.register(EcoHabit)
+    class EcoHabitAdmin(admin.ModelAdmin):
+        list_display = ('title', 'category', 'base_reward', 'streak_bonus', 'is_active')
+        list_filter = ('category', 'is_active')

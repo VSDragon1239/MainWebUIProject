@@ -40,8 +40,6 @@ services:
       - ./deploy/ssl:/etc/nginx/ssl:ro
     depends_on:
       - web
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   pgadmin:
     image: dpage/pgadmin4
