@@ -1,0 +1,136 @@
+/* Общий стиль для страницы */
+
+@font-face {
+    font-family: "KellySlab";
+    src: url("../fonts/KellySlab-Regular.ttf");
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: "Jura";
+    src: url("../fonts/Jura.ttf");
+}
+
+:root {
+    --global-color-element: rgb(78, 78, 78);
+    --global-background-color-element: #0e1539;
+    --content-block-1-background-color-element: rgba(255, 255, 255, 0);
+    --content-block-2-background-color-element: rgba(255, 255, 255, 0);
+    --global-side-background-color-element: rgba(195, 195, 195, 0.3);
+
+
+    --header-background-color: rgb(238, 238, 238);
+    --header-block-2-background-color: rgba(250, 250, 250, 0);
+    --header-color-button: rgb(220, 219, 219);;
+    --header-color-border-button: rgb(120, 119, 119);
+
+    --header-color-button-hover: rgb(120, 119, 119);
+    --header-color-border-button-hover: rgb(83, 83, 83);
+
+    --header-color-button-active: rgb(150, 150, 150);
+    --header-color-border-button-active: rgb(158, 158, 158);
+
+
+    --footer-background-color: #333;
+
+    --color-base-link: rgb(255, 255, 255);
+    --backgroundcolor-base-link: rgba(0, 135, 151, 0.42);
+    --backgroundcolor-base-link-hover: rgba(255, 255, 255, 0.38);
+    --backgroundcolor-base-link-active: rgba(0, 76, 72, 0.64);
+    --cart-item-back-color-black: rgb(186, 186, 186);
+
+}
+
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f5;
+    margin: 0;
+    padding: 0;
+}
+
+/* Заголовок */
+h1 {
+    font-weight: normal;
+    text-align: center;
+    margin: 0;
+    padding: 3px 10px;
+    font-size: 18px;
+}
+
+h3 {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 28px;
+    letter-spacing: 0;
+    text-align: left;
+    padding: 0;
+    margin: 10px 0 0 0;
+}
+
+/* Ссылки */
+a {
+    color: #000000;
+    text-decoration: none;
+    border-radius: 0;
+}
+
+input {
+    font-family: "Jura", serif;
+    border: 0  #ccc;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 24px;
+}
+
+button {
+    font-family: "KellySlab", serif; /* Устанавливаем шрифт */
+    font-size: 18px; /* Размер текста */
+    padding: 10px 20px; /* Внутренние отступы */
+    border: 2px solid transparent; /* Границы кнопки */
+    border-radius: 5px; /* Скругленные углы */
+    background-color: inherit; /* Наследуем фон */
+    color: inherit; /* Наследуем цвет текста */
+    cursor: pointer; /* Указатель мыши при наведении */
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* Плавные эффекты */
+    width: 300px;
+}
+
+button:hover {
+    transform: scale(1.05); /* Увеличиваем кнопку при наведении */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Легкая тень при наведении */
+}
+
+button:active {
+    transform: scale(0.98); /* Легкое "вдавливание" при нажатии */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Тень становится мягче */
+}
+
+button:focus {
+    outline: none; /* Убираем стандартный фокус */
+    border: 2px solid rgba(0, 0, 0, 0.5); /* Добавляем легкую границу при фокусе */
+}
+
+
+img {
+    /*padding: 10px;*/
+}
+
+ul {
+    padding: 0; /* Убираем отступы списка */
+    margin: 0;
+    list-style: none; /* Убираем стандартные маркеры */
+}
+
+li {
+    margin-bottom: 10px; /* Расстояние между элементами */
+}
+
+li:last-child {
+    margin-bottom: 0;
+}
+
+p {
+    font-family: "Jura", serif;
+    font-size: 24px;
+}
