@@ -1,0 +1,104 @@
+{% extends 'base/base_header.html' %}
+{% load static %}
+
+{% block title %}Иван — Контакты{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/contacts_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+<h1><a href="{% url 'main' %}">Иван</a> — Контакты</h1>
+<p class="subtitle">Связь — это начало любого проекта</p>
+{% endblock %}
+
+{% block content_block_1 %}
+<section class="contacts">
+
+    <div class="contact-card contact-card--accent">
+
+        <div class="row">
+            <span>Кто я</span>
+            <b>IT-специалист • 3D-художник • архитектор систем</b>
+        </div>
+
+        <div class="row">
+            <span>Подход</span>
+            <b>Структура, логика и атмосфера — как единая система</b>
+        </div>
+
+        <div class="row">
+            <span>Фокус</span>
+            <b>Проекты, где важны не только функции, но и понимание и отклик в душе</b>
+        </div>
+
+        <div class="row">
+            <span>Принцип</span>
+            <b>Доводить идеи до состояния, где они «ощущаются правильно»</b>
+        </div>
+
+        <div class="row divider"></div>
+
+        <div class="row">
+            <span>Telegram</span>
+            <b><a href="https://t.me/VarStarDragon">Telegram</a></b>
+        </div>
+
+        <div class="row">
+            <span>GitHub</span>
+            <b><a href="https://github.com/VSDragon1239">github.com/VSDragon1239</a></b>
+        </div>
+
+        <div class="row">
+            <span>Портфолио</span>
+            <b><a href="#">Скоро...</a></b>
+        </div>
+
+    </div>
+
+    <div class="contact-note">
+        <p>
+            Лучше всего писать, когда у вас есть идея, задача или даже просто ощущение,
+            что «это должно работать иначе».
+            Я ценю ясность, но не меньше — глубину.
+        </p>
+    </div>
+
+    <!--    <form class="form form&#45;&#45;glass" method="post" action="#">-->
+    <!--        {% csrf_token %}-->
+
+    <!--        <h3>Связаться</h3>-->
+
+    <!--        <label>-->
+    <!--            Имя-->
+    <!--            <input type="text" name="name" required>-->
+    <!--        </label>-->
+
+    <!--        <label>-->
+    <!--            Почта-->
+    <!--            <input type="email" name="email" required>-->
+    <!--        </label>-->
+
+    <!--        <label>-->
+    <!--            Сообщение-->
+    <!--            <textarea name="msg" rows="5" required placeholder="Кратко опишите идею или задачу..."></textarea>-->
+    <!--        </label>-->
+
+    <!--        <button class="btn btn&#45;&#45;primary" type="submit">Отправить</button>-->
+
+    <!--        <p class="muted">-->
+    <!--            Чем точнее сформулирована идея — тем глубже можно её реализовать.-->
+    <!--        </p>-->
+    <!--    </form>-->
+
+</section>
+
+<section class="map map--ambient">
+    <div class="map__placeholder">
+        Не точка на карте — а пространство, где создаются проекты. Но тут пока ничего нет...
+    </div>
+</section>
+{% endblock %}
+
+{% block content_block_2 %}{% endblock %}
+{% block content_block_3 %}{% endblock %}

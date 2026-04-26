@@ -1,0 +1,139 @@
+{% extends 'base/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - Детали зелённого задания{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/index_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1>
+        МЗП ->
+        <a href="{% url 'profile' %}">Профиль</a> ->
+        <a href="{% url 'profile' %}">Профиль</a> ->
+        <a href="{% url 'profile' %}">Трекер задания: "pk"</a> ->
+        <a href="{% url 'eco_tasks_tracker' %}">Трекер задания: "pk"</a> ->
+        Детали задания
+    </h1>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="container mt-5">
+
+        <!-- Кнопка "Назад" -->
+        <a href="{% url 'eco_tasks_tracker' %}" class="btn btn-outline-secondary mb-3">
+            <i class="bi bi-arrow-left"></i> К списку заданий
+        </a>
+
+        <div class="card shadow">
+            <div class="card-header bg-white">
+                <h3 class="mb-0">{{ task.title }}</h3>
+            </div>
+            <div class="card-body">
+                <p class="fs-5">{{ task.description }}</p>
+
+                <div class="mt-4 p-3 bg-light rounded">
+                    <span class="fs-4 text-success fw-bold">Награда: +{{ task.reward }} ECO</span>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-top">
+
+                {% if is_completed %}
+                    <!-- Если выполнено -->
+                    <div class="alert alert-success mb-0 d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+                        <div>
+                            <strong>Задание выполнено!</strong> <br>
+                            Эко-коины уже зачислены на ваш баланс.
+                        </div>
+                    </div>
+                {% else %}
+                    <!-- Если НЕ выполнено -->
+                    <button
+                            class="btn btn-primary btn-lg w-100"
+                            id="complete-task-btn"
+                            data-task-id="{{ task.id }}"
+                    >
+                        <i class="bi bi-lightning-charge-fill"></i> Выполнить и получить награду
+                    </button>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    {% if not is_completed %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+                const csrftoken = getCookie('csrftoken');
+
+                const btn = document.getElementById('complete-task-btn');
+
+                btn.addEventListener('click', function (e) {
+                    const taskId = btn.getAttribute('data-task-id');
+
+                    // Блокируем кнопку
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Проверка на сервере...';
+
+                    fetch(`/eco-tasks/complete/${taskId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                // Меняем кнопку на зеленый алерт об успехе
+                                btn.outerHTML = `
+                    <div class="alert alert-success mb-0 d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+                        <div>
+                            <strong>${data.message}</strong> <br>
+                            Ваш баланс обновлен!
+                        </div>
+                    </div>
+                `;
+
+                                // Обновляем баланс в шапке сайта (если используете context_processor из прошлого шага)
+                                const balanceEl = document.getElementById('eco-balance-display');
+                                if (balanceEl) {
+                                    balanceEl.innerText = data.new_balance;
+                                }
+                            } else {
+                                alert(data.error || 'Произошла ошибка');
+                                btn.disabled = false;
+                                btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> Выполнить и получить награду';
+                            }
+                        })
+                        .catch(() => {
+                            alert('Сетевая ошибка');
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="bi bi-lightning-charge-fill"></i> Выполнить и получить награду';
+                        });
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock %}

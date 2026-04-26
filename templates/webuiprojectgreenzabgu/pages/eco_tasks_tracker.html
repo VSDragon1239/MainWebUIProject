@@ -1,0 +1,167 @@
+{% extends 'base/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - Трекер зелёных заданий{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/index_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1>
+        МЗП ->
+        <a href="{% url 'profile' %}">Профиль</a> ->
+        <a href="{% url 'profile' %}">Трекер задания: "pk"</a> ->
+        Трекер задания:
+    </h1>
+{% endblock %}
+
+{% block content_block_1 %}
+    {#    <div class="container mt-4">#}
+    {#        <h2>Эко-задания</h2>#}
+    {##}
+    {#        <!-- Блок с балансом (обновляется динамически) -->#}
+    {#        <div class="alert alert-success" id="balance-banner">#}
+    {#            Ваш текущий баланс: <strong id="eco-balance-display">{{ user_eco_balance }}</strong> ECO#}
+    {#        </div>#}
+    {##}
+    {#        <div class="row mt-3">#}
+    {#            {% for task in tasks %}#}
+    {#                <div class="col-md-4 mb-3">#}
+    {#                    <div class="card h-100" id="task-card-{{ task.id }}">#}
+    {#                        <div class="card-body">#}
+    {#                            <h5 class="card-title">{{ task.title }}</h5>#}
+    {#                            <p class="card-text text-muted">{{ task.description }}</p>#}
+    {#                            <span class="badge bg-success fs-6">+{{ task.reward }} ECO</span>#}
+    {#                        </div>#}
+    {#                        <div class="card-footer bg-transparent border-top-0">#}
+    {#                            {% if task.id in completed_task_ids %}#}
+    {#                                <!-- Если задание выполнено, показываем неактивную кнопку -->#}
+    {#                                <button class="btn btn-secondary w-100" disabled>#}
+    {#                                    <i class="bi bi-check-circle"></i> Выполнено#}
+    {#                                </button>#}
+    {#                            {% else %}#}
+    {#                                <!-- Если не выполнено — активная кнопка, вызывающая AJAX -->#}
+    {#                                <button#}
+    {#                                        class="btn btn-primary w-100 complete-task-btn"#}
+    {#                                        data-task-id="{{ task.id }}"#}
+    {#                                >#}
+    {#                                    Выполнить#}
+    {#                                </button>#}
+    {#                            {% endif %}#}
+    {#                        </div>#}
+    {#                    </div>#}
+    {#                </div>#}
+    {#            {% empty %}#}
+    {#                <div class="col-12">#}
+    {#                    <p>Сейчас нет доступных эко-заданий. Загляните позже!</p>#}
+    {#                </div>#}
+    {#            {% endfor %}#}
+    {#        </div>#}
+    {#    </div>#}
+    {#{% endblock %}#}
+    {##}
+    {#{% block extra_js %}#}
+    {#    <script>#}
+    {#        document.addEventListener('DOMContentLoaded', function () {#}
+    {##}
+    {#            // Получаем CSRF токен из куки (Django ставит его автоматически)#}
+    {#            function getCookie(name) {#}
+    {#                let cookieValue = null;#}
+    {#                if (document.cookie && document.cookie !== '') {#}
+    {#                    const cookies = document.cookie.split(';');#}
+    {#                    for (let i = 0; i < cookies.length; i++) {#}
+    {#                        const cookie = cookies[i].trim();#}
+    {#                        if (cookie.substring(0, name.length + 1) === (name + '=')) {#}
+    {#                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));#}
+    {#                            break;#}
+    {#                        }#}
+    {#                    }#}
+    {#                }#}
+    {#                return cookieValue;#}
+    {#            }#}
+    {##}
+    {#            const csrftoken = getCookie('csrftoken');#}
+    {##}
+    {#            // Вешаем обработчик на все кнопки "Выполнить"#}
+    {#            document.querySelectorAll('.complete-task-btn').forEach(button => {#}
+    {#                button.addEventListener('click', function (e) {#}
+    {#                    const btn = e.currentTarget;#}
+    {#                    const taskId = btn.getAttribute('data-task-id');#}
+    {#                    const cardId = `task-card-${taskId}`;#}
+    {##}
+    {#                    // Визуально отключаем кнопку, чтобы юзер не кликал 10 раз подряд#}
+    {#                    btn.disabled = true;#}
+    {#                    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Проверка...';#}
+    {##}
+    {#                    // Отправляем AJAX POST запрос#}
+    {#                    fetch(`/eco-tasks/complete/${taskId}/`, {#}
+    {#                        method: 'POST',#}
+    {#                        headers: {#}
+    {#                            'X-CSRFToken': csrftoken,#}
+    {#                            'Content-Type': 'application/json',#}
+    {#                        },#}
+    {#                    })#}
+    {#                        .then(response => response.json())#}
+    {#                        .then(data => {#}
+    {#                            if (data.status === 'success') {#}
+    {#                                // 1. Меняем кнопку на "Выполнено"#}
+    {#                                btn.className = 'btn btn-secondary w-100';#}
+    {#                                btn.disabled = true;#}
+    {#                                btn.innerHTML = '<i class="bi bi-check-circle"></i> Выполнено';#}
+    {##}
+    {#                                // 2. Обновляем баланс в шапке страницы (БЕЗ ПЕРЕЗАГРУЗКИ!)#}
+    {#                                document.getElementById('eco-balance-display').innerText = data.new_balance;#}
+    {##}
+    {#                            } else {#}
+    {#                                // Если пришла ошибка (уже выполнено или сервер упал)#}
+    {#                                alert(data.error || 'Ошибка');#}
+    {#                                btn.disabled = false; // Возвращаем кнопку в рабочее состояние#}
+    {#                                btn.innerHTML = 'Выполнить';#}
+    {#                            }#}
+    {#                        })#}
+    {#                        .catch(() => {#}
+    {#                            alert('Сетевая ошибка');#}
+    {#                            btn.disabled = false;#}
+    {#                            btn.innerHTML = 'Выполнить';#}
+    {#                        });#}
+    {#                });#}
+    {#            });#}
+    {#        });#}
+    {#    </script>#}
+    <div class="container mt-4">
+        <h2>Доступные эко-задания</h2>
+        <p class="text-muted">Выберите задание, чтобы узнать подробности и получить награду.</p>
+
+        <div class="row mt-3">
+            {% for task in tasks %}
+                <div class="col-md-4 mb-4">
+                    <a href="{% url 'eco_task_details' task.id %}" class="text-decoration-none text-dark">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ task.title }}</h5>
+                                <p class="card-text text-muted">
+                                    {{ task.description|truncatewords:15 }} {# Обрезаем длинный текст #}
+                                </p>
+                            </div>
+                            <div class="card-footer bg-white border-top-0 d-flex justify-content-between align-items-center">
+                                <span class="badge bg-success fs-6">+{{ task.reward }} ECO</span>
+
+                                {% if task.id in completed_task_ids %}
+                                    <span class="text-success"><i
+                                            class="bi bi-check-circle-fill"></i> Выполнено</span>
+                                {% else %}
+                                    <span class="text-primary">Подробнее <i class="bi bi-arrow-right"></i></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-warning">Сейчас нет доступных эко-заданий.</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

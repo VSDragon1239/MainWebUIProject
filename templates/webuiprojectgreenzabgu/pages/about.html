@@ -1,0 +1,172 @@
+{% extends 'base/base_header.html' %}
+{% load static %}
+
+{% block title %}СКБ КБ - О нас{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/about_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1><a href="{% url 'main' %}">СКБ КБ</a> -> О нас</h1>
+{% endblock %}
+
+
+{##}
+{#{% block content_block_1 %}#}
+{#<section class="about">#}
+{#  <header class="about-hero">#}
+{#    <div class="about-hero__text">#}
+{#      <h2 class="about-hero__title">СКБ КБ Энергетического факультета ЗабГУ</h2>#}
+{#      <p class="about-hero__lead">Объединяем студентов, преподавателей и индустриальных наставников. От идеи до прототипа.</p>#}
+{#      <div class="about-hero__cta">#}
+{#        <a href="#join" class="btn btn--primary">Присоединиться</a>#}
+{#        <a href="{% url 'contacts' %}" class="btn btn--ghost">Связаться</a>#}
+{#      </div>#}
+{#    </div>#}
+{#  </header>#}
+{##}
+{#  <section class="block">#}
+{#    <h3 class="block__title">Миссия</h3>#}
+{#    <p class="block__text">Помогать будущим инженерам и айтишникам проходить путь от идеи до работающего прототипа.</p>#}
+{#  </section>#}
+{##}
+{#  <section class="block">#}
+{#    <h3 class="block__title">Чем мы занимаемся</h3>#}
+{#    <div class="cards">#}
+{#      <article class="card"><h4 class="card__title">Инженерные решения</h4><p class="card__text">Теплоэнергетика и теплотехника.</p></article>#}
+{#      <article class="card"><h4 class="card__title">Информационные системы</h4><p class="card__text">Веб-приложения и сервисы.</p></article>#}
+{#      <article class="card"><h4 class="card__title">R&amp;D и кейсы</h4><p class="card__text">Исследования, открытые методики.</p></article>#}
+{#      <article class="card"><h4 class="card__title">Документация</h4><p class="card__text">ГОСТ и требования ВУЗа.</p></article>#}
+{#    </div>#}
+{#  </section>#}
+{##}
+{#  <section class="block" id="roles">#}
+{#    <h3 class="block__title">Роли</h3>#}
+{#    <div class="roles">#}
+{#      <div class="role"><div class="role__name">Участник</div><p class="role__desc">Задачи, документация, защита.</p></div>#}
+{#      <div class="role"><div class="role__name">Руководитель</div><p class="role__desc">Методика и архитектура.</p></div>#}
+{#      <div class="role"><div class="role__name">Администратор</div><p class="role__desc">Процессы и регламенты.</p></div>#}
+{#      <div class="role"><div class="role__name">Контент-менеджер</div><p class="role__desc">Новости и страницы сайта.</p></div>#}
+{#    </div>#}
+{#  </section>#}
+{##}
+{#  <section class="block" id="students">#}
+{#    <h3 class="block__title">Для студентов</h3>#}
+{#    <ol class="steps">#}
+{#      <li class="steps__item">Модель AS-IS</li>#}
+{#      <li class="steps__item">Видение TO-BE</li>#}
+{#      <li class="steps__item">Модели и ТЗ (ГОСТ 34)</li>#}
+{#      <li class="steps__item">Прототип и защита</li>#}
+{#    </ol>#}
+{#  </section>#}
+{##}
+{#  <section class="block" id="join">#}
+{#    <h3 class="block__title">Как присоединиться</h3>#}
+{#    <div class="join-grid">#}
+{#      <div class="join-step"><span class="join-step__num">1</span><p>Напишите нам о своих интересах.</p></div>#}
+{#      <div class="join-step"><span class="join-step__num">2</span><p>Собеседование и подбор проекта.</p></div>#}
+{#      <div class="join-step"><span class="join-step__num">3</span><p>Старт с наставником и чек-поинтами.</p></div>#}
+{#    </div>#}
+{#  </section>#}
+{#</section>#}
+{#{% endblock %}#}
+{##}
+{#{% block content_block_2 %}#}
+{#<section class="contacts-embed">#}
+{#  <h3 class="block__title">Контакты</h3>#}
+{#  <div class="contact-card">#}
+{#    <div class="contact-card__row"><span class="contact-card__key">Кафедра:</span><span class="contact-card__val">Энергетический факультет, ЗабГУ</span></div>#}
+{#    <div class="contact-card__row"><span class="contact-card__key">Адрес:</span><span class="contact-card__val">г. Чита, [уточнить адрес]</span></div>#}
+{#    <div class="contact-card__row"><span class="contact-card__key">Почта/Telegram:</span><span class="contact-card__val"><a href="mailto:example@zabgu.ru">example@zabgu.ru</a> / @skb_energy</span></div>#}
+{#  </div>#}
+{#</section>#}
+{#{% endblock %}#}
+{##}
+{#{% block content_block_3 %}{% endblock %}#}
+
+
+{% block content_block_1 %}
+    <section class="lead">
+        <h2>Кто мы</h2>
+        <p>Студенческое научно-техническое подразделение кафедры энергетики ЗабГУ. Мы разрабатываем и внедряем решения в
+            энергосбережении и энергоэкологии, ведём НИОКР, оформляем результаты по ГОСТ и доводим разработки до
+            пилотов.</p>
+    </section>
+
+    <section class="grid-2 block">
+        <div>
+            <h3 class="block__title">Миссия</h3>
+            <p class="muted">Доводить научные идеи до работающих прототипов и внедрений, формируя инженерную культуру у
+                студентов.</p>
+            <ul class="list">
+                <li>R&D → прототип → испытания → ОПЭ</li>
+                <li>Портфель проектов, TRL и отчётность</li>
+                <li>Публикации, патенты, грантовая активность</li>
+            </ul>
+        </div>
+        <div class="fact">
+            <blockquote>«Наука — не приз, который можно подержать в руках, а горизонт открытий»</blockquote>
+            <div class="chips">
+                <span class="chip chip--soft">Гибкие методологии</span>
+                <span class="chip chip--soft">Функциональное СКБ</span>
+                <span class="chip chip--soft">Отдельное подразделение</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="tet" class="block highlight">
+        <h3 class="block__title">ООО «ТЭТ» — технологический стартап (2025)</h3>
+        <p>Проект родился в стенах университета и СКБ «КБ». Мы руководим всем циклом: патент, прототип, испытания,
+            опытно-промышленная эксплуатация рекуператора теплоты серых стоков.</p>
+    </section>
+
+    <section class="block">
+        <h3 class="block__title">Ключевые проекты</h3>
+        <div class="cards cards--3">
+            <article class="card">
+                <h4 class="card__title">Подавление выбросов бенза(а)пирена</h4>
+                <p class="card__text">Новые методы анализа и гипотеза автокаталитических процессов; технологии
+                    подавления на угольной генерации.</p>
+            </article>
+            <article class="card">
+                <h4 class="card__title">Рекуперация теплоты серых стоков (TRL-6)</h4>
+                <p class="card__text">Запатентованная технология, ОПЭ на площадке ГРК «Быстринское»; ООО «ТЭТ» как
+                    индустриальный контур.</p>
+            </article>
+            <article class="card">
+                <h4 class="card__title">Обогащение золошлаковых отходов</h4>
+                <p class="card__text">Электромагнитная сепарация горючих элементов для дальнейшей переработки.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="grid-2 block">
+        <div>
+            <h3 class="block__title">Финансирование</h3>
+            <p class="muted">Фонд содействия инновациям, гранты Президента РФ, премии и стипендии, внутренние гранты
+                ЗабГУ, собственные средства.</p>
+        </div>
+        <div>
+            <h3 class="block__title">Достижения</h3>
+            <ul class="list">
+                <li>30+ публикаций (Scopus, ВАК и др.)</li>
+                <li>Патент на рекуператор серых стоков, ещё 2 заявки</li>
+                <li>Термостойкий сорбционный фильтр для улавливания бенз(а)пирена</li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="join" class="block block--soft">
+        <h3 class="block__title">Как присоединиться</h3>
+        <ol class="steps">
+            <li>Напиши о своих интересах → подбор темы</li>
+            <li>Мини-собеседование и старт с наставником</li>
+            <li>AS-IS/TO-BE, ТЗ, прототип, защита</li>
+        </ol>
+        <a class="btn btn--primary" href="{% url 'contacts' %}">Связаться</a>
+    </section>
+{% endblock %}
+
+{% block content_block_2 %}{% endblock %}
+{% block content_block_3 %}{% endblock %}

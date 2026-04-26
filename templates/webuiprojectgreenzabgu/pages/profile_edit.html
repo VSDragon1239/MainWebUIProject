@@ -1,0 +1,53 @@
+{% extends 'base/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - Профиль{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/profile_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1><a href="{% url 'main' %}">МЗП</a> -> <a href="{% url 'profile' %}">Профиль</a> -> Изменение изображения</h1>
+{% endblock %}
+
+{% block content_block_1 %}
+
+    {#    <form method="post" enctype="multipart/form-data">#}
+    {#        {% csrf_token %}#}
+    {#        {{ form.as_p }}#}
+    {#        <button type="submit" class="btn btn-primary">Загрузить фото</button>#}
+    {#    </form>#}
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0">Изменить данные профиля</h4>
+                </div>
+                <div class="card-body">
+
+                    <!-- ВАЖНО: enctype="multipart/form-data" для загрузки файлов! -->
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <!-- Данные модели Profile -->
+                        <div class="mb-3">
+                            <label for="id_avatar" class="form-label">Аватар профиля</label>
+                            {{ p_form.avatar }}
+                            <div class="form-text">Рекомендуемый размер: 300x300px. Формат JPG или PNG.</div>
+                        </div>
+
+                        <!-- Кнопки действий -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Отмена</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-1"></i> Сохранить изменения
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

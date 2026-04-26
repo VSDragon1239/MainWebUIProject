@@ -1,0 +1,28 @@
+{% extends 'base/base_header.html' %}
+{% load static %}
+
+{% block title %}СКБ КБ - Контент менеджеру {% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1><a href="{% url 'main' %}">СКБ КБ</a>  ->  Контент-менеджеру</h1>
+{% endblock %}
+
+{% block content_block_01 %}
+    <div class="content-block-01">
+        <a class="base-link link-1 border-10" href="{% url 'profile' %}">
+            <h1>Профиль</h1>
+        </a>
+    </div>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="content-block-1">
+        <a class="base-link link-1 border-10" href="{% url 'add_blog_post' %}">
+            <h1>Добавить новость</h1>
+        </a>
+    </div>
+{% endblock %}

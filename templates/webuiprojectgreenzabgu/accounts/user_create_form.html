@@ -1,0 +1,28 @@
+{% extends "base/base_header.html" %}
+{% load static %}
+
+{% block title %}СКБ КБ - Новый Пользователь{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/base/form_styles.css' %}">
+{% endblock %}
+
+{% block content_block_01 %}
+    <div class="content-block-01">
+        <a class="base-link link-1 border-10" href="{% url 'admin' %}">
+            <h1>Вернуться</h1>
+        </a>
+    </div>
+{% endblock %}
+
+{% block content_block_1 %}
+    <h1>{{ view.object|default:"Новый пользователь" }}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="button_container">
+            <button type="submit" class="base-link">Добавить</button>
+        </div>
+    </form>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends 'base/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - Детали события или мероприятия{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/index_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1>
+        МЗП ->
+        <a href="{% url 'main' %}">Главная</a> ->
+        <a href="{% url 'profile' %}">Категория событий или мероприятий: "pk1"</a> ->
+        <a href="{% url 'profile' %}">Событие или мероприятие: "pk2"</a> ->
+        Детали события или мероприятия
+    </h1>
+{% endblock %}
+
+{% block content_block_1 %}
+
+{% endblock %}

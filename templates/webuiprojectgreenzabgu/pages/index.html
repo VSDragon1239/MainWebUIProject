@@ -1,0 +1,131 @@
+{% extends 'webuiproject/base/base_header.html' %}
+{% load static %}
+
+{% block title %}Web UI - Главная{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/index_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+<!-- Скрытие заголовка base.html, если необходимо -->
+{% endblock %}
+
+{% block content_block_1 %}
+
+<!-- Основной контейнер страницы -->
+<section class="mb-5">
+    <h2 class="h3 mb-3 border-bottom pb-2">Доступные модули</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+
+        <!-- Карточка модуля 1: Проекты -->
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">📁 Управление Проектами</h5>
+                    <p class="card-text text-muted">
+                        Доступ к файловой структуре, логам и настройкам активных проектов.
+                    </p>
+                    <a href="{% url 'main' %}" class="btn btn-outline-primary stretched-link">Перейти</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Карточка модуля 2: Документация / База знаний -->
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">📚 База знаний</h5>
+                    <p class="card-text text-muted">
+                        Статьи, инструкции и техническая документация по разработке.
+                    </p>
+                    <a href="#" class="btn btn-outline-primary stretched-link">Открыть</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Карточка модуля 3: Аналитика / Графики -->
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">📊 Мониторинг</h5>
+                    <p class="card-text text-muted">
+                        Визуализация данных, состояние серверов и логи в реальном времени.
+                    </p>
+                    <a href="#" class="btn btn-outline-primary stretched-link">Смотреть</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ==================== БЛОК 3: Основная информация (Биография / О проекте) ==================== -->
+<section class="row mb-5">
+    <div class="col-lg-8">
+        <div class="card bg-light border-0">
+            <div class="card-body">
+                <h3 class="card-title mb-3">О системе</h3>
+                <p class="card-text">
+                    Это универсальный веб-интерфейс, объединяющий различные инструменты автоматизации.
+                    Сайт служит центральным хабом для доступа к скриптам, базам данных и управлению файлами.
+                    Построен на Django с использованием модульной архитектуры.
+                </p>
+                <p class="card-text">
+                    Текущая версия: <strong>Alpha 0.1</strong> | Последнее обновление: <strong>2026-03-28</strong>
+                </p>
+                <hr>
+                <h5>Ключевые особенности:</h5>
+                <ul>
+                    <li>Модульность — легкое добавление новых разделов.</li>
+                    <li>Интеграция с файловой системой.</li>
+                    <li>Логирование действий в реальном времени.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== БЛОК 4: Сайдбар (Статус и События) ==================== -->
+    <div class="col-lg-4">
+        <!-- Статус системы -->
+        <div class="card mb-4">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0">Состояние системы</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Основной сервер
+                    <span class="badge bg-success rounded-pill">Online</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    База данных
+                    <span class="badge bg-success rounded-pill">Connected</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Фоновые задачи
+                    <span class="badge bg-warning text-dark rounded-pill">Pending</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Последние события (Логи) -->
+        <div class="card">
+            <div class="card-header bg-transparent">
+                <h5 class="mb-0">Последние события</h5>
+            </div>
+            <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                <div class="small text-muted mb-2">
+                    <span class="text-success">[INFO]</span> 15:10:35 - Папка "LearnData" открыта.
+                </div>
+                <div class="small text-muted mb-2">
+                    <span class="text-warning">[WARN]</span> 15:10:39 - Таймаут окна HWND.
+                </div>
+                <div class="small text-muted mb-2">
+                    <span class="text-primary">[USER]</span> 15:10:34 - Авторизация пройдена.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
