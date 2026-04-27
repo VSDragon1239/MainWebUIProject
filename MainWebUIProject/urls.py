@@ -34,7 +34,7 @@ urlpatterns = [
     path(
         'login/',
         LoginView.as_view(
-            template_name="pages/auth.html",
+            template_name="webuiproject/pages/auth.html",
             redirect_authenticated_user=True,
             next_page="/profile/",
         ),

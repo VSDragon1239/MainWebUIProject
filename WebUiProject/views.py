@@ -136,12 +136,27 @@ class BlogView(ListView):
         return super().get_queryset().prefetch_related("images")
 
 
+# Страница входа (доступно только тем кто не авторизован)
+class AuthView(FormView):
+    template_name = "webuiproject/pages/auth.html"
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        if user.is_authenticated:
+            return redirect("/profile/")
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
 # Страница профиля (доступна всем (Участнику, Руководителю, Контент-менеджеру, Администратору))
 class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
     required_roles = ["Участники", "Руководители", "Администраторы", "Контент менеджер"]
     login_url = "/login/"  # куда перенаправлять
     redirect_field_name = "next"  # параметр с origin
-    template_name = "pages/profile.html"
+    template_name = "webuiproject/pages/profile.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -291,21 +306,6 @@ class UserDeleteView(RoleRequiredMixin, DeleteView):
         resp = super().delete(request, *args, **kwargs)
         messages.success(request, f"Пользователь «{username}» удалён.")
         return resp
-
-
-# Страница входа (доступно только тем кто не авторизован)
-class AuthView(FormView):
-    template_name = "pages/auth.html"
-
-    def get(self, request, *args, **kwargs):
-        user = request.user
-        if user.is_authenticated:
-            return redirect("/profile/")
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
 
 
 # Страница нет доступа (вместо ошибки 403)
