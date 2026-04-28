@@ -3,7 +3,7 @@ from django.contrib import admin
 from WebUIProjectGreenZabGU.views import AddBlogPostView, AchievementsView, \
     CategoriesEventsView, EventsView, EcoHabitsTrackerView, EcoHabitsCategoriesView, \
     EcoHabitsView, EventDetailsView, EcoTasksTrackerView, EcoTaskDetailsView, EcoHabitDetailsView, \
-    CompleteEcoTaskView, LogEcoHabitView, AdminView, ParticipantView, ContentManagerView
+    CompleteEcoTaskView, LogEcoHabitView, AdminView, ParticipantView, ContentManagerView, IndexGreenView
 
 urlpatterns = [
     # Роли пользователей:
@@ -13,6 +13,7 @@ urlpatterns = [
     path('content_manager/', ContentManagerView.as_view(), name='content_manager'),  # Управляющий событиями
 
     # ============================ Для пользователей ============================
+    path('main/', IndexGreenView.as_view(), name='green_main'),  # Список достижений
     path('achievements/', AchievementsView.as_view(), name='achievements'),  # Список достижений
     path('categories-events/', CategoriesEventsView.as_view(), name='categories_events'),
 

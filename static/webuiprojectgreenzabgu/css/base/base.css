@@ -1,108 +1,43 @@
-/* /static/css/base.css */
-
-body {
-    font-family: "KellySlab", serif;
-    font-size: 18px;
-    display: flex;
-    flex-direction: column;
-    /*background-color: var(--global-background-color-element);*/
-    background-color: white;
+/* Только для экранов больше 1024px */
+@media screen and (min-width: 1025px) {
+    body {
+        zoom: 150%;
+        /* Если используете transform вместо zoom: */
+        /* transform: scale(2);
+           transform-origin: top left;
+           width: 50%; */
+    }
 }
 
-header {
-    display: flex;
-    justify-content: center;
-    margin: 50px 0 35px;
-    padding-top: 20px;
-    padding-bottom: 28px;
-
-    border-radius: 0;
-    background: linear-gradient(to right, rgba(185, 0, 255, 100%) 0%, rgba(24, 74, 82, 100%) 50%, rgba(229, 0, 255, 100%) 100%);
+/* Для мобильных (больше 720px до 1024px) оставляем стандартный масштаб 100% */
+@media screen and (max-width: 1024px) and (min-width: 720px) {
+    body {
+        zoom: 142%;
+        /*width: 50%;*/
+    }
 }
 
-header h1 {
-    color: rgb(255, 255, 255);
+/* Для мобильных (до 1024px) оставляем стандартный масштаб 100% */
+@media screen and (max-width: 720px) and (min-width: 512px) {
+    body {
+        /*font-size: 12px;*/
+        zoom: 70%;
+        /*width: 50%;*/
+    }
 }
 
-main {
-    display: flex;
-    flex-direction: column;
-    /*padding-left: 31px;*/
-    /*padding-right: 31px;*/
-    gap: 10px;
+@media screen and (max-width: 414px) {
+    body {
+        zoom: 60%;
+    }
 }
 
-.content {
-    display: flex;
-    /*justify-content: center;*/
-    /*flex-direction: column;*/
-    /*align-items: center;*/
-    /*width: 99%;*/
-    min-height: 800px;
-    gap: 10px; /* Отступы между блоками */
-    padding: 10px; /* Внутренние отступы */
-    background-color: var(--global-side-background-color-element); /* Светлый фон */
-    border-radius: 10px; /* Скругление углов */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Тень для визуального выделения */
-    margin: 0 50px;
-}
-
-.content h1 {
-    color: black;
-}
-
-.content-top {
-    font-family: "Jura", serif;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-left: 31px;
-    padding-right: 31px;
-    height: 70px;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0%) 0%, rgba(255, 255, 255, 70%) 10%, #ffffff 60%, rgba(255, 255, 255, 0%) 100%);
-    z-index: 3;
-}
-
-.content-top .base-link::after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    pointer-events: none; /* чтобы не мешал клику */
-    transition: background 0.1s ease;
-    border-radius: 10px;
-}
-
-.content-top h1 {
-    font-size: 24px;
-}
-
-.content-block-01 {
-    display: flex;
-}
-
-.content-block-01 h1 {
-    font-family: "KellySlab", serif;
-    font-size: 18px;
-    color: #ffffff;
-}
-
-.content-block-1 {
-    display: flex;
-}
-
-footer {
-    background-color: #333;
-    color: white;
-    text-align: center;
-    padding: 1rem;
-    position: relative;
-    bottom: 0;
-    /*width: 99%;*/
-}
-
-.link-image {
-    width: 48px;
-    height: 48px;
-    margin-right: 32px;
-}
+/*.ppt-slide {*/
+/*    position: relative;*/
+/*    margin-left: auto;*/
+/*    margin-right: auto;*/
+/*    box-sizing: border-box;*/
+/*    !*min-height: 1334px;*!*/
+/*    !*width: 720px;*!*/
+/*    overflow: hidden;*/
+/*}*/

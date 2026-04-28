@@ -23,6 +23,17 @@ from .services import EcoCoinService
 logger = logging.getLogger(__name__)
 
 
+class IndexGreenView(TemplateView):
+    template_name = "webuiprojectgreenzabgu/pages/index.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
 # Страница для участников
 #   Список проектов в которых участвуете, информация, доступ к документам, их редактирование, и т.д.
 class ParticipantView(RoleRequiredMixin, TemplateView):
