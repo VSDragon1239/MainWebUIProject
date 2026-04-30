@@ -166,7 +166,6 @@ MEDIAFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# settings.py
 
 # Docker internal network URL (имя сервиса из docker-compose)
 ANYTHINGLLM_API_URL = 'http://192.168.100.185:3001'
