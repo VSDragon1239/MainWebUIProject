@@ -20,13 +20,15 @@ from django.contrib.auth.views import LoginView, LogoutView
 
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 
 from WebUiProject.views import NoAccessView
 
 urlpatterns = [
     path('sysadmin/', admin.site.urls),
-    path('main/', include('WebUiProject.urls')),  # Доступ по адресу /main/
-    path('main/green-zabgu/', include('WebUIProjectGreenZabGU.urls')),  # Доступ по адресу /green-zabgu/
+    path('main/', include('WebUiProject.urls')),  # Доступ по адресу /main/, главная для всего...
+    path('main/green-zabgu/', include('WebUIProjectGreenZabGU.urls')),
+    # Доступ по адресу main/green-zabgu/, главная для МЗП
 
     # Системные страницы
     # path('upload-file/', UploadFileView.as_view(), name='upload_file'),
@@ -47,6 +49,7 @@ urlpatterns = [
         ),
         name="logout",
     ),
+    path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'favicon.png')),
 ]
 
 if settings.DEBUG:

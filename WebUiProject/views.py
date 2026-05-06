@@ -82,7 +82,7 @@ class IndexView(TemplateView):
         return context
 
 
-# Страница об предприятии
+# Страница о нас
 class AboutView(TemplateView):
     template_name = "pages/about.html"
 
@@ -118,24 +118,6 @@ class ApplicationsView(TemplateView):
         return context
 
 
-# Страница с блогом и новостями
-class BlogView(ListView):
-    template_name = "pages/blog.html"
-    model = Blog
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        blogs_list = Blog.objects.all()
-        context["blogs_list"] = blogs_list
-        return context
-
-    def get_queryset(self):
-        return super().get_queryset().prefetch_related("images")
-
-
 # Страница входа (доступно только тем кто не авторизован)
 class AuthView(FormView):
     template_name = "webuiproject/pages/auth.html"
@@ -148,52 +130,6 @@ class AuthView(FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        return context
-
-
-# Страница профиля (доступна всем (Участнику, Руководителю, Контент-менеджеру, Администратору))
-class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
-    required_roles = ["Участники", "Руководители", "Администраторы", "Контент менеджер"]
-    login_url = "/login/"  # куда перенаправлять
-    redirect_field_name = "next"  # параметр с origin
-    template_name = "webuiproject/pages/profile.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        context['user'] = user
-
-        # БЕЗОПАСНОЕ получение профиля
-        profile, _ = Profile.objects.get_or_create(user=user)
-        context['profile'] = profile
-
-        # Баланс
-        context['eco_balance'] = EcoCoinService.get_balance(user)
-
-        # Выполненные задания
-        context['completed_tasks'] = UserTaskCompletion.objects.filter(
-            user=user
-        ).select_related('task').order_by('-completed_at')
-
-        # Приоритеты ролей (если у пользователя несколько групп)
-        roles_priority = {
-            'Администраторы': ('Администратор', 'danger'),
-            'Контент менеджер': ('Контент-менеджер', 'info'),
-            'Руководители': ('Руководитель', 'warning'),
-            'Участники': ('Участник', 'secondary'),
-        }
-
-        user_groups = user.groups.values_list('name', flat=True)
-        context['display_role'] = ('Без роли', 'light')  # Значение по умолчанию
-
-        for group_name in user_groups:
-            if group_name in roles_priority:
-                context['display_role'] = roles_priority[group_name]
-                break
-
         return context
 
 

@@ -13,7 +13,7 @@ from django.http import Http404
 
 from .forms import BlogPostForm, BlogPostImageFormSet
 from WebUiProject.models import Project, Blog, EcoTransactionType, EcoTask, UserTaskCompletion, \
-    EcoHabit, UserHabitLog, EcoHabitCategory
+    EcoHabit, UserHabitLog, EcoHabitCategory, Profile
 from .permissions import RoleRequiredMixin
 
 from django.views import View
@@ -34,32 +34,49 @@ class IndexGreenView(TemplateView):
         return context
 
 
-# Страница для участников
-#   Список проектов в которых участвуете, информация, доступ к документам, их редактирование, и т.д.
-class ParticipantView(RoleRequiredMixin, TemplateView):
-    required_roles = ['Участники']
-    template_name = "pages/participant.html"
+# Страница профиля (доступна всем (Участнику, Руководителю, Контент-менеджеру, Администратору))
+class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
+    required_roles = ["Участники", "Руководители", "Администраторы", "Контент менеджер"]
+    login_url = "/login/"  # куда перенаправлять
+    redirect_field_name = "next"  # параметр с origin
+    template_name = "webuiprojectgreenzabgu/pages/profile.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        return context
+        user = self.request.user
+        context['user'] = user
 
+        # БЕЗОПАСНОЕ получение профиля
+        profile, _ = Profile.objects.get_or_create(user=user)
+        context['profile'] = profile
 
-# Страница для руководителя проекта (-ов)
-#   Список проектов     -   добавить (в систему), изменить (данные (кто участвует), ссылки, документы), удалить (вместе со всем),
-#   Участников проекта  -   добавить (зарегистрировать в систему и добавить к проекту), изменить (в каком проекте участвует, в каком уже нет), удалить (из системы учетную запись)
-class LeaderView(RoleRequiredMixin, TemplateView):
-    required_roles = ['Руководители']
-    template_name = "pages/leaders.html"
+        # Баланс
+        context['eco_balance'] = EcoCoinService.get_balance(user)
 
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        # Выполненные задания
+        context['completed_tasks'] = UserTaskCompletion.objects.filter(
+            user=user
+        ).select_related('task').order_by('-completed_at')
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        # Приоритеты ролей (если у пользователя несколько групп)
+        roles_priority = {
+            'Администраторы': ('Администратор', 'danger'),
+            'Контент менеджер': ('Контент-менеджер', 'info'),
+            'Руководители': ('Руководитель', 'warning'),
+            'Участники': ('Участник', 'secondary'),
+        }
+
+        user_groups = user.groups.values_list('name', flat=True)
+        context['display_role'] = ('Без роли', 'light')  # Значение по умолчанию
+
+        for group_name in user_groups:
+            if group_name in roles_priority:
+                context['display_role'] = roles_priority[group_name]
+                break
+
         return context
 
 
@@ -97,6 +114,20 @@ class AdminView(RoleRequiredMixin, TemplateView):
         return context
 
 
+# Страница для участников
+#   Список проектов в которых участвуете, информация, доступ к документам, их редактирование, и т.д.
+class ParticipantView(RoleRequiredMixin, TemplateView):
+    required_roles = ['Участники']
+    template_name = "pages/participant.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
 class ContentManagerView(RoleRequiredMixin, TemplateView):
     required_roles = ['Контент менеджер']
     template_name = "pages/content_manager.html"
@@ -107,6 +138,24 @@ class ContentManagerView(RoleRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
+
+
+# Страница с блогом и новостями
+class BlogView(ListView):
+    template_name = "pages/blog.html"
+    model = Blog
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        blogs_list = Blog.objects.all()
+        context["blogs_list"] = blogs_list
+        return context
+
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related("images")
 
 
 class AddBlogPostView(RoleRequiredMixin, CreateView):
@@ -188,7 +237,7 @@ class EventDetailsView(TemplateView):
 
 
 class EcoHabitsTrackerView(TemplateView):
-    template_name = "pages/eco_habits_tracker.html"
+    template_name = "webuiprojectgreenzabgu/pages/eco_habits_tracker.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -199,7 +248,27 @@ class EcoHabitsTrackerView(TemplateView):
 
 
 class EcoTasksTrackerView(TemplateView):
-    template_name = "pages/eco_tasks_tracker.html"
+    template_name = "webuiprojectgreenzabgu/pages/eco_tasks_tracker.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        completed_ids = UserTaskCompletion.objects.filter(
+            user=self.request.user
+        ).values_list('task_id', flat=True)
+
+        # 2. Выводим ТОЛЬКО те активные задания, которых НЕТ в списке выполненных
+        tasks = EcoTask.objects.filter(is_active=True).exclude(pk__in=completed_ids)
+
+        context['tasks'] = tasks
+        context['completed_task_ids'] = set(completed_ids)
+        return context
+
+
+class EcoTasksView(TemplateView):
+    template_name = "webuiprojectgreenzabgu/pages/eco_tasks.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
