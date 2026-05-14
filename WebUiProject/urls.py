@@ -1,5 +1,5 @@
 from django.urls import path
-from WebUiProject.views import IndexView, ContactsView, AboutView, ApplicationsView, \
+from WebUiProject.views import IndexView, AboutView, ApplicationsView, \
     UserCreateView, UserUpdateView, UserDeleteView, EditProfileView
 
 urlpatterns = [
@@ -13,10 +13,9 @@ urlpatterns = [
 
     # Для пользователей:
 
-    path('profile/edit/', EditProfileView.as_view(), name='profile_edit'),  # Управление профилем
+    path('profile/edit/', EditProfileView.as_view(), name='profile_edit'),
 
     # ы
-    path('contacts/', ContactsView.as_view(), name='contacts'),
     path('about/', AboutView.as_view(), name='about'),
     path('application/', ApplicationsView.as_view(), name='application'),
 ]

@@ -1,4 +1,35 @@
-/* base.css */
+@media screen and (min-width: 1025px) {
+    body {
+        zoom: 100%;
+        /* Если используете transform вместо zoom: */
+        /* transform: scale(2);
+           transform-origin: top left;
+           width: 50%; */
+    }
+}
+
+/* Для мобильных (больше 720px до 1024px) оставляем стандартный масштаб 100% */
+@media screen and (max-width: 1024px) and (min-width: 720px) {
+    body {
+        zoom: 70%;
+        /*width: 50%;*/
+    }
+}
+
+/* Для мобильных (до 1024px) оставляем стандартный масштаб 100% */
+@media screen and (max-width: 720px) and (min-width: 512px) {
+    body {
+        /*font-size: 12px;*/
+        zoom: 50%;
+        /*width: 50%;*/
+    }
+}
+
+@media screen and (max-width: 414px) {
+    body {
+        zoom: 30%;
+    }
+}
 
 body {
     display: flex;

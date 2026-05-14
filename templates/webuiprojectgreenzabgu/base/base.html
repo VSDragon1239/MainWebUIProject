@@ -43,7 +43,7 @@
     {% endblock %}
 </head>
 <body>
-<header>
+<header class="sticky top-0 z-20 bg-white shadow-md">
     {% block header_block_1 %}{% endblock %}
     {% block header_block_2 %}{% endblock %}
     {% block header_block_3 %}{% endblock %}
@@ -107,6 +107,12 @@
         </div>
     </div>
 </footer>
+<!-- Django Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- Инициализация для русского языка (опционально, но полезно для "Нет результатов") -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/ru.js"></script>
 </body>
 </html>
 

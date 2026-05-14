@@ -94,18 +94,6 @@ class AboutView(TemplateView):
         return context
 
 
-# Контактная информация
-class ContactsView(TemplateView):
-    template_name = "pages/contacts.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
-
-
 # Области применения
 class ApplicationsView(TemplateView):
     template_name = "pages/applications.html"
@@ -144,7 +132,7 @@ class EditProfileView(LoginRequiredMixin, View):
         context = {
             'p_form': p_form,
         }
-        return render(request, 'pages/profile_edit.html', context)
+        return render(request, 'webuiproject/pages/profile_edit.html', context)
 
     def post(self, request):
         profile, _ = Profile.objects.get_or_create(user=request.user)

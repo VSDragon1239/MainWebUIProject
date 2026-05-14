@@ -1,104 +1,260 @@
-{% extends 'base/base_header.html' %}
+{% extends 'webuiprojectgreenzabgu/base/base_header.html' %}
 {% load static %}
 
-{% block title %}Иван — Контакты{% endblock %}
+{% block title %}Web UI - Главная{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/contacts_style.css' %}">
+    <link rel="stylesheet" href="{% static 'webuiprojectgreenzabgu/css/index_style.css' %}">
 {% endblock %}
 
 {% block content_block_0 %}
-<h1><a href="{% url 'main' %}">Иван</a> — Контакты</h1>
-<p class="subtitle">Связь — это начало любого проекта</p>
+    <!-- Скрытие заголовка base.html, если необходимо -->
 {% endblock %}
 
 {% block content_block_1 %}
-<section class="contacts">
+    {% if is_register %}
+        <!-- Этот блок покажется ТОЛЬКО если нажали кнопку «Зарегистрироваться» -->
+        <div class="px-12 py-12 bg-gray-50">
+            <div class="registration-form-wrapper flex flex-column items-center mb-4 bg-white rounded-xl p-6 shadow-md text-center">
+                <h2 class="text-2xl font-bold mb-4">Создать новый аккаунт</h2>
+                <!-- Ваша форма регистрации -->
+                <form method="post" action="{% url 'contacts' %}?action=register" class="space-y-4">
+                    {% csrf_token %}
 
-    <div class="contact-card contact-card--accent">
+                    <!-- Поле: ФИО -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.fio.label }}</label>
+                        {{ form.fio }}
+                        {% if form.fio.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.fio.errors.0 }}</p>{% endif %}
+                    </div>
 
-        <div class="row">
-            <span>Кто я</span>
-            <b>IT-специалист • 3D-художник • архитектор систем</b>
+                    <!-- Поле: Группа -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.group.label }}</label>
+
+                        <!-- Обертка с вашими Tailwind классами для внешнего вида -->
+                        <div class="w-full border rounded-lg overflow-hidden shadow-sm">
+                            {{ form.group }}
+                        </div>
+
+                        {% if form.group.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.group.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Поле: Телефон -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.phone.label }}</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.phone.errors.0 }}</p>{% endif %}
+                    </div>
+
+                    <!-- Поле: Email -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">{{ form.email.label }}</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>{% endif %}
+                    </div>
+
+                    <!-- Поле: Согласие -->
+                    <div class="flex items-start mt-4">
+                        <div class="flex items-center h-5">
+                            {{ form.agreement }}
+                        </div>
+                        <div class="ml-3 text-sm">
+                            <label for="{{ form.agreement.id_for_label }}" class="font-medium text-gray-700">
+                                Даю согласие на <a href="#" class="text-green-600 hover:underline">обработку
+                                персональных
+                                данных</a>
+                            </label>
+                            {% if form.agreement.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ form.agreement.errors.0 }}</p>{% endif %}
+                        </div>
+                    </div>
+                    <!-- Поле: reCAPTCHA -->
+                    <div class="flex justify-center pt-2">
+                        {{ form.captcha }}
+                        {% if form.captcha.errors %}
+                            <p class="text-red-500 text-xs mt-1 w-full text-center">{{ form.captcha.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <!-- Кнопка отправки -->
+                    <button type="submit"
+                            class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md">
+                        Отправить данные
+                    </button>
+                </form>
+            </div>
         </div>
+    {% else %}
+        {% if is_send %}
+            {% if messages %}
+                <div class="space-y-2 mb-6">
+                    {% for message in messages %}
+                        <div class="p-4 text-sm text-green-700 bg-green-100 border border-green-200 rounded-lg shadow-sm flex items-center justify-between"
+                             role="alert">
+                            <span class="font-medium">{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endif %}
+        <!-- Обычный контент страницы контактов, если зашли просто так -->
+        <!-- Contact Content -->
+        <div class="px-12 py-8 bg-gray-50">
+            <!-- Contact Information -->
+            <div class="mb-6">
+                <div class="flex items-center mb-4">
+                    <i class="material-icons text-2xl eco-green mr-2">business</i>
+                    <h3 class="text-2xl font-bold text-gray-800">Офис технологического лидерства</h3>
+                </div>
 
-        <div class="row">
-            <span>Подход</span>
-            <b>Структура, логика и атмосфера — как единая система</b>
+                <div class="bg-white rounded-xl shadow-md p-5 mb-3">
+                    <div class="flex items-start">
+                        <i class="material-icons text-2xl eco-green mr-3 mt-1">location_on</i>
+                        <div>
+                            <div class="text-gray-800 font-semibold text-lg mb-1">Адрес</div>
+                            <p class="text-gray-600 text-base">ул. Александро-Заводская, 30</p>
+                            <p class="text-gray-600 text-base">г. Чита, 672039</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div class="contact-card bg-white rounded-xl shadow-md p-4">
+                        <div class="flex items-center mb-2">
+                            <i class="material-icons text-xl eco-green mr-2">phone</i>
+                            <span class="text-gray-500 text-sm">Телефон</span>
+                        </div>
+                        <div class="text-gray-800 font-semibold text-lg">+7 (3022) 41-65-00</div>
+                    </div>
+
+                    <div class="contact-card bg-white rounded-xl shadow-md p-4">
+                        <div class="flex items-center mb-2">
+                            <i class="material-icons text-xl eco-green mr-2">email</i>
+                            <span class="text-gray-500 text-sm">Email</span>
+                        </div>
+                        <div class="text-gray-800 font-semibold text-lg">eco@zabgu.ru</div>
+                    </div>
+                </div>
+
+                <div class="contact-card bg-white rounded-xl shadow-md p-4 mb-3">
+                    <div class="flex items-center mb-2">
+                        <i class="material-icons text-xl eco-green mr-2">schedule</i>
+                        <span class="text-gray-500 text-sm">Рабочее время</span>
+                    </div>
+                    <div class="text-gray-800 font-semibold text-lg">Пн-Пт 9:00-18:00</div>
+                </div>
+            </div>
+
+            <!-- Social Networks -->
+            <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-5 mb-6 text-white">
+                <div class="flex items-center mb-3">
+                    <i class="material-icons text-2xl mr-2">share</i>
+                    <h3 class="text-xl font-bold">Мы в социальных сетях</h3>
+                </div>
+                <div class="grid grid-cols-3 gap-3">
+                    <a href="#"
+                       class="bg-white bg-opacity-20 rounded-lg p-3 text-center hover:bg-opacity-30 transition">
+                        <i class="material-icons text-3xl mb-1">groups</i>
+                        <div class="text-sm font-semibold">ВКонтакте</div>
+                    </a>
+                    <a href="#"
+                       class="bg-white bg-opacity-20 rounded-lg p-3 text-center hover:bg-opacity-30 transition">
+                        <i class="material-icons text-3xl mb-1">send</i>
+                        <div class="text-sm font-semibold">Telegram</div>
+                    </a>
+                    <a href="#"
+                       class="bg-white bg-opacity-20 rounded-lg p-3 text-center hover:bg-opacity-30 transition">
+                        <i class="material-icons text-3xl mb-1">photo_camera</i>
+                        <div class="text-sm font-semibold">Instagram</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <div class="flex items-center mb-4">
+                    <i class="material-icons text-2xl eco-green mr-2">mail</i>
+                    <h3 class="text-2xl font-bold text-gray-800">Обратная связь</h3>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-gray-700 text-sm font-medium mb-1 block">Имя</label>
+                        <input type="text" placeholder="Ваше имя"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-base"/>
+                    </div>
+
+                    <div>
+                        <label class="text-gray-700 text-sm font-medium mb-1 block">Email</label>
+                        <input type="email" placeholder="your@email.com"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-base"/>
+                    </div>
+
+                    <div>
+                        <label class="text-gray-700 text-sm font-medium mb-1 block">Тема</label>
+                        <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-base text-gray-700">
+                            <option value="">Выберите тему</option>
+                            <option value="question">Вопрос</option>
+                            <option value="suggestion">Предложение</option>
+                            <option value="complaint">Жалоба</option>
+                            <option value="partnership">Сотрудничество</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-gray-700 text-sm font-medium mb-1 block">Сообщение</label>
+                        <textarea placeholder="Ваше сообщение..." rows="3"
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 text-base resize-none"></textarea>
+                    </div>
+
+                    <button class="gradient-green text-white px-8 py-3 rounded-lg font-semibold text-base shadow-md hover:shadow-lg transition w-full">
+                        Отправить сообщение
+                    </button>
+                </div>
+            </div>
+
+            <!-- FAQ -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center mb-4">
+                    <i class="material-icons text-2xl eco-green mr-2">help</i>
+                    <h3 class="text-2xl font-bold text-gray-800">Частые вопросы</h3>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="border-b border-gray-200 pb-3">
+                        <div class="flex items-center justify-between cursor-pointer">
+                            <span class="text-gray-800 font-medium text-base">Как начать пользоваться?</span>
+                            <i class="material-icons text-gray-400">expand_more</i>
+                        </div>
+                    </div>
+
+                    <div class="border-b border-gray-200 pb-3">
+                        <div class="flex items-center justify-between cursor-pointer">
+                            <span class="text-gray-800 font-medium text-base">Как получить баллы?</span>
+                            <i class="material-icons text-gray-400">expand_more</i>
+                        </div>
+                    </div>
+
+                    <div class="border-b border-gray-200 pb-3">
+                        <div class="flex items-center justify-between cursor-pointer">
+                            <span class="text-gray-800 font-medium text-base">Где посмотреть свои задания?</span>
+                            <i class="material-icons text-gray-400">expand_more</i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between cursor-pointer">
+                            <span class="text-gray-800 font-medium text-base">Как связаться с поддержкой?</span>
+                            <i class="material-icons text-gray-400">expand_more</i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="row">
-            <span>Фокус</span>
-            <b>Проекты, где важны не только функции, но и понимание и отклик в душе</b>
-        </div>
-
-        <div class="row">
-            <span>Принцип</span>
-            <b>Доводить идеи до состояния, где они «ощущаются правильно»</b>
-        </div>
-
-        <div class="row divider"></div>
-
-        <div class="row">
-            <span>Telegram</span>
-            <b><a href="https://t.me/VarStarDragon">Telegram</a></b>
-        </div>
-
-        <div class="row">
-            <span>GitHub</span>
-            <b><a href="https://github.com/VSDragon1239">github.com/VSDragon1239</a></b>
-        </div>
-
-        <div class="row">
-            <span>Портфолио</span>
-            <b><a href="#">Скоро...</a></b>
-        </div>
-
-    </div>
-
-    <div class="contact-note">
-        <p>
-            Лучше всего писать, когда у вас есть идея, задача или даже просто ощущение,
-            что «это должно работать иначе».
-            Я ценю ясность, но не меньше — глубину.
-        </p>
-    </div>
-
-    <!--    <form class="form form&#45;&#45;glass" method="post" action="#">-->
-    <!--        {% csrf_token %}-->
-
-    <!--        <h3>Связаться</h3>-->
-
-    <!--        <label>-->
-    <!--            Имя-->
-    <!--            <input type="text" name="name" required>-->
-    <!--        </label>-->
-
-    <!--        <label>-->
-    <!--            Почта-->
-    <!--            <input type="email" name="email" required>-->
-    <!--        </label>-->
-
-    <!--        <label>-->
-    <!--            Сообщение-->
-    <!--            <textarea name="msg" rows="5" required placeholder="Кратко опишите идею или задачу..."></textarea>-->
-    <!--        </label>-->
-
-    <!--        <button class="btn btn&#45;&#45;primary" type="submit">Отправить</button>-->
-
-    <!--        <p class="muted">-->
-    <!--            Чем точнее сформулирована идея — тем глубже можно её реализовать.-->
-    <!--        </p>-->
-    <!--    </form>-->
-
-</section>
-
-<section class="map map--ambient">
-    <div class="map__placeholder">
-        Не точка на карте — а пространство, где создаются проекты. Но тут пока ничего нет...
-    </div>
-</section>
+    {% endif %}
 {% endblock %}
-
-{% block content_block_2 %}{% endblock %}
-{% block content_block_3 %}{% endblock %}

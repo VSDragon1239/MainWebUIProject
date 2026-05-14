@@ -25,6 +25,7 @@ from django.views.generic import RedirectView
 from WebUiProject.views import NoAccessView
 
 urlpatterns = [
+    path('', RedirectView.as_view(url='main/', permanent=True)),
     path('sysadmin/', admin.site.urls),
     path('main/', include('WebUiProject.urls')),  # Доступ по адресу /main/, главная для всего...
     path('main/green-zabgu/', include('WebUIProjectGreenZabGU.urls')),
@@ -38,7 +39,7 @@ urlpatterns = [
         LoginView.as_view(
             template_name="webuiproject/pages/auth.html",
             redirect_authenticated_user=True,
-            next_page="/main/profile/",
+            next_page="/main/green-zabgu/profile/",
         ),
         name="login",
     ),

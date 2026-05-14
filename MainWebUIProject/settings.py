@@ -27,7 +27,7 @@ DEBUG = True
 
 hosts = os.getenv(
     'DJANGO_ALLOWED_HOSTS',
-    'localhost,127.0.0.1,[::1],194.87.214.67,192.168.100.196',  # добавь сюда свой реальный IP
+    'localhost,127.0.0.1,[::1],194.87.214.67,192.168.100.196,10.0.2.2',  # добавь сюда свой реальный IP
 )
 ALLOWED_HOSTS = hosts.split(',')
 
@@ -37,6 +37,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://localhost',
     'https://127.0.0.1',
     'https://192.168.100.196',
+    'https://10.0.2.2'
 ]
 
 # Application definition
@@ -51,6 +52,8 @@ INSTALLED_APPS = [
     'WebUiProject.apps.WebUiProjectConfig',
     'WebUIProjectGreenZabGU.apps.WebuiprojectgreenzabguConfig',
     'imagekit',
+    'django_select2',
+    'django_recaptcha',
 ]
 
 MIDDLEWARE = [
@@ -76,7 +79,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'WebUIProjectGreenZabGU.context_processors.eco_balance',  # Теперь в любом HTML шаблоне вы можете писать: {{ user_eco_balance }} ECO.
+                'WebUIProjectGreenZabGU.context_processors.eco_balance',
+                # Теперь в любом HTML шаблоне вы можете писать: {{ user_eco_balance }} ECO.
             ],
         },
     },
@@ -172,6 +176,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # settings.py
 
 # Docker internal network URL (имя сервиса из docker-compose)
-ANYTHINGLLM_API_URL = 'http://192.168.100.185:3001'
-ANYTHINGLLM_WORKSPACE = 'expert001'  # Слаг твоего воркспейса
-ANYTHINGLLM_API_KEY = 'FH2T4W6-4NNMA2Y-K9X3SDW-HWG7FJN'  # Твой API ключ из настроек AnythingLLM
+ANYTHINGLLM_API_URL = os.getenv('ANYTHINGLLM_API_URL')
+ANYTHINGLLM_WORKSPACE = os.getenv('ANYTHINGLLM_WORKSPACE')
+ANYTHINGLLM_API_KEY = os.getenv('ANYTHINGLLM_API_KEY')
+
+RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY', '')
+RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY', '')

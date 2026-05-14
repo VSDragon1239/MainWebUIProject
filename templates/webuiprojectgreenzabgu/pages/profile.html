@@ -57,12 +57,14 @@
                     <i class="material-icons text-5xl eco-green">person</i>
                 </div>
                 <div class="flex-grow">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Иванов Иван</h2>
-                    <p class="text-gray-600 text-lg">Студент ФКНТ, группа ПИ-301</p>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Голубенко Иван</h2>
+                    <p class="text-gray-600 text-lg">Студент ЭФ, группа ПИ-22</p>
                 </div>
-                <button class="border-2 border-green-500 text-green-700 px-6 py-2 rounded-full font-semibold text-sm hover:bg-green-50 transition">
-                    Редактировать
-                </button>
+                <a href="{% url 'profile_edit' %}">
+                    <button class="border-2 border-green-500 text-green-700 px-6 py-2 rounded-full font-semibold text-sm hover:bg-green-50 transition">
+                        Редактировать
+                    </button>
+                </a>
             </div>
 
             <!-- Level & Progress -->
@@ -82,8 +84,8 @@
             <!-- Stats Grid -->
             <div class="grid grid-cols-3 gap-4">
                 <div class="text-center bg-green-50 rounded-xl p-4">
-                    <div class="text-4xl font-bold eco-green mb-1">2450</div>
-                    <div class="text-gray-600 text-sm">Баллов</div>
+                    <div class="text-4xl font-bold eco-green mb-1">{{ user_eco_balance }}</div>
+                    <div class="text-gray-600 text-sm">ECO баллов</div>
                 </div>
                 <div class="text-center bg-green-50 rounded-xl p-4">
                     <div class="text-4xl font-bold eco-green mb-1">45</div>

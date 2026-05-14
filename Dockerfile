@@ -1,4 +1,5 @@
-FROM python:3.11-slim
+#FROM python:3.11-slim
+FROM mirror.gcr.io/library/python:3.11-slim
 LABEL authors="VariableStarryDragon"
 
 # Установим системные зависимости (PostgreSQL client, gcc для сборки psycopg2 и т.п.)

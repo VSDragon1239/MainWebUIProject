@@ -1,0 +1,164 @@
+{% extends 'webuiprojectgreenzabgu/base/base_header.html' %}
+{% load static %}
+
+{% block title %}Web UI - Главная{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'webuiprojectgreenzabgu/css/index_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <!-- Скрытие заголовка base.html, если необходимо -->
+{% endblock %}
+
+{% block content_block_1 %}
+    <!-- Marketplace Content -->
+    <div class="px-12 py-8 bg-gray-50">
+        <!-- Balance Card -->
+        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl shadow-lg p-6 mb-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-100 text-sm mb-1">Ваш баланс</p>
+                    <div class="text-5xl font-bold">2450</div>
+                    <p class="text-green-100 text-sm mt-1">баллов</p>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-xl p-4">
+                    <i class="material-icons text-5xl">account_balance_wallet</i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Filters -->
+        <div class="bg-white rounded-xl shadow-md p-3 mb-6 flex items-center gap-2">
+            <button class="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-sm transition">
+                Все
+            </button>
+            <button class="flex-1 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition">
+                Еда
+            </button>
+            <button class="flex-1 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition">
+                Магазины
+            </button>
+            <button class="flex-1 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition">
+                Услуги
+            </button>
+            <button class="flex-1 text-gray-700 px-4 py-2 rounded-lg font-semibold text-sm hover:bg-green-50 transition">
+                Мерч
+            </button>
+        </div>
+
+        <!-- Partner Cards -->
+        <div class="mb-6">
+            <div class="flex items-center mb-4">
+                <i class="material-icons text-2xl eco-green mr-2">store</i>
+                <h3 class="text-2xl font-bold text-gray-800">Доступные бонусы</h3>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Partner 1 -->
+                <div class="bg-white rounded-xl shadow-md p-5 border-t-4 border-green-500">
+                    <div class="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mb-3 mx-auto">
+                        <i class="material-icons text-3xl eco-green">restaurant</i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-800 text-center mb-2">Столовая ЗабГУ</h4>
+                    <p class="text-gray-600 text-sm text-center mb-3">Скидка 10% на обеды</p>
+                    <div class="bg-green-50 rounded-lg p-3 mb-3">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold eco-green">500</div>
+                            <div class="text-gray-600 text-xs">баллов</div>
+                        </div>
+                    </div>
+                    <button class="w-full gradient-green text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition">
+                        Обменять
+                    </button>
+                </div>
+
+                <!-- Partner 2 -->
+                <div class="bg-white rounded-xl shadow-md p-5 border-t-4 border-green-500">
+                    <div class="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mb-3 mx-auto">
+                        <i class="material-icons text-3xl eco-green">local_cafe</i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-800 text-center mb-2">Кофейня «Бариста»</h4>
+                    <p class="text-gray-600 text-sm text-center mb-3">Бесплатный кофе</p>
+                    <div class="bg-green-50 rounded-lg p-3 mb-3">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold eco-green">300</div>
+                            <div class="text-gray-600 text-xs">баллов</div>
+                        </div>
+                    </div>
+                    <button class="w-full gradient-green text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition">
+                        Обменять
+                    </button>
+                </div>
+
+                <!-- Partner 3 -->
+                <div class="bg-white rounded-xl shadow-md p-5 border-t-4 border-green-500">
+                    <div class="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mb-3 mx-auto">
+                        <i class="material-icons text-3xl eco-green">shopping_bag</i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-800 text-center mb-2">Канцелярия</h4>
+                    <p class="text-gray-600 text-sm text-center mb-3">Скидка 15% на товары</p>
+                    <div class="bg-green-50 rounded-lg p-3 mb-3">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold eco-green">200</div>
+                            <div class="text-gray-600 text-xs">баллов</div>
+                        </div>
+                    </div>
+                    <button class="w-full gradient-green text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition">
+                        Обменять
+                    </button>
+                </div>
+
+                <!-- Partner 4 -->
+                <div class="bg-white rounded-xl shadow-md p-5 border-t-4 border-green-500">
+                    <div class="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mb-3 mx-auto">
+                        <i class="material-icons text-3xl eco-green">menu_book</i>
+                    </div>
+                    <h4 class="text-lg font-bold text-gray-800 text-center mb-2">Книжный магазин</h4>
+                    <p class="text-gray-600 text-sm text-center mb-3">Скидка 20% на книги</p>
+                    <div class="bg-green-50 rounded-lg p-3 mb-3">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold eco-green">400</div>
+                            <div class="text-gray-600 text-xs">баллов</div>
+                        </div>
+                    </div>
+                    <button class="w-full gradient-green text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-md hover:shadow-lg transition">
+                        Обменять
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Promocodes Section -->
+        <div>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-2xl font-bold text-gray-800">Мои промокоды</h3>
+                <span class="text-gray-600 text-sm">3 активных</span>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-4">
+                <div class="flex items-center justify-between border-b border-gray-200 pb-3 mb-3">
+                    <div class="flex items-center">
+                        <i class="material-icons text-2xl eco-green mr-3">confirmation_number</i>
+                        <div>
+                            <div class="text-gray-800 font-semibold">Столовая ЗабГУ - 10%</div>
+                            <div class="text-gray-500 text-sm">Действует до 20.06.2026</div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 px-3 py-1 rounded text-xs font-bold eco-green">Eco2026</div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="material-icons text-2xl eco-green mr-3">confirmation_number</i>
+                        <div>
+                            <div class="text-gray-800 font-semibold">Кофейня «Бариста»</div>
+                            <div class="text-gray-500 text-sm">Действует до 25.05.2026</div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 px-3 py-1 rounded text-xs font-bold eco-green">CoffeeMVP</div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

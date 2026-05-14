@@ -8,10 +8,11 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import TemplateView, CreateView, ListView, DetailView
 from django.db import transaction as db_transaction, IntegrityError
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
 from django.http import Http404
 
-from .forms import BlogPostForm, BlogPostImageFormSet
+from .forms import BlogPostForm, BlogPostImageFormSet, RegistrationRequestForm
 from WebUiProject.models import Project, Blog, EcoTransactionType, EcoTask, UserTaskCompletion, \
     EcoHabit, UserHabitLog, EcoHabitCategory, Profile
 from .permissions import RoleRequiredMixin
@@ -158,6 +159,42 @@ class BlogView(ListView):
         return super().get_queryset().prefetch_related("images")
 
 
+# Контактная информация
+class ContactsView(TemplateView):
+    template_name = "webuiprojectgreenzabgu/pages/contacts.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_register'] = self.request.GET.get('action') == 'register'
+        context['is_send'] = self.request.GET.get('action') == 'send'
+        if 'form' not in context:
+            context['form'] = RegistrationRequestForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Метод обрабатывает отправку формы (POST-запрос)"""
+        form = RegistrationRequestForm(request.POST)
+
+        if form.is_valid():
+            # Извлекаем очищенные данные, если они верны
+            fio = form.cleaned_data['fio']
+            group = form.cleaned_data['group']
+            phone = form.cleaned_data['phone']
+            email = form.cleaned_data['email']
+
+            # ТУТ код сохранения (например, создание записи в БД или отправка письма)
+
+            # Выводим сообщение об успехе и делаем перенаправление (редирект)
+            messages.success(request, f'Данные успешно отправлены! Ожидайте решение в письме, которое будет направлено на указанную почту - {email}!')
+            return redirect(f"{request.path}?action=send")
+
+        # Если в форме есть ошибки, заново рендерим страницу, передавая невалидную форму с ошибками
+        return self.render_to_response(self.get_context_data(form=form))
+
+
 class AddBlogPostView(RoleRequiredMixin, CreateView):
     required_roles = ['Контент менеджер']
     template_name = "pages/add_blog_post.html"
@@ -264,6 +301,50 @@ class EcoTasksTrackerView(TemplateView):
 
         context['tasks'] = tasks
         context['completed_task_ids'] = set(completed_ids)
+        return context
+
+
+class EcoBonusListView(TemplateView):
+    template_name = "webuiprojectgreenzabgu/pages/eco_bonus_list.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class EditEcoBonusView(TemplateView):
+    template_name = "webuiprojectgreenzabgu/pages/edit_eco_bonus.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class RatingBoardView(TemplateView):
+    template_name = "webuiprojectgreenzabgu/pages/rating_board.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class AddEcoBonusView(TemplateView):
+    template_name = "webuiprojectgreenzabgu/pages/add_eco_bonus.html"
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         return context
 
 

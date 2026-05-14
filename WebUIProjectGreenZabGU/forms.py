@@ -1,11 +1,30 @@
+import csv
+
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UserChangeForm
 from django.contrib.auth.models import User, Group
+from django.core.validators import RegexValidator
 from django.template.defaultfilters import slugify
+from django_recaptcha.fields import ReCaptchaField
+from django_recaptcha.widgets import ReCaptchaV2Checkbox
 
 from WebUiProject.models import Blog, BlogImage, Project, ProjectType, Profile
 
 from django.forms.models import inlineformset_factory
+from django_select2.forms import Select2Widget
+
+
+# Функция для загрузки CSV (вынесите в утилиты, если используется часто)
+def load_groups_from_csv(file_path='WebUIProjectGreenZabGU/zabgu_groups/all_groups_abc.csv'):
+    groups = []
+    try:
+        with open(file_path, mode='r', encoding='utf-8-sig') as f:
+            reader = csv.reader(f)
+            next(reader, None)  # Пропускаем заголовок "Группа"
+            groups = [row[0].strip() for row in reader if row]
+    except FileNotFoundError:
+        pass  # Вернет пустой список, если файла нет
+    return groups
 
 
 class CustomLoginForm(AuthenticationForm):
@@ -26,6 +45,68 @@ class CustomUserRegistrationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+
+
+class RegistrationRequestForm(forms.Form):
+    # Валидатор для номера телефона (формат: +79991112233)
+    phone_regex = RegexValidator(
+        regex=r'^\+?1?\d{9,15}$',
+        message="Номер телефона должен быть в формате: '+79991112233'. До 15 цифр."
+    )
+
+    fio = forms.CharField(
+        max_length=150,
+        label="ФИО",
+        widget=forms.TextInput(
+            attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
+                   'placeholder': 'Иванов Иван Иванович'})
+    )
+    GROUP_CHOICES = [("", "Начните вводить название группы...")] + \
+                    [(group, group) for group in load_groups_from_csv()]
+
+    group = forms.ChoiceField(
+        label="Группа",
+        choices=GROUP_CHOICES,
+        widget=Select2Widget(
+            attrs={
+                # Ваши Tailwind классы применятся к обертке Select2
+                'class': 'w-full',
+                'data-placeholder': 'ИЭ-21-1',
+                'data-minimum-input-length': 1,  # Искать после ввода первой буквы
+                'style': 'min-height: 42px;'  # Чтобы высота совпадала с другими полями
+            }
+        )
+    )
+    phone = forms.CharField(
+        validators=[phone_regex],
+        max_length=17,
+        label="Номер телефона",
+        widget=forms.TextInput(
+            attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
+                   'placeholder': '+79991112233'})
+    )
+    email = forms.EmailField(
+        label="Электронная почта",
+        widget=forms.EmailInput(
+            attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
+                   'placeholder': 'example@mail.ru'})
+    )
+
+    # Добавляем капчу
+    captcha = ReCaptchaField(
+        widget=ReCaptchaV2Checkbox(
+            attrs={
+                # Если нужно изменить размер на компактный, раскомментируйте:
+                # 'data-size': 'compact'
+            }
+        )
+    )
+    # Поле согласия, обязательное для галочки (required=True по умолчанию)
+    agreement = forms.BooleanField(
+        label="Я даю согласие на обработку персональных данных",
+        widget=forms.CheckboxInput(
+            attrs={'class': 'w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500'})
+    )
 
 
 class BlogPostForm(forms.ModelForm):
