@@ -359,3 +359,44 @@ class RegistrationRequest(models.Model):
 
     def __str__(self):
         return f"{self.fio} ({self.group}) - {self.get_status_display()}"
+
+
+class EventCategory(models.Model):
+    """Категории мероприятий (Конференции, Субботники, Лекции)"""
+    name = models.CharField(max_length=100, verbose_name="Название категории")
+    icon = models.CharField(max_length=50, default="bi-calendar-event", verbose_name="CSS класс иконки")
+
+    class Meta:
+        verbose_name = "Категория мероприятия"
+        verbose_name_plural = "Категории мероприятий"
+
+    def __str__(self):
+        return self.name
+
+
+class Event(models.Model):
+    """Само мероприятие"""
+    category = models.ForeignKey(EventCategory, on_delete=models.SET_NULL, null=True, verbose_name="Категория")
+    title = models.CharField(max_length=255, verbose_name="Название")
+    description = models.TextField(verbose_name="Описание")
+
+    image = ProcessedImageField(
+        upload_to=project_image_upload_to,  # переиспользуем функцию загрузки
+        processors=[ResizeToFit(800, 400)],
+        format='JPEG',
+        options={'quality': 85},
+        blank=True, null=True,
+        verbose_name="Обложка"
+    )
+
+    event_date = models.DateTimeField(verbose_name="Дата и время проведения")
+    location = models.CharField(max_length=255, blank=True, verbose_name="Место проведения")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+
+    class Meta:
+        ordering = ["-event_date"]
+        verbose_name = "Мероприятие"
+        verbose_name_plural = "Мероприятия"
+
+    def __str__(self):
+        return self.title

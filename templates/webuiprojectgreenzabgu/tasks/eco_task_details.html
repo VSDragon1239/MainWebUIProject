@@ -1,0 +1,97 @@
+{% extends 'webuiprojectgreenzabgu/base/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - {{ task.title }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'webuiprojectgreenzabgu/css/registration_requests.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Slab:wght@400;600;700&display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+{% endblock %}
+
+{% block content_block_0 %}
+    <h1>
+        МЗП ->
+        <a href="{% url 'eco_tasks_tracker' %}">Трекер заданий</a> ->
+        {{ task.title }}
+    </h1>
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="px-12 py-8 bg-gray-50">
+        <!-- Ограничиваем ширину карточки для красоты по центру -->
+        <div class="max-w-2xl mx-auto">
+
+            <!-- Кнопка "Назад" в стиле Material -->
+            <a href="{% url 'eco_tasks_tracker' %}"
+               class="inline-flex items-center text-gray-600 hover:text-green-600 mb-6 transition">
+                <i class="material-icons mr-1" style="font-size: 20px;">arrow_back</i>
+                К списку заданий
+            </a>
+
+            <!-- Основная карточка задания -->
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+
+                <!-- Шапка с иконкой -->
+                <div class="bg-gradient-to-r from-green-50 to-white p-6 border-b border-gray-100">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4 flex-shrink-0">
+                            <i class="material-icons text-3xl eco-green">assignment</i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">{{ task.title }}</h2>
+                            <p class="text-gray-500 text-sm">Разовое эко-задание</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Описание и награда -->
+                <div class="p-6">
+                    <p class="text-gray-700 leading-relaxed text-lg">{{ task.description }}</p>
+
+                    <div class="mt-6 p-4 bg-green-50 rounded-xl border border-green-200 flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="material-icons text-2xl eco-green mr-3">stars</i>
+                            <div>
+                                <span class="text-gray-600 text-sm block">Награда за выполнение</span>
+                                <span class="text-2xl font-bold eco-green">+{{ task.reward }} ECO</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Подвал с кнопкой выполнения -->
+                <div class="p-6 bg-gray-50 border-t border-gray-100" id="action-area">
+                    {% if is_completed %}
+                        <!-- Если выполнено -->
+                        <div class="flex items-center bg-green-50 p-4 rounded-xl border border-green-200">
+                            <i class="material-icons text-3xl eco-green mr-4">check_circle</i>
+                            <div>
+                                <h4 class="font-bold text-gray-800">Задание выполнено!</h4>
+                                <p class="text-gray-600 text-sm">Эко-коины уже зачислены на ваш баланс.</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Если НЕ выполнено -->
+                        <button
+                                class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl transition shadow-md flex items-center justify-center text-lg"
+                                id="complete-task-btn"
+                                data-task-id="{{ task.id }}"
+                        >
+                            <i class="material-icons mr-2">bolt</i> Выполнить и получить награду
+                        </button>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    {% if not is_completed %}
+        <script src="{% static 'webuiprojectgreenzabgu/js/eco_tasks_details.js' %}"></script>
+    {% endif %}
+{% endblock %}

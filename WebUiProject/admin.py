@@ -5,7 +5,7 @@ from django.utils.crypto import get_random_string
 from WebUIProjectGreenZabGU.email_sender import send_templated_mail
 from WebUIProjectGreenZabGU.services import process_registration_approval
 from .models import ProjectType, Project, Blog, BlogImage, EcoTask, UserTaskCompletion, EcoCoinTransaction, \
-    EcoHabitCategory, EcoHabit, RegistrationRequest, Profile
+    EcoHabitCategory, EcoHabit, RegistrationRequest, Profile, EventCategory, Event
 
 
 @admin.register(ProjectType)
@@ -114,3 +114,12 @@ class RegistrationRequestAdmin(admin.ModelAdmin):
                 elif obj.status == "rejected":
                     send_templated_mail(...)  # логика отклонения
         super().save_model(request, obj, form, change)
+
+
+admin.site.register(EventCategory)
+
+
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ('title', 'category', 'event_date', 'location')
+    list_filter = ('category',)

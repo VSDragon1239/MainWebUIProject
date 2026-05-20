@@ -17,7 +17,7 @@ from MainWebUIProject import settings
 from .email_sender import send_templated_mail
 from .forms import BlogPostForm, BlogPostImageFormSet, RegistrationRequestForm, ProfileAvatarForm
 from WebUiProject.models import Project, Blog, EcoTransactionType, EcoTask, UserTaskCompletion, \
-    EcoHabit, UserHabitLog, EcoHabitCategory, Profile, RegistrationRequest, EcoCoinTransaction
+    EcoHabit, UserHabitLog, EcoHabitCategory, Profile, RegistrationRequest, EcoCoinTransaction, Event, EventCategory
 from .permissions import RoleRequiredMixin
 
 from django.views import View
@@ -343,67 +343,108 @@ class AchievementsView(TemplateView):
         return context
 
 
-class CategoriesEventsView(TemplateView):
+# ==========================================
+# 1. СОБЫТИЯ
+# ==========================================
+
+class CategoriesEventsView(ListView):
+    """Список категорий мероприятий"""
+    model = EventCategory
     template_name = "pages/categories_events.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
+    context_object_name = 'categories'
 
 
-class EventsView(TemplateView):
+class EventsView(ListView):
+    """Список мероприятий внутри категории"""
+    model = Event
     template_name = "pages/events.html"
+    context_object_name = 'events'
 
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+    def get_queryset(self):
+        category_id = self.kwargs.get('pk')
+        return Event.objects.filter(category_id=category_id)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['category'] = get_object_or_404(EventCategory, pk=self.kwargs.get('pk'))
         return context
 
 
-class EventDetailsView(TemplateView):
+class EventDetailsView(DetailView):
+    """Детальная страница конкретного мероприятия"""
+    model = Event
     template_name = "pages/event_details.html"
+    context_object_name = 'event'
 
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+    # ИСПРАВЛЕНИЕ: Извлекаем pk2 из URL
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+        pk = self.kwargs.get('pk2')  # Берем второй параметр из URL
+        queryset = queryset.filter(pk=pk)
+        try:
+            obj = queryset.get()
+        except queryset.model.DoesNotExist:
+            raise Http404("Мероприятие не найдено")
+        return obj
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Добавляем категорию для хлебных крошек
+        context['category'] = self.object.category
         return context
 
 
-class EcoHabitsTrackerView(TemplateView):
+class EcoHabitsTrackerView(LoginRequiredMixin, TemplateView):
+    """
+    Теперь это не пустая страница, а Главный Дашборд Привычек.
+    Отсюда пользователь идет к категориям.
+    """
     template_name = "webuiprojectgreenzabgu/pages/eco_habits_tracker.html"
 
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        # Получаем все категории, в которых есть привычки
+        context['categories'] = EcoHabitCategory.objects.filter(habits__is_active=True).distinct()
+
+        # Считаем общую статистику для карточек на дашборде
+        from django.db.models import Max, Count
+        stats = UserHabitLog.objects.filter(user=user).aggregate(
+            total_logs=Count('id'),
+            max_streak=Max('streak_count')
+        )
+        context['total_habits_done'] = stats['total_logs'] or 0
+        context['best_streak'] = stats['max_streak'] or 0
+
         return context
 
 
-class EcoTasksTrackerView(TemplateView):
-    template_name = "webuiprojectgreenzabgu/pages/eco_tasks_tracker.html"
+class EcoTasksTrackerView(LoginRequiredMixin, TemplateView):
+    template_name = "webuiprojectgreenzabgu/tasks/eco_tasks_tracker.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        completed_ids = UserTaskCompletion.objects.filter(
-            user=self.request.user
-        ).values_list('task_id', flat=True)
+        user = self.request.user
 
-        # 2. Выводим ТОЛЬКО те активные задания, которых НЕТ в списке выполненных
-        tasks = EcoTask.objects.filter(is_active=True).exclude(pk__in=completed_ids)
+        # 1. Доступные (невыполненные) задания
+        completed_ids = UserTaskCompletion.objects.filter(user=user).values_list('task_id', flat=True)
+        available_tasks = EcoTask.objects.filter(is_active=True).exclude(pk__in=completed_ids)
+        context['tasks'] = available_tasks
 
-        context['tasks'] = tasks
-        context['completed_task_ids'] = set(completed_ids)
+        # 2. Статистика для верхней зеленой плашки
+        context['total_completed'] = UserTaskCompletion.objects.filter(user=user).count()
+        context['active_tasks_count'] = available_tasks.count()
+
+        # 3. Последние 5 выполненных заданий (для истории внизу)
+        context['recent_completions'] = UserTaskCompletion.objects.filter(
+            user=user
+        ).select_related('task').order_by('-completed_at')[:5]
+
         return context
 
 
@@ -451,31 +492,31 @@ class AddEcoBonusView(TemplateView):
         return context
 
 
-class EcoTasksView(TemplateView):
-    template_name = "webuiprojectgreenzabgu/pages/eco_tasks.html"
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        completed_ids = UserTaskCompletion.objects.filter(
-            user=self.request.user
-        ).values_list('task_id', flat=True)
-
-        # 2. Выводим ТОЛЬКО те активные задания, которых НЕТ в списке выполненных
-        tasks = EcoTask.objects.filter(is_active=True).exclude(pk__in=completed_ids)
-
-        context['tasks'] = tasks
-        context['completed_task_ids'] = set(completed_ids)
-        return context
+# class EcoTasksView(TemplateView):
+#     template_name = "webuiprojectgreenzabgu/pages/eco_tasks.html"
+#
+#     def get(self, request, *args, **kwargs):
+#         return super().get(request, *args, **kwargs)
+#
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         completed_ids = UserTaskCompletion.objects.filter(
+#             user=self.request.user
+#         ).values_list('task_id', flat=True)
+#
+#         # 2. Выводим ТОЛЬКО те активные задания, которых НЕТ в списке выполненных
+#         tasks = EcoTask.objects.filter(is_active=True).exclude(pk__in=completed_ids)
+#
+#         context['tasks'] = tasks
+#         context['completed_task_ids'] = set(completed_ids)
+#         return context
 
 
 class EcoTaskDetailsView(LoginRequiredMixin,
                          DetailView):  # DetailView от Django — он сам найдет задачу в БД по ID из URL или выдаст красивую ошибку 404, если задача не существует.
     """Детальная страница конкретного задания"""
     model = EcoTask
-    template_name = "pages/eco_task_details.html"
+    template_name = "webuiprojectgreenzabgu/tasks/eco_task_details.html"
     context_object_name = 'task'  # В шаблоне объект будет доступен как {{ task }}
 
     def get_context_data(self, **kwargs):

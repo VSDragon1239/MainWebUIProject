@@ -3,7 +3,7 @@ from WebUIProjectGreenZabGU.views import AddBlogPostView, AchievementsView, \
     CategoriesEventsView, EventsView, EcoHabitsTrackerView, EcoHabitsCategoriesView, \
     EcoHabitsView, EventDetailsView, EcoTasksTrackerView, EcoTaskDetailsView, EcoHabitDetailsView, \
     CompleteEcoTaskView, LogEcoHabitView, AdminView, ParticipantView, ContentManagerView, IndexGreenView, \
-    BlogView, ProfileView, EcoTasksView, EcoBonusListView, EditEcoBonusView, AddEcoBonusView, RatingBoardView, \
+    BlogView, ProfileView, EcoBonusListView, EditEcoBonusView, AddEcoBonusView, RatingBoardView, \
     ContactsView, ModerateRequestView, EditProfileView
 
 urlpatterns = [
@@ -21,16 +21,16 @@ urlpatterns = [
     path('profile/', ProfileView.as_view(), name='profile'),  # Профиль пользователя
     path('profile/edit/', EditProfileView.as_view(), name='profile_edit'),
     path('achievements/', AchievementsView.as_view(), name='achievements'),                     # Список достижений
-    path('categories-events/', CategoriesEventsView.as_view(), name='categories_events'),       # Категории событий
-    path('eco-habits-tracker/', EcoHabitsTrackerView.as_view(), name='eco_habits_tracker'),     # Трекер зеленых привычек
-    path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),        # Трекер зеленых заданий
-    path('eco-tasks/', EcoTasksView.as_view(), name='eco_tasks'),                               # Список зеленых заданий
     path('rating-board/', RatingBoardView.as_view(), name='rating_board'),                      # Рейтинги
     path('contacts/', ContactsView.as_view(), name='contacts'),                                 # Контакты
+    # path('categories-events/', CategoriesEventsView.as_view(), name='categories_events'),       # Категории событий
+    # path('eco-habits-tracker/', EcoHabitsTrackerView.as_view(), name='eco_habits_tracker'),     # Трекер зеленых привычек
+    # path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),        # Трекер зеленых заданий
+    # path('eco-tasks/', EcoTasksView.as_view(), name='eco_tasks'),                               # Список зеленых заданий
 
     # ============================ Список категорий событий / мероприятий ============================
-    path('categories-events/<int:pk>/events/', EventsView.as_view(), name='events'),                                        # Список событий / мероприятий
-    path('categories-events/<int:pk1>/events/<int:pk2>/event-details/', EventDetailsView.as_view(), name='event_details'),  # Список событий / мероприятий
+    # path('categories-events/<int:pk>/events/', EventsView.as_view(), name='events'),                                        # Список событий / мероприятий
+    # path('categories-events/<int:pk1>/events/<int:pk2>/event-details/', EventDetailsView.as_view(), name='event_details'),  # Список событий / мероприятий
     path('eco-task-details/<int:pk>/', EcoTaskDetailsView.as_view(), name='eco_task_details'),                              # Детали зелённого задание
 
     # ============================ Для пользователей / Для инвесторов ============================
@@ -39,12 +39,29 @@ urlpatterns = [
     path('add-eco-bonus/', AddEcoBonusView.as_view(), name='add_eco_bonus'),
 
     # ============================ Основные экологические страницы ============================
-    path('eco-habits-categories/', EcoHabitsCategoriesView.as_view(), name='eco_habits_categories'),                        # Сортировка, экономия и другое... (Объединить в один с фильтром)
-    path('categories/<int:pk>/eco-habits/', EcoHabitsView.as_view(), name='eco_habits'),                                    # Сортировка бу вещей / мусора
-    path('categories/<int:pk1>/eco-habits/<int:pk2>/details', EcoHabitDetailsView.as_view(), name='eco_habit_details'),     # Детали экологических привычек
+    # path('eco-habits-categories/', EcoHabitsCategoriesView.as_view(), name='eco_habits_categories'),                        # Сортировка, экономия и другое... (Объединить в один с фильтром)
+    # path('categories/<int:pk>/eco-habits/', EcoHabitsView.as_view(), name='eco_habits'),                                    # Сортировка бу вещей / мусора
+    # path('categories/<int:pk1>/eco-habits/<int:pk2>/details', EcoHabitDetailsView.as_view(), name='eco_habit_details'),     # Детали экологических привычек
 
     # ============================ Основные системные страницы ============================
-    path('eco-habits/log/<int:pk>/', LogEcoHabitView.as_view(), name='eco_habit_log'),
-    path('eco-tasks/complete/<int:task_id>/', CompleteEcoTaskView.as_view(), name='eco_task_complete'),     # URL для AJAX запроса при нажатии на кнопку
+    # path('eco-habits/log/<int:pk>/', LogEcoHabitView.as_view(), name='eco_habit_log'),
+    # path('eco-tasks/complete/<int:task_id>/', CompleteEcoTaskView.as_view(), name='eco_task_complete'),     # URL для AJAX запроса при нажатии на кнопку
 
+    # --- СОБЫТИЯ ---
+    path('categories-events/', CategoriesEventsView.as_view(), name='categories_events'),
+    path('categories-events/<int:pk>/events/', EventsView.as_view(), name='events'),
+    # URL Деталей: pk1 - категория, pk2 - само событие
+    path('categories-events/<int:pk1>/events/<int:pk2>/event-details/', EventDetailsView.as_view(), name='event_details'),
+
+    # --- ПРИВЫЧКИ ---
+    path('eco-habits-tracker/', EcoHabitsTrackerView.as_view(), name='eco_habits_tracker'),
+    path('eco-habits-categories/', EcoHabitsCategoriesView.as_view(), name='eco_habits_categories'),
+    path('categories/<int:pk>/eco-habits/', EcoHabitsView.as_view(), name='eco_habits'),
+    path('categories/<int:pk1>/eco-habits/<int:pk2>/details', EcoHabitDetailsView.as_view(), name='eco_habit_details'),
+    path('eco-habits/log/<int:pk>/', LogEcoHabitView.as_view(), name='eco_habit_log'),
+
+    # --- ЗАДАЧИ ---
+    path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),
+    path('eco-task-details/<int:pk>/', EcoTaskDetailsView.as_view(), name='eco_task_details'),
+    path('eco-tasks/complete/<int:task_id>/', CompleteEcoTaskView.as_view(), name='eco_task_complete'),
 ]
