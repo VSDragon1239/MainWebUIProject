@@ -3,25 +3,26 @@ from datetime import datetime
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User, Group
+from django.db.models import Count, Max
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import TemplateView, CreateView, ListView, DetailView
 from django.db import transaction as db_transaction, IntegrityError
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.http import Http404
 
 from MainWebUIProject import settings
 from .email_sender import send_templated_mail
-from .forms import BlogPostForm, BlogPostImageFormSet, RegistrationRequestForm
+from .forms import BlogPostForm, BlogPostImageFormSet, RegistrationRequestForm, ProfileAvatarForm
 from WebUiProject.models import Project, Blog, EcoTransactionType, EcoTask, UserTaskCompletion, \
-    EcoHabit, UserHabitLog, EcoHabitCategory, Profile, RegistrationRequest
+    EcoHabit, UserHabitLog, EcoHabitCategory, Profile, RegistrationRequest, EcoCoinTransaction
 from .permissions import RoleRequiredMixin
 
 from django.views import View
 
-from .services import EcoCoinService
+from .services import EcoCoinService, process_registration_approval
 
 logger = logging.getLogger(__name__)
 
@@ -57,23 +58,41 @@ class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
         context['profile'] = profile
 
         # Баланс
-        context['eco_balance'] = EcoCoinService.get_balance(user)
+        eco_balance = EcoCoinService.get_balance(user)
+        context['eco_balance'] = eco_balance
 
-        # Выполненные задания
+        # --- НОВОЕ: Геймификация (Уровень и прогресс) ---
+        # Простая формула: 1 уровень = 100 ECO. Можно усложнить потом.
+        context['level'] = (eco_balance // 100) + 1
+        context['progress_percent'] = eco_balance % 100
+
+        # --- НОВОЕ: Статистика ---
+        context['completed_tasks_count'] = UserTaskCompletion.objects.filter(user=user).count()
+
+        # Считаем максимальную серию из логов привычек
+        max_streak = UserHabitLog.objects.filter(user=user).aggregate(max_streak=Max('streak_count'))['max_streak']
+        context['max_streak'] = max_streak if max_streak else 0
+
+        # --- НОВОЕ: Последняя активность (из транзакций) ---
+        # Берем 5 последних транзакций для ленты
+        context['recent_transactions'] = EcoCoinTransaction.objects.filter(
+            wallet__user=user
+        ).order_by('-created_at')[:5]
+
+        # Выполненные задания (если нужны где-то еще)
         context['completed_tasks'] = UserTaskCompletion.objects.filter(
             user=user
         ).select_related('task').order_by('-completed_at')
 
-        # Приоритеты ролей (если у пользователя несколько групп)
+        # Роли
         roles_priority = {
             'Администраторы': ('Администратор', 'danger'),
             'Контент менеджер': ('Контент-менеджер', 'info'),
             'Руководители': ('Руководитель', 'warning'),
             'Участники': ('Участник', 'secondary'),
         }
-
         user_groups = user.groups.values_list('name', flat=True)
-        context['display_role'] = ('Без роли', 'light')  # Значение по умолчанию
+        context['display_role'] = ('Без роли', 'light')
 
         for group_name in user_groups:
             if group_name in roles_priority:
@@ -81,6 +100,38 @@ class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
                 break
 
         return context
+
+
+class EditProfileView(LoginRequiredMixin, View):
+    """Вьюха для обработки ДВУХ форм одновременно"""
+
+    def get(self, request):
+        # get_or_create для защиты от отсутствия профиля
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        p_form = ProfileAvatarForm(instance=profile)
+
+        context = {
+            'p_form': p_form,
+        }
+        return render(request, 'webuiprojectgreenzabgu/pages/profile_edit.html', context)
+
+    def post(self, request):
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+
+        # ВАЖНО: request.FILES обязателен для загрузки картинок!
+        p_form = ProfileAvatarForm(request.POST, request.FILES, instance=profile)
+
+        if p_form.is_valid():
+            p_form.save()
+            messages.success(request, 'Ваш профиль успешно обновлен!')
+            return redirect('profile')
+        else:
+            messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
+
+        context = {
+            'p_form': p_form,
+        }
+        return render(request, 'webuiprojectgreenzabgu/pages/profile_edit.html', context)
 
 
 # Страница для администратора сайта
@@ -110,7 +161,47 @@ class AdminView(RoleRequiredMixin, TemplateView):
         # Все пользователи (для быстрого поиска)
         context["users"] = User.objects.all()
 
+        # НОВОЕ: Запросы на регистрацию (сначала новые)
+        context["requests"] = RegistrationRequest.objects.all().order_by('-created_at')
+
+        # НОВОЕ: Статистика в цифрах
+        counts = RegistrationRequest.objects.values('status').annotate(count=Count('id'))
+        stats_dict = {item['status']: item['count'] for item in counts}
+
+        context["stats"] = {
+            "new": stats_dict.get('new', 0),
+            "approved": stats_dict.get('approved', 0),
+            "rejected": stats_dict.get('rejected', 0),
+            "total": sum(stats_dict.values())
+        }
+
         return context
+
+
+# Управляет заявками
+class ModerateRequestView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        try:
+            req = RegistrationRequest.objects.get(pk=pk)
+        except RegistrationRequest.DoesNotExist:
+            return JsonResponse({"error": "Заявка не найдена"}, status=404)
+
+        action = request.POST.get("action")
+
+        if action == "approve":
+            success, result = process_registration_approval(req)
+            if success:
+                return JsonResponse({"status": "success", "message": "Пользователь создан, пароль отправлен"})
+            else:
+                return JsonResponse({"status": "error", "message": result}, status=400)
+
+        elif action == "reject":
+            req.status = "rejected"
+            req.save()
+            # Здесь можно вызвать send_templated_mail для отклонения
+            return JsonResponse({"status": "success", "message": "Заявка отклонена"})
+
+        return JsonResponse({"error": "Неверный action"}, status=400)
 
 
 # Страница для участников

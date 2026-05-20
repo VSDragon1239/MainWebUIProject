@@ -1,10 +1,10 @@
-{% extends 'base/base_header.html' %}
+{% extends 'webuiprojectgreenzabgu/base/base_header.html' %}
 {% load static %}
 
 {% block title %}МЗП - Профиль{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/profile_style.css' %}">
+    <link rel="stylesheet" href="{% static 'webuiprojectgreenzabgu/css/profile_style.css' %}">
 {% endblock %}
 
 {% block content_block_0 %}
@@ -12,41 +12,244 @@
 {% endblock %}
 
 {% block content_block_1 %}
+    <!-- Settings Content -->
+    <div class="px-12 py-8 bg-gray-50">
+        <!-- Personal Information -->
+        <div class="settings-card bg-white rounded-xl shadow-md p-6 mb-6">
+            <div class="flex items-center mb-5">
+                <i class="material-icons text-2xl eco-green mr-3">person</i>
+                <h3 class="text-2xl font-bold text-gray-800">Личные данные</h3>
+            </div>
 
-    {#    <form method="post" enctype="multipart/form-data">#}
-    {#        {% csrf_token %}#}
-    {#        {{ form.as_p }}#}
-    {#        <button type="submit" class="btn btn-primary">Загрузить фото</button>#}
-    {#    </form>#}
-    <div class="row justify-content-center mt-4">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h4 class="mb-0">Изменить данные профиля</h4>
+            <div class="flex items-center mb-6">
+                <div class="bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mr-5">
+                    <i class="material-icons text-4xl eco-green">account_circle</i>
                 </div>
-                <div class="card-body">
-
-                    <!-- ВАЖНО: enctype="multipart/form-data" для загрузки файлов! -->
-                    <form method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-
-                        <!-- Данные модели Profile -->
-                        <div class="mb-3">
-                            <label for="id_avatar" class="form-label">Аватар профиля</label>
-                            {{ p_form.avatar }}
-                            <div class="form-text">Рекомендуемый размер: 300x300px. Формат JPG или PNG.</div>
-                        </div>
-
-                        <!-- Кнопки действий -->
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Отмена</a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check-lg me-1"></i> Сохранить изменения
-                            </button>
-                        </div>
-                    </form>
+                <div>
+                    <button class="gradient-green text-white px-4 py-2 rounded-lg font-semibold text-sm">
+                        Загрузить фото
+                    </button>
                 </div>
             </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="text-gray-700 text-sm font-medium mb-1 block">Имя</label>
+                    <input type="text" value="Иван"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500"/>
+                </div>
+                <div>
+                    <label class="text-gray-700 text-sm font-medium mb-1 block">Фамилия</label>
+                    <input type="text" value="Иванов"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500"/>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="text-gray-700 text-sm font-medium mb-1 block">Email</label>
+                    <input type="email" value="ivanov@zabgu.ru"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500"/>
+                </div>
+                <div>
+                    <label class="text-gray-700 text-sm font-medium mb-1 block">Телефон</label>
+                    <input type="tel" value="+7 (900) 000-00-00"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500"/>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-gray-700 text-sm font-medium mb-1 block">Факультет</label>
+                    <select class="w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500">
+                        <option value="fknt">ФКНТ</option>
+                        <option value="feu">ФЭУ</option>
+                        <option value="uf">ЮФ</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-gray-700 text-sm font-medium mb-1 block">Группа</label>
+                    <input type="text" value="ПИ-301"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div class="settings-card bg-white rounded-xl shadow-md p-6 mb-6">
+            <div class="flex items-center mb-5">
+                <i class="material-icons text-2xl eco-green mr-3">security</i>
+                <h3 class="text-2xl font-bold text-gray-800">Безопасность</h3>
+            </div>
+
+            <div class="space-y-4">
+                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                    <div class="flex items-center">
+                        <i class="material-icons text-xl eco-green mr-3">lock</i>
+                        <div>
+                            <div class="text-gray-800 font-semibold text-base">Смена пароля</div>
+                            <div class="text-gray-500 text-sm">Последняя смена: 15.03.2026</div>
+                        </div>
+                    </div>
+                    <button class="text-green-600 hover:text-green-700 font-semibold text-sm">
+                        Изменить
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                    <div class="flex items-center">
+                        <i class="material-icons text-xl eco-green mr-3">verified_user</i>
+                        <div>
+                            <div class="text-gray-800 font-semibold text-base">Двухфакторная аутентификация</div>
+                            <div class="text-gray-500 text-sm">Дополнительная защита аккаунта</div>
+                        </div>
+                    </div>
+                    <div class="toggle-switch active"></div>
+                </div>
+
+                <div class="flex items-center justify-between py-3">
+                    <div class="flex items-center">
+                        <i class="material-icons text-xl eco-green mr-3">history</i>
+                        <div>
+                            <div class="text-gray-800 font-semibold text-base">История входов</div>
+                            <div class="text-gray-500 text-sm">Последний вход: Сегодня, 10:30</div>
+                        </div>
+                    </div>
+                    <button class="text-green-600 hover:text-green-700 font-semibold text-sm">
+                        Показать
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="settings-card bg-white rounded-xl shadow-md p-6 mb-6">
+            <div class="flex items-center mb-5">
+                <i class="material-icons text-2xl eco-green mr-3">notifications</i>
+                <h3 class="text-2xl font-bold text-gray-800">Уведомления</h3>
+            </div>
+
+            <div class="space-y-3">
+                <div class="flex items-center justify-between py-2">
+                    <div class="flex items-center">
+                        <i class="material-icons text-lg text-gray-500 mr-2">assignment</i>
+                        <span class="text-gray-700 font-medium text-base">Новые задания</span>
+                    </div>
+                    <div class="toggle-switch active"></div>
+                </div>
+
+                <div class="flex items-center justify-between py-2">
+                    <div class="flex items-center">
+                        <i class="material-icons text-lg text-gray-500 mr-2">emoji_events</i>
+                        <span class="text-gray-700 font-medium text-base">Достижения</span>
+                    </div>
+                    <div class="toggle-switch active"></div>
+                </div>
+
+                <div class="flex items-center justify-between py-2">
+                    <div class="flex items-center">
+                        <i class="material-icons text-lg text-gray-500 mr-2">newspaper</i>
+                        <span class="text-gray-700 font-medium text-base">Новости</span>
+                    </div>
+                    <div class="toggle-switch"></div>
+                </div>
+
+                <div class="flex items-center justify-between py-2">
+                    <div class="flex items-center">
+                        <i class="material-icons text-lg text-gray-500 mr-2">sports_esports</i>
+                        <span class="text-gray-700 font-medium text-base">Челленджи</span>
+                    </div>
+                    <div class="toggle-switch active"></div>
+                </div>
+
+                <div class="pt-3 border-t border-gray-200">
+                    <div class="flex items-center mb-2">
+                        <i class="material-icons text-lg text-gray-500 mr-2">email</i>
+                        <span class="text-gray-700 font-medium text-base">Email-уведомления</span>
+                    </div>
+                    <select class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-green-500">
+                        <option value="all">Все уведомления</option>
+                        <option value="important">Только важные</option>
+                        <option value="none">Отключить</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy Settings -->
+        <div class="settings-card bg-white rounded-xl shadow-md p-6 mb-6">
+            <div class="flex items-center mb-5">
+                <i class="material-icons text-2xl eco-green mr-3">privacy_tip</i>
+                <h3 class="text-2xl font-bold text-gray-800">Приватность</h3>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-gray-700 text-sm font-medium mb-2 block">Видимость профиля</label>
+                    <select class="w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500">
+                        <option value="all">Все пользователи</option>
+                        <option value="friends">Только друзья</option>
+                        <option value="nobody">Только я</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center justify-between py-2">
+                    <div class="flex items-center">
+                        <i class="material-icons text-lg text-gray-500 mr-2">leaderboard</i>
+                        <span class="text-gray-700 font-medium text-base">Показывать в рейтинге</span>
+                    </div>
+                    <div class="toggle-switch active"></div>
+                </div>
+
+                <div class="flex items-center justify-between py-2">
+                    <div class="flex items-center">
+                        <i class="material-icons text-lg text-gray-500 mr-2">military_tech</i>
+                        <span class="text-gray-700 font-medium text-base">Показывать достижения</span>
+                    </div>
+                    <div class="toggle-switch active"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- About and Logout -->
+        <div class="settings-card bg-white rounded-xl shadow-md p-6">
+            <div class="flex items-center mb-4">
+                <i class="material-icons text-2xl eco-green mr-3">info</i>
+                <h3 class="text-2xl font-bold text-gray-800">О приложении</h3>
+            </div>
+
+            <div class="space-y-3 mb-5">
+                <div class="flex items-center justify-between text-sm">
+                    <span class="text-gray-600">Версия приложения:</span>
+                    <span class="font-semibold eco-green">1.0.0</span>
+                </div>
+                <div class="flex items-center justify-between py-2">
+                    <div class="flex items-center">
+                        <i class="material-icons text-lg text-gray-500 mr-2">description</i>
+                        <span class="text-gray-700 font-medium text-base">Политика конфиденциальности</span>
+                    </div>
+                    <i class="material-icons text-gray-400">chevron_right</i>
+                </div>
+                <div class="flex items-center justify-between py-2">
+                    <div class="flex items-center">
+                        <i class="material-icons text-lg text-gray-500 mr-2">gavel</i>
+                        <span class="text-gray-700 font-medium text-base">Условия использования</span>
+                    </div>
+                    <i class="material-icons text-gray-400">chevron_right</i>
+                </div>
+                <div class="flex items-center justify-between py-2">
+                    <div class="flex items-center">
+                        <i class="material-icons text-lg text-gray-500 mr-2">help</i>
+                        <span class="text-gray-700 font-medium text-base">Связь с поддержкой</span>
+                    </div>
+                    <i class="material-icons text-gray-400">chevron_right</i>
+                </div>
+            </div>
+
+            <button class="w-full bg-red-50 text-red-600 border-2 border-red-200 px-4 py-3 rounded-lg font-semibold text-base hover:bg-red-100 transition">
+                <i class="material-icons text-lg mr-2">logout</i>
+                Выйти из аккаунта
+            </button>
         </div>
     </div>
 

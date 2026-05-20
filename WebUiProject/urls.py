@@ -1,7 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from WebUiProject.views import IndexView, AboutView, ApplicationsView, \
-    UserCreateView, UserUpdateView, UserDeleteView, EditProfileView
+    UserCreateView, UserUpdateView, UserDeleteView
 
 urlpatterns = [
     # Роли пользователей:
@@ -11,9 +11,6 @@ urlpatterns = [
     path('create/', UserCreateView.as_view(), name='user_create'),
     path('<int:pk>/edit/', UserUpdateView.as_view(), name='user_edit'),
     path('<int:pk>/delete/', UserDeleteView.as_view(), name='user_delete'),
-
-    # Для пользователей:
-    path('profile/edit/', EditProfileView.as_view(), name='profile_edit'),
 
     # Стандартные вьюхи Джанго для сброса пароля
     path('reset-password/', auth_views.PasswordResetView.as_view(), name='password_reset'),

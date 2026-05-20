@@ -4,7 +4,11 @@ from datetime import timedelta
 from django.db import transaction as db_transaction
 from django.db.models import F
 from django.utils import timezone
-from WebUiProject.models import EcoWallet, EcoCoinTransaction, EcoTransactionType, UserHabitLog
+
+from WebUIProjectGreenZabGU.email_sender import send_templated_mail
+from WebUiProject.models import EcoWallet, EcoCoinTransaction, EcoTransactionType, UserHabitLog, Profile
+from django.contrib.auth.models import User, Group
+from django.utils.crypto import get_random_string
 
 
 class InsufficientFundsError(Exception):
@@ -111,3 +115,49 @@ class EcoCoinService:
             "reward": total_reward,
             "is_new_streak": current_streak > 1
         }
+
+
+def process_registration_approval(request_obj):
+    """Создает пользователя и отправляет письмо. Возвращает (True, пароль) или (False, ошибка)"""
+    if request_obj.status == "approved":
+        return False, "Заявка уже одобрена"
+
+    email = request_obj.email
+    if User.objects.filter(username=email).exists():
+        return False, "Пользователь с таким email уже существует"
+
+    # 1. Генерация и создание
+    raw_password = get_random_string(length=12, allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789')
+    fio_parts = request_obj.fio.split()
+
+    new_user = User.objects.create_user(
+        username=email,
+        email=email,
+        password=raw_password,
+        first_name=fio_parts[1] if len(fio_parts) > 1 else "",
+        last_name=fio_parts[0] if fio_parts else "",
+        is_active=True
+    )
+    Profile.objects.create(user=new_user)
+
+    try:
+        new_user.groups.add(Group.objects.get(name='Участники'))
+    except Group.DoesNotExist:
+        pass
+
+    # 2. Отправка письма
+    send_templated_mail(
+        subject="Доступ к порталу Green ZabGu открыт",
+        template_path="emails/registration_approved.html",
+        context_dict={
+            "fio": request_obj.fio, "username": email, "password": raw_password,
+            "login_url": "https://ваш-домен.ru/login/"  # ЗАМЕНИТЕ
+        },
+        to_email=email
+    )
+
+    # 3. Смена статуса
+    request_obj.status = "approved"
+    request_obj.save()
+
+    return True, raw_password

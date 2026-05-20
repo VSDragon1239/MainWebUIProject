@@ -3,6 +3,7 @@ from django.contrib.auth.models import User, Group
 from django.utils.crypto import get_random_string
 
 from WebUIProjectGreenZabGU.email_sender import send_templated_mail
+from WebUIProjectGreenZabGU.services import process_registration_approval
 from .models import ProjectType, Project, Blog, BlogImage, EcoTask, UserTaskCompletion, EcoCoinTransaction, \
     EcoHabitCategory, EcoHabit, RegistrationRequest, Profile
 
@@ -105,68 +106,11 @@ class RegistrationRequestAdmin(admin.ModelAdmin):
     readonly_fields = ('fio', 'group', 'phone', 'email', 'created_at')
 
     def save_model(self, request, obj, form, change):
-        # Срабатывает ТОЛЬКО при редактировании (не при создании новой заявки)
         if change:
-            # Достаем старое значение из БД до сохранения
             old_obj = RegistrationRequest.objects.get(pk=obj.pk)
-
-            # Если статус изменился на "Одобрена"
-            if old_obj.status != obj.status and obj.status == "approved":
-                email = obj.email
-
-                # Защита от дублей: если юзер с таким email уже есть (например, одобрили дважды)
-                if not User.objects.filter(username=email).exists():
-
-                    # 1. Генерируем надежный пароль
-                    raw_password = get_random_string(length=12,
-                                                     allowed_chars='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789')
-
-                    # 2. Разбиваем ФИО (предполагаем формат "Иванов Иван Иванович")
-                    fio_parts = obj.fio.split()
-                    last_name = fio_parts[0] if len(fio_parts) > 0 else ""
-                    first_name = fio_parts[1] if len(fio_parts) > 1 else ""
-
-                    # 3. Создаем пользователя (username = email)
-                    new_user = User.objects.create_user(
-                        username=email,
-                        email=email,
-                        password=raw_password,
-                        first_name=first_name,
-                        last_name=last_name,
-                        is_active=True
-                    )
-
-                    # 4. Создаем пустой профиль для него
-                    Profile.objects.create(user=new_user)
-
-                    # 5. Добавляем в базовую группу "Участники"
-                    try:
-                        default_group = Group.objects.get(name='Участники')
-                        new_user.groups.add(default_group)
-                    except Group.DoesNotExist:
-                        pass  # Если группы нет, просто пропускаем (залогируйте это в реальном проекте)
-
-                    # 6. Отправляем письмо с данными для входа
-                    send_templated_mail(
-                        subject="Доступ к порталу Green ZabGu открыт",
-                        template_path="webuiprojectgreenzabgu/emails/registration_approved.html",
-                        context_dict={
-                            "fio": obj.fio,
-                            "username": email,
-                            "password": raw_password,
-                            "login_url": "https://localhost/main/green-zabgu/profile/"  # ЗАМЕНИТЕ НА СВОЙ ДОМЕН
-                        },
-                        to_email=email
-                    )
-
-            # Если статус изменился на "Отклонена"
-            elif old_obj.status != obj.status and obj.status == "rejected":
-                send_templated_mail(
-                    subject="Заявка в Green ZabGu отклонена",
-                    template_path="webuiprojectgreenzabgu/emails/registration_rejected.html",
-                    context_dict={"fio": obj.fio},
-                    to_email=obj.email
-                )
-
-        # Сохраняем саму заявку (меняем статус в БД)
+            if old_obj.status != obj.status:
+                if obj.status == "approved":
+                    process_registration_approval(obj)
+                elif obj.status == "rejected":
+                    send_templated_mail(...)  # логика отклонения
         super().save_model(request, obj, form, change)

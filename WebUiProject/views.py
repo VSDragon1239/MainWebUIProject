@@ -1,21 +1,16 @@
 import logging
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User, Group
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, FormView, CreateView, ListView, UpdateView, DeleteView
+from django.views.generic import TemplateView, FormView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 
-from WebUIProjectGreenZabGU.forms import UserUpdateForm, UserCreateForm, \
-    ProfileAvatarForm
-from .models import Blog, UserTaskCompletion, Profile
+from WebUIProjectGreenZabGU.forms import UserUpdateForm, UserCreateForm
+from .models import Blog
 from WebUIProjectGreenZabGU.permissions import RoleRequiredMixin
 
 from django.shortcuts import render
-from django.views import View
-
-from WebUIProjectGreenZabGU.services import EcoCoinService
 
 logger = logging.getLogger(__name__)
 
@@ -119,38 +114,6 @@ class AuthView(FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         return context
-
-
-class EditProfileView(LoginRequiredMixin, View):
-    """Вьюха для обработки ДВУХ форм одновременно"""
-
-    def get(self, request):
-        # get_or_create для защиты от отсутствия профиля
-        profile, _ = Profile.objects.get_or_create(user=request.user)
-        p_form = ProfileAvatarForm(instance=profile)
-
-        context = {
-            'p_form': p_form,
-        }
-        return render(request, 'webuiproject/pages/profile_edit.html', context)
-
-    def post(self, request):
-        profile, _ = Profile.objects.get_or_create(user=request.user)
-
-        # ВАЖНО: request.FILES обязателен для загрузки картинок!
-        p_form = ProfileAvatarForm(request.POST, request.FILES, instance=profile)
-
-        if p_form.is_valid():
-            p_form.save()
-            messages.success(request, 'Ваш профиль успешно обновлен!')
-            return redirect('profile')
-        else:
-            messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
-
-        context = {
-            'p_form': p_form,
-        }
-        return render(request, 'pages/profile_edit.html', context)
 
 
 class UserCreateView(RoleRequiredMixin, CreateView):

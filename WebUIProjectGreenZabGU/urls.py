@@ -4,11 +4,12 @@ from WebUIProjectGreenZabGU.views import AddBlogPostView, AchievementsView, \
     EcoHabitsView, EventDetailsView, EcoTasksTrackerView, EcoTaskDetailsView, EcoHabitDetailsView, \
     CompleteEcoTaskView, LogEcoHabitView, AdminView, ParticipantView, ContentManagerView, IndexGreenView, \
     BlogView, ProfileView, EcoTasksView, EcoBonusListView, EditEcoBonusView, AddEcoBonusView, RatingBoardView, \
-    ContactsView
+    ContactsView, ModerateRequestView, EditProfileView
 
 urlpatterns = [
     path('', IndexGreenView.as_view(), name='green_main'),  # Главная страница, надо чтобы было два вида - для не зарегистрированных и для участников
     path('administrations/', AdminView.as_view(), name='administrations'),      # Страница для администратора, позволяет управлять данными
+    path('api/moderate-request/<int:pk>/', ModerateRequestView.as_view(), name='api_moderate_request'),     # Управляет кнопками для заявок на регистрацию
     path('participant/', ParticipantView.as_view(), name='participant'),    # Страница для менеджеров, позволяет управлять и добавлять участников
     path('content_manager/', ContentManagerView.as_view(), name='content_manager'),  # Управляющий событиями, позволяет управлять новостями и блогами...
 
@@ -18,6 +19,7 @@ urlpatterns = [
 
     # ============================ Для пользователей ============================
     path('profile/', ProfileView.as_view(), name='profile'),  # Профиль пользователя
+    path('profile/edit/', EditProfileView.as_view(), name='profile_edit'),
     path('achievements/', AchievementsView.as_view(), name='achievements'),                     # Список достижений
     path('categories-events/', CategoriesEventsView.as_view(), name='categories_events'),       # Категории событий
     path('eco-habits-tracker/', EcoHabitsTrackerView.as_view(), name='eco_habits_tracker'),     # Трекер зеленых привычек
