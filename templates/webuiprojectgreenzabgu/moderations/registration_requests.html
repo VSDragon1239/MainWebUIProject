@@ -1,0 +1,412 @@
+{% extends 'webuiprojectgreenzabgu/base/base_header.html' %}
+{% load static %}
+
+{% block title %}Модерация запросов - Маркетплейс Зелёных Привычек{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'webuiprojectgreenzabgu/css/registration_requests.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Slab:wght@400;600;700&display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+{% endblock %}
+
+{% block content_block_0 %}
+    <!-- Скрытие заголовка base.html, если необходимо -->
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="flex-1 content-area bg-gray-50 custom-scroll" style="overflow-y: auto;">
+
+        <!-- Page Title -->
+        <div class="mb-5">
+            <div class="flex items-center gap-2 mb-1">
+                <i class="material-icons text-green-600" style="font-size: 20px;">admin_panel_settings</i>
+                <h2 class="page-title font-bold text-gray-800 title-font">Запросы на регистрацию</h2>
+            </div>
+            <p class="page-sub text-gray-500">Проверка и подтверждение данных студентов</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid grid mb-5">
+            <div class="stat-card bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="stat-num font-bold text-gray-800">12</div>
+                        <div class="stat-label text-gray-500 font-medium">Ожидают</div>
+                    </div>
+                    <div class="stat-icon rounded-xl badge-pending flex items-center justify-center">
+                        <i class="material-icons">schedule</i>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="stat-num font-bold eco-green">47</div>
+                        <div class="stat-label text-gray-500 font-medium">Подтверждено</div>
+                    </div>
+                    <div class="stat-icon rounded-xl badge-verified flex items-center justify-center">
+                        <i class="material-icons">verified</i>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="stat-num font-bold text-red-600">5</div>
+                        <div class="stat-label text-gray-500 font-medium">Отклонено</div>
+                    </div>
+                    <div class="stat-icon rounded-xl badge-rejected flex items-center justify-center">
+                        <i class="material-icons">block</i>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="stat-num font-bold text-blue-600">38</div>
+                        <div class="stat-label text-gray-500 font-medium">Данные отправлены</div>
+                    </div>
+                    <div class="stat-icon rounded-xl badge-sent flex items-center justify-center">
+                        <i class="material-icons">send</i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters & Sort -->
+        <div class="bg-white rounded-2xl shadow-sm p-3 mb-5 border border-gray-100">
+            <div class="filters-grid grid items-center">
+                <div class="relative">
+                    <i class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                       style="font-size: 18px;">search</i>
+                    <input type="text" placeholder="Поиск по ФИО, email, телефону..."
+                           class="search-input w-full border border-gray-200 rounded-xl pl-9 pr-3 text-gray-700"/>
+                </div>
+                <select class="filter-select border border-gray-200 rounded-xl bg-white text-gray-700">
+                    <option value="">Все факультеты</option>
+                    <option>ФКНТ</option>
+                    <option>ИНО</option>
+                    <option>ЮФ</option>
+                    <option>ФЭУ</option>
+                    <option>ГФ</option>
+                    <option>МТФ</option>
+                </select>
+                <select class="filter-select border border-gray-200 rounded-xl bg-white text-gray-700">
+                    <option value="">Все группы</option>
+                    <option>ПИ-221</option>
+                    <option>ПИ-222</option>
+                    <option>ИС-221</option>
+                    <option>ИС-222</option>
+                    <option>Ю-221</option>
+                    <option>ЭУ-221</option>
+                </select>
+                <select class="filter-select border border-gray-200 rounded-xl bg-white text-gray-700">
+                    <option value="date-desc">Дата ↓</option>
+                    <option value="date-asc">Дата ↑</option>
+                    <option value="name-asc">ФИО А-Я</option>
+                    <option value="name-desc">ФИО Я-А</option>
+                    <option value="faculty">Факультет</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Requests List -->
+        <div class="space-y-3">
+
+            <!-- Request 1: Pending -->
+            <div class="req-card bg-white rounded-2xl shadow-sm border border-gray-100 status-pending">
+                <div class="req-card-inner">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                ИВ
+                            </div>
+                            <div>
+                                <h4 class="req-name font-bold text-gray-800">Иванов Артём Сергеевич</h4>
+                                <div class="req-detail flex items-center gap-2 text-gray-500 mt-0.5">
+                                    <span class="font-medium eco-green">ФКНТ</span>
+                                    <span class="text-gray-300">•</span>
+                                    <span>ПИ-221</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="badge-pending text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap">Ожидает</span>
+                            <i class="material-icons text-gray-300 req-arrow" style="font-size: 18px;">chevron_right</i>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 text-sm">
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <i class="material-icons text-gray-400" style="font-size: 16px;">phone</i>
+                            <span class="req-detail">+7 (999) 123-45-67</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <i class="material-icons text-gray-400" style="font-size: 16px;">email</i>
+                            <span class="req-detail">ivanov.as@student.zabgu.ru</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="req-detail text-gray-400">18.04.2026, 14:32</span>
+                        <div class="req-actions flex">
+                            <!-- Approve opens modal -->
+                            <input type="checkbox" id="modal-1" class="hidden"/>
+                            <label for="modal-1"
+                                   class="btn-approve px-4 py-2 rounded-xl font-semibold text-center cursor-pointer">
+                                <i class="material-icons text-sm align-middle mr-1">check</i>Подтвердить
+                            </label>
+                            <button class="btn-reject px-4 py-2 rounded-xl font-semibold">
+                                <i class="material-icons text-sm align-middle mr-1">close</i>Отклонить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal for Request 1 -->
+            <input type="checkbox" id="modal-1"/>
+            <div class="modal-overlay fixed inset-0 bg-black/40 z-[300] flex items-end sm:items-center justify-center">
+                <label for="modal-1" class="absolute inset-0 cursor-pointer"></label>
+                <div class="modal-box modal-box-inner bg-white rounded-2xl shadow-2xl relative z-10 w-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="modal-title font-bold text-gray-800 title-font">Подтверждение регистрации</h3>
+                        <label for="modal-1"
+                               class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition">
+                            <i class="material-icons text-gray-500" style="font-size: 18px;">close</i>
+                        </label>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-4">Проверьте данные студента. При подтверждении логин и пароль
+                        будут
+                        отправлены на указанную почту.</p>
+                    <div class="bg-gray-50 rounded-xl p-4 mb-4 space-y-3">
+                        <div class="data-row flex items-center justify-between py-1 px-2 rounded-lg">
+                            <span class="text-gray-500 text-sm">ФИО</span>
+                            <span class="modal-data font-medium text-gray-800">Иванов Артём Сергеевич</span>
+                        </div>
+                        <div class="data-row flex items-center justify-between py-1 px-2 rounded-lg">
+                            <span class="text-gray-500 text-sm">Факультет</span>
+                            <span class="modal-data font-medium eco-green">ФКНТ</span>
+                        </div>
+                        <div class="data-row flex items-center justify-between py-1 px-2 rounded-lg">
+                            <span class="text-gray-500 text-sm">Группа</span>
+                            <span class="modal-data font-medium text-gray-800">ПИ-221</span>
+                        </div>
+                        <div class="data-row flex items-center justify-between py-1 px-2 rounded-lg">
+                            <span class="text-gray-500 text-sm">Email</span>
+                            <span class="modal-data font-medium text-gray-800">ivanov.as@student.zabgu.ru</span>
+                        </div>
+                    </div>
+                    <div class="cred-box bg-green-50 border border-green-200 rounded-xl p-4 mb-5">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="material-icons eco-green" style="font-size: 18px;">vpn_key</i>
+                            <span class="font-bold text-gray-800 text-sm">Данные для отправки</span>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between bg-white rounded-lg px-3 py-2">
+                                <div>
+                                    <span class="text-xs text-gray-400 block">Логин</span>
+                                    <span class="cred-text font-mono font-bold text-gray-800">ivanov.as@student.zabgu.ru</span>
+                                </div>
+                                <label for="modal-1" class="btn-copy p-2 rounded-lg cursor-pointer">
+                                    <i class="material-icons text-gray-400" style="font-size: 16px;">content_copy</i>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between bg-white rounded-lg px-3 py-2">
+                                <div>
+                                    <span class="text-xs text-gray-400 block">Пароль</span>
+                                    <span class="cred-text font-mono font-bold text-gray-800">xK7$mP2qR</span>
+                                </div>
+                                <label for="modal-1" class="btn-copy p-2 rounded-lg cursor-pointer">
+                                    <i class="material-icons text-gray-400" style="font-size: 16px;">content_copy</i>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <label for="modal-1"
+                               class="btn-approve flex-1 py-3 rounded-xl font-semibold text-center cursor-pointer">
+                            <i class="material-icons text-sm align-middle mr-1">send</i>Отправить на email
+                        </label>
+                        <label for="modal-1"
+                               class="btn-reject flex-1 py-3 rounded-xl font-semibold text-center cursor-pointer">
+                            Отмена
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Request 2: Pending -->
+            <div class="req-card bg-white rounded-2xl shadow-sm border border-gray-100 status-pending">
+                <div class="req-card-inner">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                ПК
+                            </div>
+                            <div>
+                                <h4 class="req-name font-bold text-gray-800">Петрова Ксения Игоревна</h4>
+                                <div class="req-detail flex items-center gap-2 text-gray-500 mt-0.5">
+                                    <span class="font-medium eco-green">ИНО</span>
+                                    <span class="text-gray-300">•</span>
+                                    <span>ИС-222</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="badge-pending text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap">Ожидает</span>
+                            <i class="material-icons text-gray-300 req-arrow" style="font-size: 18px;">chevron_right</i>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 text-sm">
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <i class="material-icons text-gray-400" style="font-size: 16px;">phone</i>
+                            <span class="req-detail">+7 (914) 555-33-22</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <i class="material-icons text-gray-400" style="font-size: 16px;">email</i>
+                            <span class="req-detail">petrova.ki@student.zabgu.ru</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="req-detail text-gray-400">18.04.2026, 13:15</span>
+                        <div class="req-actions flex">
+                            <button class="btn-approve px-4 py-2 rounded-xl font-semibold">
+                                <i class="material-icons text-sm align-middle mr-1">check</i>Подтвердить
+                            </button>
+                            <button class="btn-reject px-4 py-2 rounded-xl font-semibold">
+                                <i class="material-icons text-sm align-middle mr-1">close</i>Отклонить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Request 3: Sent -->
+            <div class="req-card bg-white rounded-2xl shadow-sm border border-gray-100 status-sent">
+                <div class="req-card-inner">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                СД
+                            </div>
+                            <div>
+                                <h4 class="req-name font-bold text-gray-800">Сидоров Дмитрий Александрович</h4>
+                                <div class="req-detail flex items-center gap-2 text-gray-500 mt-0.5">
+                                    <span class="font-medium eco-green">ФКНТ</span>
+                                    <span class="text-gray-300">•</span>
+                                    <span>ПИ-222</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="badge-sent text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap">Отправлено</span>
+                            <i class="material-icons text-gray-300 req-arrow" style="font-size: 18px;">chevron_right</i>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 text-sm">
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <i class="material-icons text-gray-400" style="font-size: 16px;">phone</i>
+                            <span class="req-detail">+7 (924) 777-88-99</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <i class="material-icons text-gray-400" style="font-size: 16px;">email</i>
+                            <span class="req-detail">sidorov.da@student.zabgu.ru</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="req-detail text-gray-400">17.04.2026, 10:48</span>
+                        <div class="req-actions flex">
+                            <button class="btn-sent px-4 py-2 rounded-xl font-semibold">
+                                <i class="material-icons text-sm align-middle mr-1">mail</i>Повторить отправку
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Request 4: Rejected -->
+            <div class="req-card bg-white rounded-2xl shadow-sm border border-gray-100 status-rejected opacity-75">
+                <div class="req-card-inner">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                КМ
+                            </div>
+                            <div>
+                                <h4 class="req-name font-bold text-gray-500 line-through">Козлов Максим Андреевич</h4>
+                                <div class="req-detail flex items-center gap-2 text-gray-400 mt-0.5">
+                                    <span>ЮФ</span>
+                                    <span class="text-gray-300">•</span>
+                                    <span>Ю-221</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="badge-rejected text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap">Отклонено</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 text-sm">
+                        <div class="flex items-center gap-2 text-gray-400">
+                            <i class="material-icons text-gray-300" style="font-size: 16px;">phone</i>
+                            <span class="req-detail">+7 (999) 000-11-22</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-gray-400">
+                            <i class="material-icons text-gray-300" style="font-size: 16px;">email</i>
+                            <span class="req-detail">kozlov.ma@unknown.ru</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="req-detail text-gray-400">15.04.2026, 09:20</span>
+                        <span class="text-xs text-red-400 font-medium">Причина: студент не найден в базе ЗабГУ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Request 5: Verified (intermediate state) -->
+            <div class="req-card bg-white rounded-2xl shadow-sm border border-gray-100 status-verified">
+                <div class="req-card-inner">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                ОН
+                            </div>
+                            <div>
+                                <h4 class="req-name font-bold text-gray-800">Новикова Ольга Дмитриевна</h4>
+                                <div class="req-detail flex items-center gap-2 text-gray-500 mt-0.5">
+                                    <span class="font-medium eco-green">ФЭУ</span>
+                                    <span class="text-gray-300">•</span>
+                                    <span>ЭУ-221</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="badge-verified text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap">Проверен</span>
+                            <i class="material-icons text-gray-300 req-arrow" style="font-size: 18px;">chevron_right</i>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4 text-sm">
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <i class="material-icons text-gray-400" style="font-size: 16px;">phone</i>
+                            <span class="req-detail">+7 (913) 444-55-66</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-gray-600">
+                            <i class="material-icons text-gray-400" style="font-size: 16px;">email</i>
+                            <span class="req-detail">novikova.od@student.zabgu.ru</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="req-detail text-gray-400">18.04.2026, 11:05</span>
+                        <div class="req-actions flex">
+                            <button class="btn-approve px-4 py-2 rounded-xl font-semibold">
+                                <i class="material-icons text-sm align-middle mr-1">send</i>Отправить данные
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+

@@ -8,7 +8,7 @@ from WebUIProjectGreenZabGU.views import AddBlogPostView, AchievementsView, \
 
 urlpatterns = [
     path('', IndexGreenView.as_view(), name='green_main'),  # Главная страница, надо чтобы было два вида - для не зарегистрированных и для участников
-    path('admin/', AdminView.as_view(), name='admin'),      # Страница для администратора, позволяет управлять данными
+    path('administrations/', AdminView.as_view(), name='administrations'),      # Страница для администратора, позволяет управлять данными
     path('participant/', ParticipantView.as_view(), name='participant'),    # Страница для менеджеров, позволяет управлять и добавлять участников
     path('content_manager/', ContentManagerView.as_view(), name='content_manager'),  # Управляющий событиями, позволяет управлять новостями и блогами...
 

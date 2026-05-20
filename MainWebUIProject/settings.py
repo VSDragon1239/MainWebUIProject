@@ -182,3 +182,19 @@ ANYTHINGLLM_API_KEY = os.getenv('ANYTHINGLLM_API_KEY')
 
 RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY', '')
 RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY', '')
+
+# Базовые настройки почты
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# Сервер исходящей почты (SMTP)
+EMAIL_HOST = os.getenv('EMAIL_HOST', '')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() in ('true', '1', 't')
+EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() in ('true', '1', 't')
+
+# Ящик, от имени которого отправляем (доменный ящик в VK WorkSpace)
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+
+# Опционально: отображаемое имя и адрес для всех исходящих писем
+DEFAULT_FROM_EMAIL = f"Green ZabGu <{EMAIL_HOST_USER}>"

@@ -12,9 +12,11 @@ from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.http import Http404
 
+from MainWebUIProject import settings
+from .email_sender import send_templated_mail
 from .forms import BlogPostForm, BlogPostImageFormSet, RegistrationRequestForm
 from WebUiProject.models import Project, Blog, EcoTransactionType, EcoTask, UserTaskCompletion, \
-    EcoHabit, UserHabitLog, EcoHabitCategory, Profile
+    EcoHabit, UserHabitLog, EcoHabitCategory, Profile, RegistrationRequest
 from .permissions import RoleRequiredMixin
 
 from django.views import View
@@ -82,13 +84,9 @@ class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
 
 
 # Страница для администратора сайта
-#   Список руководителей    -   добавить (роль), изменить (роль), удалить (если нет других ролей - удаление учётной записи),
-#   Контент-менеджеров      -   добавить (роль), изменить (роль), удалить (зависит от других ролей, если их нет - удаление учётной записи),
-#   Участников в системе    -   добавить (создание учётной записи в систему), изменить (профиль), удалить (саму учётную запись)
-#   Работа с проектами (создание, изменени, удаление) и назначение ролей
 class AdminView(RoleRequiredMixin, TemplateView):
     required_roles = ['Администраторы']
-    template_name = "pages/admin.html"
+    template_name = "webuiprojectgreenzabgu/moderations/registration_requests.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -186,9 +184,23 @@ class ContactsView(TemplateView):
             email = form.cleaned_data['email']
 
             # ТУТ код сохранения (например, создание записи в БД или отправка письма)
+            RegistrationRequest.objects.create(
+                fio=fio,
+                group=group,
+                phone=phone,
+                email=email
+            )
+
+            send_templated_mail(
+                subject="Ваша заявка в Green ZabGu получена",
+                template_path="webuiprojectgreenzabgu/emails/registration_received.html",
+                context_dict={"fio": fio, "group": group, "email": email},
+                to_email=email
+            )
 
             # Выводим сообщение об успехе и делаем перенаправление (редирект)
-            messages.success(request, f'Данные успешно отправлены! Ожидайте решение в письме, которое будет направлено на указанную почту - {email}!')
+            messages.success(request,
+                             f'Данные успешно отправлены! Ожидайте решение в письме, которое будет направлено на указанную почту - {email}!')
             return redirect(f"{request.path}?action=send")
 
         # Если в форме есть ошибки, заново рендерим страницу, передавая невалидную форму с ошибками

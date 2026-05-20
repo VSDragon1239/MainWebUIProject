@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+</head>
+<body style="font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px;">
+<div style="max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 10px;">
+    {% if is_approved %}
+        <h2 style="color: #2e7d32;">Ваша заявка одобрена! ✅</h2>
+        <p>Здравствуйте, <strong>{{ fio }}</strong>!</p>
+        <p>Поздравляем, ваша учетная запись готова. Теперь вы можете войти в систему.</p>
+        <a href="{{ login_url }}"
+           style="display: inline-block; background: #2e7d32; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; margin-top: 15px;">Войти
+            в систему</a>
+    {% else %}
+        <h2 style="color: #d32f2f;">Заявка отклонена ❌</h2>
+        <p>Здравствуйте, <strong>{{ fio }}</strong>!</p>
+        <p>К сожалению, в вашей регистрации отказано. Возможные причины: указаны неверные данные или группа не найдена в
+            базе.</p>
+        <p>Если вы считаете это ошибкой, свяжитесь с администратором.</p>
+    {% endif %}
+</div>
+</body>
+</html>
