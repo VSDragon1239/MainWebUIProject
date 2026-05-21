@@ -51,6 +51,12 @@
                                 Задания
                             </a>
                         {% endif %}
+                        {% if request.resolver_match.url_name != 'eco_habits_tracker' %}
+                            <a href="{% url 'eco_habits_tracker' %}"
+                               class="text-gray-700 hover:text-green-600 font-medium text-base">
+                                Привычки
+                            </a>
+                        {% endif %}
                         {% if request.resolver_match.url_name != 'eco_bonus_list' %}
                             <a href="{% url 'eco_bonus_list' %}"
                                class="text-gray-700 hover:text-green-600 font-medium text-base">

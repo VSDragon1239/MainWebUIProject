@@ -15,7 +15,7 @@ from django.http import Http404
 
 from MainWebUIProject import settings
 from .email_sender import send_templated_mail
-from .forms import BlogPostForm, BlogPostImageFormSet, RegistrationRequestForm, ProfileAvatarForm
+from .forms import BlogPostForm, BlogPostImageFormSet, RegistrationRequestForm, ProfileAvatarForm, UserEditForm
 from WebUiProject.models import Project, Blog, EcoTransactionType, EcoTask, UserTaskCompletion, \
     EcoHabit, UserHabitLog, EcoHabitCategory, Profile, RegistrationRequest, EcoCoinTransaction, Event, EventCategory
 from .permissions import RoleRequiredMixin
@@ -43,7 +43,7 @@ class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
     required_roles = ["Участники", "Руководители", "Администраторы", "Контент менеджер"]
     login_url = "/login/"  # куда перенаправлять
     redirect_field_name = "next"  # параметр с origin
-    template_name = "webuiprojectgreenzabgu/pages/profile.html"
+    template_name = "webuiprojectgreenzabgu/profile/profile.html"
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -103,35 +103,38 @@ class ProfileView(LoginRequiredMixin, RoleRequiredMixin, TemplateView):
 
 
 class EditProfileView(LoginRequiredMixin, View):
-    """Вьюха для обработки ДВУХ форм одновременно"""
-
     def get(self, request):
-        # get_or_create для защиты от отсутствия профиля
         profile, _ = Profile.objects.get_or_create(user=request.user)
+        u_form = UserEditForm(instance=request.user)
         p_form = ProfileAvatarForm(instance=profile)
 
         context = {
+            'u_form': u_form,
             'p_form': p_form,
         }
-        return render(request, 'webuiprojectgreenzabgu/pages/profile_edit.html', context)
+        return render(request, 'webuiprojectgreenzabgu/profile/profile_edit.html', context)
 
     def post(self, request):
         profile, _ = Profile.objects.get_or_create(user=request.user)
 
-        # ВАЖНО: request.FILES обязателен для загрузки картинок!
+        u_form = UserEditForm(request.POST, instance=request.user)
+        # ВАЖНО: request.FILES для аватарки!
         p_form = ProfileAvatarForm(request.POST, request.FILES, instance=profile)
 
-        if p_form.is_valid():
-            p_form.save()
-            messages.success(request, 'Ваш профиль успешно обновлен!')
+        if u_form.is_valid() and p_form.is_valid():
+            with db_transaction.atomic():
+                u_form.save()
+                p_form.save()
+            messages.success(request, 'Ваши данные успешно обновлены!')
             return redirect('profile')
         else:
             messages.error(request, 'Пожалуйста, исправьте ошибки в форме.')
 
         context = {
+            'u_form': u_form,
             'p_form': p_form,
         }
-        return render(request, 'webuiprojectgreenzabgu/pages/profile_edit.html', context)
+        return render(request, 'webuiprojectgreenzabgu/profile/profile_edit.html', context)
 
 
 # Страница для администратора сайта
@@ -635,14 +638,18 @@ class MarkHabitDoneView(LoginRequiredMixin, View):  # LoginRequiredMixin гар�
 class EcoHabitsCategoriesView(LoginRequiredMixin, ListView):
     """Страница выбора категории привычек"""
     model = EcoHabitCategory
-    template_name = "pages/eco_habits_categories.html"
+    template_name = "webuiprojectgreenzabgu/ecohabits/eco_habits_categories.html"
     context_object_name = 'categories'
+
+    def get_queryset(self):
+        # Скрываем категории, в которых нет ни одной активной привычки
+        return EcoHabitCategory.objects.filter(habits__is_active=True).distinct()
 
 
 class EcoHabitsView(LoginRequiredMixin, ListView):
     """Список привычек внутри конкретной категории"""
     model = EcoHabit
-    template_name = "pages/eco_habits.html"
+    template_name = "webuiprojectgreenzabgu/ecohabits/eco_habits.html"
     context_object_name = 'habits'
 
     def get_queryset(self):
@@ -669,7 +676,7 @@ class EcoHabitsView(LoginRequiredMixin, ListView):
 class EcoHabitDetailsView(LoginRequiredMixin, DetailView):
     """Детальная страница привычки с инфой о серии"""
     model = EcoHabit
-    template_name = "pages/eco_habit_details.html"
+    template_name = "webuiprojectgreenzabgu/ecohabits/eco_habit_details.html"
     context_object_name = 'habit'
 
     def get_object(self, queryset=None):
