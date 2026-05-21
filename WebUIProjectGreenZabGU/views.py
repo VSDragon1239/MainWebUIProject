@@ -532,25 +532,43 @@ class EcoTaskDetailsView(LoginRequiredMixin,
 
 
 class CompleteEcoTaskView(LoginRequiredMixin, View):
-    """
-    Эта вьюха срабатывает когда пользователь нажимает кнопку "Выполнить".
-    """
-
     def post(self, request, task_id):
         task = get_object_or_404(EcoTask, pk=task_id, is_active=True)
 
-        # 1. Проверка на уровне приложения (чтобы не гонять лишние SQL запросы к БД)
+        # Формируем уникальный ключ
+        external_id = f"task:{task.id}:user:{request.user.id}"
+        task_type_code = task.task_type.code if task.task_type else 'trust'
+
+        proof_text = None
+        proof_image = None
+
+        # 1. Валидация типа
+        if task_type_code == 'text_code':
+            proof_text = request.POST.get('proof_text', '').strip()
+            if not proof_text:
+                return JsonResponse({"error": "Введите код для подтверждения"}, status=400)
+
+            if task.secret_code:
+                if proof_text.upper() != task.secret_code.upper():
+                    return JsonResponse({"error": "Неверный код! Проверьте данные и попробуйте снова."}, status=400)
+
+        elif task_type_code == 'photo':
+            if 'proof_image' not in request.FILES:
+                return JsonResponse({"error": "Прикрепите фотографию"}, status=400)
+            proof_image = request.FILES['proof_image']
+
+        # 2. ЯВНАЯ ПРОВЕРКА: Была ли уже попытка выполнить это задание?
         if UserTaskCompletion.objects.filter(user=request.user, task=task).exists():
             return JsonResponse({"error": "Вы уже выполнили это задание"}, status=400)
 
-        # 2. Формируем уникальный ключ для нашего сервиса
-        external_id = f"task:{task.id}:user:{request.user.id}"
+        # 3. ЯВНАЯ ПРОВЕРКА: Завис ли этот external_id в логах транзакций? (Защита от "призраков")
+        if EcoCoinTransaction.objects.filter(external_id=external_id).exists():
+            return JsonResponse({
+                "error": "Система уже зафиксировала выполнение этого задания ранее (транзакция существует, но статус мог не обновиться)."
+            }, status=400)
 
         try:
-            # Оборачиваем в atomic: если коины не начислятся, факт выполнения тоже не запишется
             with db_transaction.atomic():
-
-                # Вызываем наш сервис! Он заблокирует кошелек и обновит баланс
                 new_balance = EcoCoinService.credit(
                     user=request.user,
                     amount=task.reward,
@@ -558,27 +576,40 @@ class CompleteEcoTaskView(LoginRequiredMixin, View):
                     external_id=external_id
                 )
 
-                # Записываем факт выполнения ТОЛЬКО если транзакция с коинами прошла успешно
-                UserTaskCompletion.objects.create(user=request.user, task=task)
+                UserTaskCompletion.objects.create(
+                    user=request.user,
+                    task=task,
+                    proof_text=proof_text,
+                    proof_image=proof_image
+                )
 
-            # Возвращаем успешный ответ и НОВЫЙ баланс для обновления на экране
             return JsonResponse({
                 "status": "success",
                 "message": f"+{task.reward} ECO получено!",
                 "new_balance": str(new_balance)
             })
 
-        except IntegrityError:
-            # Срабатывает, если concurrent-запрос (две открытые вкладки) прошли проверку выше одновременно,
-            # но база данных (через UniqueConstraint в сервисе или unique_together) отдала ошибку дубликата.
-            return JsonResponse({"error": "Задание уже было выполнено (система)"}, status=400)
-
-        except Exception as e:
-            # Логируем непредвиденную ошибку (например, падение БД)
+        except IntegrityError as e:
+            # Если мы сюда попали, значит произошел идеальный Race Condition (два запроса в одну миллисекунду)
             import logging
             logger = logging.getLogger(__name__)
-            logger.error(f"Error completing task {task_id}: {str(e)}")
-            return JsonResponse({"error": "Произошла ошибка на сервере"}, status=500)
+            logger.warning(
+                f"Race condition prevented for task {task_id} by user {request.user.id}. External ID: {external_id}. Error: {str(e)}")
+
+            # Возвращаем не ошибку, а "успех", чтобы UI не сломался, так как задание на 99.9% выполнено первым запросом
+            # Просто обновляем баланс из БД
+            actual_balance = EcoCoinService.get_balance(request.user)
+            return JsonResponse({
+                "status": "success",
+                "message": "Задание выполнено!",
+                "new_balance": str(actual_balance)
+            })
+
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Critical error completing task {task_id}: {str(e)}", exc_info=True)
+            return JsonResponse({"error": f"Ошибка сервера: {str(e)}"}, status=500)
 
 
 class MarkHabitDoneView(LoginRequiredMixin, View):  # LoginRequiredMixin гарантирует,

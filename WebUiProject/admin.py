@@ -5,7 +5,7 @@ from django.utils.crypto import get_random_string
 from WebUIProjectGreenZabGU.email_sender import send_templated_mail
 from WebUIProjectGreenZabGU.services import process_registration_approval
 from .models import ProjectType, Project, Blog, BlogImage, EcoTask, UserTaskCompletion, EcoCoinTransaction, \
-    EcoHabitCategory, EcoHabit, RegistrationRequest, Profile, EventCategory, Event
+    EcoHabitCategory, EcoHabit, RegistrationRequest, Profile, EventCategory, Event, EcoTaskType
 
 
 @admin.register(ProjectType)
@@ -37,20 +37,37 @@ class EcoTaskAdmin(admin.ModelAdmin):
     search_fields = ('title',)
 
 
+# Создайте типы вручную через админку или фикстуры:
+# code: 'trust', name: 'Честное слово (без проверки)'
+# code: 'text_code', name: 'Ввод текста / QR-кода'
+# code: 'photo', name: 'Фотоподтверждение'
+
+admin.site.register(EcoTaskType)
+
+
 @admin.register(UserTaskCompletion)
 class UserTaskCompletionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'task', 'completed_at')
-    readonly_fields = ('user', 'task', 'completed_at')
+    list_display = ('user', 'task', 'completed_at', 'proof_text', 'has_proof_image')
+    list_filter = ('task__task_type',)
+    readonly_fields = ('proof_image',)
 
-    @admin.register(EcoHabitCategory)
-    class EcoHabitCategoryAdmin(admin.ModelAdmin):
-        list_display = ('name', 'icon')
-        prepopulated_fields = {}  # Если захотите добавить slug
+    def has_proof_image(self, obj):
+        return bool(obj.proof_image)
 
-    @admin.register(EcoHabit)
-    class EcoHabitAdmin(admin.ModelAdmin):
-        list_display = ('title', 'category', 'base_reward', 'streak_bonus', 'is_active')
-        list_filter = ('category', 'is_active')
+    has_proof_image.boolean = True
+    has_proof_image.short_description = "Есть фото?"
+
+
+@admin.register(EcoHabitCategory)
+class EcoHabitCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'icon')
+    prepopulated_fields = {}  # Если захотите добавить slug
+
+
+@admin.register(EcoHabit)
+class EcoHabitAdmin(admin.ModelAdmin):
+    list_display = ('title', 'category', 'base_reward', 'streak_bonus', 'is_active')
+    list_filter = ('category', 'is_active')
 
 
 # @admin.register(RegistrationRequest)

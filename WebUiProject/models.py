@@ -239,14 +239,44 @@ class EcoCoinTransaction(models.Model):
         return f"{self.wallet.user.username}: {sign}{self.amount} ({self.get_tx_type_display()})"
 
 
+# ======================== ЗАДАНИЯ ========================
+class EcoTaskType(models.Model):
+    """Типы проверки заданий"""
+    code = models.SlugField(unique=True, verbose_name="Код типа")
+    name = models.CharField(max_length=100, verbose_name="Название")
+
+    class Meta:
+        verbose_name = "Тип проверки задания"
+        verbose_name_plural = "Типы проверок заданий"
+
+    def __str__(self):
+        return self.name
+
+
+# Функция для загрузки фото-доказательств
+def task_proof_image_upload_to(instance, filename):
+    ext = filename.rsplit('.', 1)[-1].lower()
+    name = uuid.uuid4().hex
+    return os.path.join('tasks_proofs', f"{name}.{ext}")
+
+
 class EcoTask(models.Model):
-    """Задание, которое создает Админ"""
     title = models.CharField(max_length=255, verbose_name="Название задания")
     description = models.TextField(blank=True, verbose_name="Описание")
-    reward = models.IntegerField(
-        default=10,
-        verbose_name="Награда (ECO)"
+    reward = models.IntegerField(default=10, verbose_name="Награда (ECO)")
+
+    task_type = models.ForeignKey(
+        EcoTaskType, on_delete=models.SET_NULL, null=True, verbose_name="Способ проверки"
     )
+
+    # НОВОЕ: Поле для правильного ответа
+    secret_code = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name="Секретный код (если тип 'Ввод текста')",
+        help_text="Если заполнено, пользователь должен ввести ровно этот код. Сравнение без учета регистра."
+    )
+
     is_active = models.BooleanField(default=True, verbose_name="Активно")
 
     class Meta:
@@ -258,23 +288,25 @@ class EcoTask(models.Model):
 
 
 class UserTaskCompletion(models.Model):
-    """
-    Связующая таблица. Нужна для двух вещей:
-    1. Чтобы в UI скрывать уже выполненные задания.
-    2. Двойной контроль (наряду с external_id в транзакциях).
-    """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="completed_tasks")
     task = models.ForeignKey(EcoTask, on_delete=models.PROTECT, related_name="completions")
     completed_at = models.DateTimeField(auto_now_add=True)
 
+    # Поля для доказательств
+    proof_text = models.CharField(max_length=255, blank=True, verbose_name="Введенный код/текст")
+    proof_image = ProcessedImageField(
+        upload_to=task_proof_image_upload_to,
+        processors=[ResizeToFit(800, 800)],
+        format='JPEG',
+        options={'quality': 75},
+        blank=True, null=True,
+        verbose_name="Фотография доказательства"
+    )
+
     class Meta:
         verbose_name = "Выполненное задание"
         verbose_name_plural = "Выполненные задания"
-        # Пользователь может выполнить конкретное задание только ОДИН раз
         unique_together = ['user', 'task']
-
-    def __str__(self):
-        return f"{self.user.username} выполнил '{self.task.title}'"
 
 
 class EcoHabitCategory(models.Model):
