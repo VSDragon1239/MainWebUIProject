@@ -186,6 +186,7 @@ class EcoTransactionType(models.TextChoices):
     MANUAL_REWARD = "manual_reward", "Ручное начисление (админом)"
     # Списания
     SHOP_PURCHASE = "shop_purchase", "Покупка в магазине"
+    TASK_REVERSED = "task_reversed", "Отмена эко-задачи (списание)"
     # Переводы
     TRANSFER_OUT = "transfer_out", "Перевод другому"
     TRANSFER_IN = "transfer_in", "Перевод от другого"
@@ -303,10 +304,29 @@ class UserTaskCompletion(models.Model):
         verbose_name="Фотография доказательства"
     )
 
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Активно"
+        CANCELLED = "cancelled", "Отменено админом"
+
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+        verbose_name="Статус"
+    )
+
     class Meta:
         verbose_name = "Выполненное задание"
         verbose_name_plural = "Выполненные задания"
         unique_together = ['user', 'task']
+        # Обязательно обновите unique_together, чтобы можно было отменить и снова выполнить (если нужно)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'task'],
+                condition=models.Q(status='active'),
+                name='unique_active_task_completion'
+            )
+        ]
 
 
 class EcoHabitCategory(models.Model):

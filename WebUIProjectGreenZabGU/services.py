@@ -116,6 +116,39 @@ class EcoCoinService:
             "is_new_streak": current_streak > 1
         }
 
+    @staticmethod
+    @db_transaction.atomic
+    def reverse_task_completion(user, completion_obj):
+        """Безопасная отмена выполнения задания и списание монет."""
+        # 1. Проверка, не отменено ли уже
+        if completion_obj.status == 'cancelled':
+            return False, "Задание уже было отменено ранее"
+
+        amount_to_deduct = completion_obj.task.reward
+
+        # 2. Блокируем кошелек
+        wallet = EcoWallet.objects.select_for_update().get(user=user)
+
+        # 3. Создаем транзакцию отмены (с минусом)
+        EcoCoinTransaction.objects.create(
+            wallet=wallet,
+            amount=-amount_to_deduct,
+            tx_type=EcoTransactionType.TASK_REVERSED,
+            external_id=f"reversed_task:{completion_obj.task.id}:user:{user.id}"
+        )
+
+        # 4. Обновляем баланс (разрешаем уход в минус при отмене,
+        # чтобы админ всегда мог откатить мошеннические начисления)
+        wallet.balance = F('balance') - amount_to_deduct
+        wallet.save(update_fields=['balance'])
+
+        # 5. Меняем статус задания
+        completion_obj.status = 'cancelled'
+        completion_obj.save(update_fields=['status'])
+
+        wallet.refresh_from_db(fields=['balance'])
+        return True, f"Успешно. Списано {amount_to_deduct} ECO. Баланс стал: {wallet.balance}"
+
 
 def process_registration_approval(request_obj):
     """Создает пользователя и отправляет письмо. Возвращает (True, пароль) или (False, ошибка)"""

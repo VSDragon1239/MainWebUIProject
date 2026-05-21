@@ -1,0 +1,18 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_row %}
+    {% if original.status == 'active' %}
+        <div class="submit-row">
+            <!-- Кнопка отмены задания -->
+            <input type="submit" value="Отменить выполнение и списать ECO" name="_cancel_task"
+                   style="background: #dc3545; color: white;"
+                   onclick="return confirm('ВНИМАНИЕ: Монеты будут списаны у пользователя! Продолжить?');">
+        </div>
+    {% else %}
+        <div class="submit-row">
+            <p style="color: #856404; background: #fff3cd; padding: 10px; border-radius: 4px; width: 100%;">
+                <strong>Статус: Отменено.</strong> Задание уже отменено, монеты списаны. Повторные действия невозможны.
+            </p>
+        </div>
+    {% endif %}
+{% endblock %}

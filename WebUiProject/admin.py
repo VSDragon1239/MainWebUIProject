@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
+from django.core.checks import messages
+from django.shortcuts import redirect
 from django.utils.crypto import get_random_string
 
 from WebUIProjectGreenZabGU.email_sender import send_templated_mail
-from WebUIProjectGreenZabGU.services import process_registration_approval
+from WebUIProjectGreenZabGU.services import process_registration_approval, EcoCoinService
 from .models import ProjectType, Project, Blog, BlogImage, EcoTask, UserTaskCompletion, EcoCoinTransaction, \
     EcoHabitCategory, EcoHabit, RegistrationRequest, Profile, EventCategory, Event, EcoTaskType
 
@@ -47,15 +49,57 @@ admin.site.register(EcoTaskType)
 
 @admin.register(UserTaskCompletion)
 class UserTaskCompletionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'task', 'completed_at', 'proof_text', 'has_proof_image')
-    list_filter = ('task__task_type',)
-    readonly_fields = ('proof_image',)
+    list_display = ('user', 'task', 'completed_at', 'status', 'proof_text', 'has_proof_image')
+    list_filter = ('status', 'task__task_type')
+    search_fields = ('user__username', 'task__title')
+    readonly_fields = ('user', 'task', 'completed_at', 'proof_text', 'proof_image', 'status')
+
+    # 1. ЗАПРЕЩАЕМ физическое удаление!
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    # 2. Добавляем кастомные действия (Actions)
+    @admin.action(description='Отменить выполнение и списать ECO (выбранные)')
+    def cancel_and_revoke_coins(self, request, queryset):
+        # Фильтруем только те, которые еще активны
+        active_completions = queryset.filter(status='active')
+        success_count = 0
+
+        for comp in active_completions:
+            try:
+                success, msg = EcoCoinService.reverse_task_completion(comp.user, comp)
+                if success:
+                    success_count += 1
+            except Exception as e:
+                self.message_user(request, f"Ошибка у {comp.user.username}: {str(e)}", level=messages.ERROR)
+
+        if success_count > 0:
+            self.message_user(request, f"Успешно отменено заданий: {success_count}. Монеты списаны.",
+                              level=messages.SUCCESS)
+
+    actions = [cancel_and_revoke_coins]
+
+    # 3. Добавляем кнопку прямо на страницу редактирования одного задания
+    change_form_template = "admin/user_task_completion_change_form.html"
+
+    def response_change(self, request, obj):
+        if "_cancel_task" in request.POST:
+            try:
+                success, msg = EcoCoinService.reverse_task_completion(obj.user, obj)
+                if success:
+                    self.message_user(request, msg, level=messages.SUCCESS)
+                else:
+                    self.message_user(request, msg, level=messages.WARNING)
+            except Exception as e:
+                self.message_user(request, f"Ошибка: {str(e)}", level=messages.ERROR)
+            return redirect("..")  # Возвращаем к списку
+        return super().response_change(request, obj)
 
     def has_proof_image(self, obj):
         return bool(obj.proof_image)
 
     has_proof_image.boolean = True
-    has_proof_image.short_description = "Есть фото?"
+    has_proof_image.short_description = "Фото?"
 
 
 @admin.register(EcoHabitCategory)
