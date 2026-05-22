@@ -1,14 +1,18 @@
-{% extends 'base/base_header.html' %}
+{% extends 'webuiprojectgreenzabgu/base/base_header.html' %}
 {% load static %}
 
 {% block title %}МЗП - Главная - Зелёный Вуз - Экологические привычки{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/index_style.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Slab:wght@400;600;700&display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 {% endblock %}
 
 {% block content_block_0 %}
-    <h1><a href="{% url 'main' %}">МЗП</a> -> <a href="{% url 'profile' %}">Профиль</a> - Достижения</h1>
+{#    <h1><a href="{% url 'main' %}">МЗП</a> -> <a href="{% url 'profile' %}">Профиль</a> - Достижения</h1>#}
 {% endblock %}
 
 {% block content_block_1 %}

@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 2. Обработка отправки
     btn.addEventListener('click', function () {
+        if (btn.disabled) return;
+        btn.disabled = true;
         const taskId = btn.getAttribute('data-task-id');
 
         // Валидация полей перед отправкой

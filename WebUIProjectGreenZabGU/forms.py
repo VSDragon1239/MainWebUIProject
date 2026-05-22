@@ -8,7 +8,7 @@ from django.template.defaultfilters import slugify
 from django_recaptcha.fields import ReCaptchaField
 from django_recaptcha.widgets import ReCaptchaV2Checkbox
 
-from WebUiProject.models import Blog, BlogImage, Project, ProjectType, Profile
+from WebUiProject.models import Blog, BlogImage, Project, ProjectType, Profile, Offer
 
 from django.forms.models import inlineformset_factory
 from django_select2.forms import Select2Widget
@@ -296,5 +296,22 @@ class UserEditForm(forms.ModelForm):
             'last_name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500'}),
             'email': forms.EmailInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500'}),
+        }
+
+
+class OfferCreateForm(forms.ModelForm):
+    class Meta:
+        model = Offer
+        fields = ['title', 'description', 'price_in_eco', 'category']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500'}),
+            'description': forms.Textarea(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500',
+                'rows': 3}),
+            'price_in_eco': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500'}),
+            'category': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg text-base focus:outline-none focus:border-green-500'}),
         }

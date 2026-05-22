@@ -4,8 +4,8 @@ from django.core.checks import messages
 from django.shortcuts import redirect
 from django.utils.crypto import get_random_string
 
-from WebUIProjectGreenZabGU.email_sender import send_templated_mail
-from WebUIProjectGreenZabGU.services import process_registration_approval, EcoCoinService
+from WebUIProjectGreenZabGU.services import process_registration_approval, EcoCoinService, \
+    process_registration_rejection
 from .models import ProjectType, Project, Blog, BlogImage, EcoTask, UserTaskCompletion, EcoCoinTransaction, \
     EcoHabitCategory, EcoHabit, RegistrationRequest, Profile, EventCategory, Event, EcoTaskType, Partner, Offer, \
     UserPromoCode
@@ -174,7 +174,7 @@ class RegistrationRequestAdmin(admin.ModelAdmin):
                 if obj.status == "approved":
                     process_registration_approval(obj)
                 elif obj.status == "rejected":
-                    send_templated_mail(...)  # логика отклонения
+                    process_registration_rejection(obj)
         super().save_model(request, obj, form, change)
 
 

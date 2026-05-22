@@ -1,0 +1,98 @@
+{% extends 'webuiprojectgreenzabgu/base/base_header.html' %}
+{% load static %}
+
+{% block title %}МЗП - События и мероприятия{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/index_style.css' %}">
+{% endblock %}
+
+{% block content_block_0 %}
+    <!-- Скрытие или переопределение стандартного хедера, если необходимо -->
+{% endblock %}
+
+{% block content_block_1 %}
+    <div class="bg-gray-50 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-6xl mx-auto">
+
+            <!-- Заголовок секции -->
+            <header class="mb-10 text-center md:text-left">
+                <h1 class="text-3xl font-extrabold text-gray-900 sm:text-4xl tracking-tight">
+                    События и мероприятия
+                </h1>
+                <p class="mt-3 text-lg text-gray-500 max-w-2xl">
+                    Выберите интересующее вас направление, чтобы посмотреть актуальные экологические акции, лекции и
+                    встречи.
+                </p>
+            </header>
+
+            <!-- Сетка категорий -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for category in categories %}
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between overflow-hidden group">
+                        <div class="p-6">
+
+                            <!-- Иконка и индикатор количества -->
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="p-3 bg-green-50 rounded-xl text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors duration-300">
+                                    <!-- Универсальная иконка календаря/события. Можно кастомизировать через поле в модели -->
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                         xmlns="http://w3.org">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 002-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+
+                                <!-- Дополнительно: вывод количества мероприятий в категории (если настроено в view/related_name) -->
+                                {% if category.events.count %}
+                                    <span class="text-xs font-semibold px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full">
+                                    {{ category.events.count }} соб.
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Название и описание категории -->
+                            <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors duration-300">
+                                {{ category.name }}
+                            </h3>
+
+                            <p class="text-gray-500 text-sm line-clamp-3">
+                                {% if category.description %}
+                                    {{ category.description }}
+                                {% else %}
+                                    Все мероприятия и активности, связанные с направлением «{{ category.name }}».
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <!-- Нижняя кнопка перехода -->
+                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-50 group-hover:bg-green-50 transition-colors duration-300">
+                            <!-- ИСПРАВЛЕНИЕ: Передаем строго category.id, чтобы в URL не подставлялся 0 -->
+                            <a href="{% url 'events' category.id %}"
+                               class="flex items-center justify-between text-sm font-semibold text-gray-700 group-hover:text-green-700 transition-colors duration-300">
+                                <span>Открыть список</span>
+                                <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform"
+                                     fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://w3.org">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <!-- Заглушка, если категорий в базе нет -->
+                    <div class="col-span-full bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor"
+                             viewBox="0 0 24 24" xmlns="http://w3.org">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Категории отсутствуют</h3>
+                        <p class="mt-1 text-sm text-gray-500">Администратор ещё не добавил ни одной категории
+                            мероприятий в панель управления.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

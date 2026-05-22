@@ -68,7 +68,7 @@
                             </a>
                         {% endif %}
                         {% if request.resolver_match.url_name != 'marketplace' %}
-                            <a href="{% url 'eco_bonus_list' %}"
+                            <a href="{% url 'marketplace' %}"
                                class="text-gray-700 hover:text-green-600 font-medium text-base">
                                 Маркетплейс
                             </a>
@@ -80,7 +80,7 @@
                             </a>
                         {% endif %}
                         {% if request.resolver_match.url_name != 'events' %}
-                            <a href="{% url 'events' pk=0 %}"
+                            <a href="{% url 'events' pk=1 %}"
                                class="text-gray-700 hover:text-green-600 font-medium text-base">
                                 События
                             </a>

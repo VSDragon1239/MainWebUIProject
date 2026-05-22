@@ -181,10 +181,10 @@ def process_registration_approval(request_obj):
     # 2. Отправка письма
     send_templated_mail(
         subject="Доступ к порталу Green ZabGu открыт",
-        template_path="emails/registration_approved.html",
+        template_path="webuiprojectgreenzabgu/emails/registration_approved.html",
         context_dict={
             "fio": request_obj.fio, "username": email, "password": raw_password,
-            "login_url": "https://ваш-домен.ru/login/"  # ЗАМЕНИТЕ
+            "login_url": "https://localhost/login/"
         },
         to_email=email
     )
@@ -194,3 +194,27 @@ def process_registration_approval(request_obj):
     request_obj.save()
 
     return True, raw_password
+
+
+def process_registration_rejection(request_obj):
+    """Отклоняет заявку и отправляет уведомление на email. Возвращает (True, сообщение) или (False, ошибка)"""
+    if request_obj.status == "rejected":
+        return False, "Заявка уже отклонена"
+    if request_obj.status == "approved":
+        return False, "Нельзя отклонить уже одобренную заявку"
+
+    # 1. Отправка письма об отказе
+    send_templated_mail(
+        subject="Заявка на регистрацию в Green ZabGu",
+        template_path="webuiprojectgreenzabgu/emails/registration_rejected.html",
+        context_dict={
+            "fio": request_obj.fio
+        },
+        to_email=request_obj.email
+    )
+
+    # 2. Смена статуса
+    request_obj.status = "rejected"
+    request_obj.save()
+
+    return True, "Заявка успешно отклонена"

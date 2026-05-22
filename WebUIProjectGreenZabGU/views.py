@@ -4,7 +4,7 @@ from datetime import datetime
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User, Group
-from django.db.models import Count, Max
+from django.db.models import Count, Max, Q
 from django.http import JsonResponse
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -16,15 +16,17 @@ from django.http import Http404
 
 from MainWebUIProject import settings
 from .email_sender import send_templated_mail
-from .forms import BlogPostForm, BlogPostImageFormSet, RegistrationRequestForm, ProfileAvatarForm, UserEditForm
+from .forms import BlogPostForm, BlogPostImageFormSet, RegistrationRequestForm, ProfileAvatarForm, UserEditForm, \
+    OfferCreateForm
 from WebUiProject.models import Project, Blog, EcoTransactionType, EcoTask, UserTaskCompletion, \
     EcoHabit, UserHabitLog, EcoHabitCategory, Profile, RegistrationRequest, EcoCoinTransaction, Event, EventCategory, \
     UserPromoCode, Offer
-from .permissions import RoleRequiredMixin
+from .permissions import RoleRequiredMixin, PartnerRequiredMixin
 
 from django.views import View
 
-from .services import EcoCoinService, process_registration_approval, InsufficientFundsError
+from .services import EcoCoinService, process_registration_approval, InsufficientFundsError, \
+    process_registration_rejection
 
 logger = logging.getLogger(__name__)
 
@@ -200,12 +202,13 @@ class ModerateRequestView(LoginRequiredMixin, View):
             else:
                 return JsonResponse({"status": "error", "message": result}, status=400)
 
-        elif action == "reject":
-            req.status = "rejected"
-            req.save()
-            # Здесь можно вызвать send_templated_mail для отклонения
-            return JsonResponse({"status": "success", "message": "Заявка отклонена"})
 
+        elif action == "reject":
+            success, result = process_registration_rejection(req)
+            if success:
+                return JsonResponse({"status": "success", "message": result})
+            else:
+                return JsonResponse({"status": "error", "message": result}, status=400)
         return JsonResponse({"error": "Неверный action"}, status=400)
 
 
@@ -355,14 +358,14 @@ class AchievementsView(TemplateView):
 class CategoriesEventsView(ListView):
     """Список категорий мероприятий"""
     model = EventCategory
-    template_name = "pages/categories_events.html"
+    template_name = "webuiprojectgreenzabgu/events/categories_events.html"
     context_object_name = 'categories'
 
 
 class EventsView(ListView):
     """Список мероприятий внутри категории"""
     model = Event
-    template_name = "pages/events.html"
+    template_name = "webuiprojectgreenzabgu/events/events.html"
     context_object_name = 'events'
 
     def get_queryset(self):
@@ -371,14 +374,18 @@ class EventsView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['category'] = get_object_or_404(EventCategory, pk=self.kwargs.get('pk'))
+        category_id = self.kwargs.get('pk')
+
+        # Безопасное получение категории без вызова ошибки 404
+        context['category'] = EventCategory.objects.filter(pk=category_id).first()
+
         return context
 
 
 class EventDetailsView(DetailView):
     """Детальная страница конкретного мероприятия"""
     model = Event
-    template_name = "pages/event_details.html"
+    template_name = "webuiprojectgreenzabgu/events/event_details.html"
     context_object_name = 'event'
 
     # ИСПРАВЛЕНИЕ: Извлекаем pk2 из URL
@@ -405,7 +412,7 @@ class EcoHabitsTrackerView(LoginRequiredMixin, TemplateView):
     Теперь это не пустая страница, а Главный Дашборд Привычек.
     Отсюда пользователь идет к категориям.
     """
-    template_name = "webuiprojectgreenzabgu/pages/eco_habits_tracker.html"
+    template_name = "webuiprojectgreenzabgu/ecohabits/eco_habits_tracker.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -544,7 +551,7 @@ class CompleteEcoTaskView(LoginRequiredMixin, View):
         external_id = f"task:{task.id}:user:{request.user.id}"
         task_type_code = task.task_type.code if task.task_type else 'trust'
 
-        proof_text = None
+        proof_text = ""
         proof_image = None
 
         # 1. Валидация типа
@@ -594,21 +601,47 @@ class CompleteEcoTaskView(LoginRequiredMixin, View):
                 "new_balance": str(new_balance)
             })
 
+
         except IntegrityError as e:
-            # Если мы сюда попали, значит произошел идеальный Race Condition (два запроса в одну миллисекунду)
             import logging
             logger = logging.getLogger(__name__)
-            logger.warning(
-                f"Race condition prevented for task {task_id} by user {request.user.id}. External ID: {external_id}. Error: {str(e)}")
+            # Точная проверка: из-за какого именно поля упала база данных?
+            error_msg = str(e)
 
-            # Возвращаем не ошибку, а "успех", чтобы UI не сломался, так как задание на 99.9% выполнено первым запросом
-            # Просто обновляем баланс из БД
-            actual_balance = EcoCoinService.get_balance(request.user)
+            if "external_id" in error_msg or "tx_type" in error_msg:
+                # Ситуация: Транзакция начисления баллов уже ЕСТЬ в базе, а UserTaskCompletion почему-то нет.
+                # Чтобы починить этот сбой ("призрак"), мы прямо здесь досоздаем объект выполнения:
+                try:
+                    UserTaskCompletion.objects.create(
+                        user=request.user,
+                        task=task,
+                        proof_text=proof_text,
+                        proof_image=proof_image
+                    )
+                    actual_balance = EcoCoinService.get_balance(request.user)
+                    return JsonResponse({
+                        "status": "success",
+                        "message": "Задание успешно синхронизировано и выполнено!",
+                        "new_balance": str(actual_balance)
+                    })
+                except Exception as inner_e:
+                    return JsonResponse({"error": f"Это задание уже было обработано системой ранее."}, status=400)
+
+            # Если это действительно Race Condition (запись UserTaskCompletion заблокировала уникальный индекс)
+            task_already_done = UserTaskCompletion.objects.filter(user=request.user, task=task).exists()
+            if task_already_done:
+                actual_balance = EcoCoinService.get_balance(request.user)
+                return JsonResponse({
+                    "status": "success",
+                    "message": "Задание выполнено!",
+                    "new_balance": str(actual_balance)
+                })
+
+            # Любая другая непредвиденная ошибка уникальности
+            logger.warning(f"IntegrityError во вьюхе тасок: {error_msg}")
             return JsonResponse({
-                "status": "success",
-                "message": "Задание выполнено!",
-                "new_balance": str(actual_balance)
-            })
+                "error": f"Ошибка базы данных (IntegrityError): {error_msg}. Проверьте уникальность индексов."
+            }, status=400)
 
         except Exception as e:
             import logging
@@ -806,3 +839,58 @@ class ExchangeOfferView(LoginRequiredMixin, View):
             logger = logging.getLogger(__name__)
             logger.error(f"Exchange error: {str(e)}", exc_info=True)
             return JsonResponse({"error": "Ошибка сервера"}, status=500)
+
+
+class PartnerDashboardView(PartnerRequiredMixin, RoleRequiredMixin, TemplateView):
+    template_name = "webuiprojectgreenzabgu/partner/partner_dashboard.html"
+    required_roles = ['Спонсоры']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        partner = self.request.user.partner_profile.partner
+
+        # Агрегация статистики по офферам текущего партнера
+        offers_stats = UserPromoCode.objects.filter(offer__partner=partner).aggregate(
+            total_issued=Count('id'),
+            total_used=Count('id', filter=Q(is_used=True))
+        )
+
+        # Считаем уникальных клиентов (у которых есть хотя бы 1 не использованный промокод)
+        active_clients = UserPromoCode.objects.filter(
+            offer__partner=partner,
+            is_used=False
+        ).values('user').distinct().count()
+
+        context['partner'] = partner
+        context['joined_at'] = self.request.user.partner_profile.joined_at
+        context['total_issued'] = offers_stats['total_issued'] or 0
+        context['total_used'] = offers_stats['total_used'] or 0
+        context['active_clients'] = active_clients
+
+        # Последние 3 промокода для отображения на дашборде
+        context['recent_promos'] = Offer.objects.filter(partner=partner).order_by('-id')[:3]
+
+        return context
+
+
+class PartnerOfferListView(PartnerRequiredMixin, RoleRequiredMixin, ListView):
+    template_name = "webuiprojectgreenzabgu/partner/partner_offers.html"
+    required_roles = ['Спонсоры']
+    context_object_name = 'offers'
+
+    def get_queryset(self):
+        return Offer.objects.filter(partner=self.request.user.partner_profile.partner).order_by('-id')
+
+
+class PartnerOfferCreateView(PartnerRequiredMixin, RoleRequiredMixin, CreateView):
+    template_name = "webuiprojectgreenzabgu/partner/partner_offer_create.html"
+    required_roles = ['Спонсоры']
+    form_class = OfferCreateForm
+    model = Offer
+    success_url = reverse_lazy('partner_offers')
+
+    def form_valid(self, form):
+        form.instance.partner = self.request.user.partner_profile.partner
+        form.instance.is_active = True
+        messages.success(self.request, "Предложение успешно создано!")
+        return super().form_valid(form)

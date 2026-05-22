@@ -506,3 +506,19 @@ class UserPromoCode(models.Model):
 
     def __str__(self):
         return f"{self.code} ({'Использован' if self.is_used else 'Активен'})"
+
+
+class PartnerProfile(models.Model):
+    """Связывает пользователя Django с бизнес-профилем Партнера"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="partner_profile")
+    partner = models.ForeignKey(Partner, on_delete=models.CASCADE, verbose_name="Бизнес")
+
+    # Дата начала партнерства для отображения в интерфейсе
+    joined_at = models.DateField(auto_now_add=True, verbose_name="Дата начала партнерства")
+
+    class Meta:
+        verbose_name = "Профиль партнера"
+        verbose_name_plural = "Профили партнеров"
+
+    def __str__(self):
+        return f"{self.partner.name} ({self.user.username})"

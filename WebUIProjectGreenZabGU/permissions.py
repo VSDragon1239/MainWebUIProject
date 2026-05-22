@@ -14,3 +14,13 @@ class RoleRequiredMixin:
         else:
             return redirect("/login/")
         return super().dispatch(request, *args, **kwargs)
+
+
+class PartnerRequiredMixin:
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('/login/')
+        # Проверяем, есть ли у пользователя профиль партнера
+        if not hasattr(request.user, 'partner_profile'):
+            return redirect('no-access')
+        return super().dispatch(request, *args, **kwargs)

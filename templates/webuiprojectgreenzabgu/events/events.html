@@ -1,0 +1,89 @@
+{% extends 'webuiprojectgreenzabgu/base/base_header.html' %}
+{% load static %}
+
+{% block title %}Мероприятия: {{ category.name }}{% endblock %}
+
+{% block content_block_1 %}
+    <div class="bg-gray-50 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto">
+
+            <!-- Хлебные крошки / Назад -->
+            <div class="mb-6">
+                <a href="{% url 'categories_events' %}"
+                   class="inline-flex items-center text-sm font-medium text-green-600 hover:text-green-700 transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                         xmlns="http://w3.org">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Назад к категориям
+                </a>
+            </div>
+
+            <!-- Шапка категории -->
+            <header class="mb-10 p-6 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <span class="text-xs font-bold uppercase tracking-wider text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                Категория
+            </span>
+                <h1 class="text-3xl font-extrabold text-gray-900 mt-2">
+                    {{ category.name }}
+                </h1>
+                {% if category.description %}
+                    <p class="mt-2 text-gray-500 text-base max-w-3xl">{{ category.description }}</p>
+                {% endif %}
+            </header>
+
+            <!-- Список мероприятий -->
+            <div class="space-y-6">
+                {% for event in events %}
+                    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-md transition-shadow">
+
+                        <!-- Инфо о мероприятии -->
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">
+                                {{ event.title }}
+                            </h3>
+                            <p class="text-gray-500 text-sm mb-4 line-clamp-2">
+                                {{ event.description }}
+                            </p>
+
+                            <!-- Мета-данные (Дата, время, место) -->
+                            <div class="flex flex-wrap gap-4 text-xs font-medium text-gray-400">
+                                {% if event.date %}
+                                    <span class="flex items-center bg-gray-50 px-2.5 py-1 rounded-md text-gray-600">
+                                    <i class="material-icons text-sm mr-1.5 text-gray-400">calendar_today</i>
+                                    {{ event.date|date:"d.m.Y" }}
+                                </span>
+                                {% endif %}
+                                {% if event.location %}
+                                    <span class="flex items-center bg-gray-50 px-2.5 py-1 rounded-md text-gray-600">
+                                    <i class="material-icons text-sm mr-1.5 text-gray-400">location_on</i>
+                                    {{ event.location }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Кнопка действия -->
+                        <div class="flex items-center justify-end md:border-l md:border-gray-100 md:pl-6 min-w-[160px]">
+                            <a href="{% url 'eco_task_details' event.id %}"
+                               class="w-full text-center px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm transition-colors shadow-sm">
+                                Участвовать
+                            </a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <!-- Заглушка, если в категории нет мероприятий -->
+                    <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 text-center">
+                        <div class="mx-auto h-12 w-12 text-gray-400 flex items-center justify-center">
+                            <i class="material-icons text-4xl">event_busy</i>
+                        </div>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Мероприятий пока нет</h3>
+                        <p class="mt-1 text-sm text-gray-500">В категории «{{ category.name }}» ещё не запланировано ни
+                            одного события. Следите за обновлениями!</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

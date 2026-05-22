@@ -6,10 +6,14 @@
 {% block extra_css %}
     <!-- Подключаем Bootstrap Icons, так как в БД хранятся их классы (например bi-building) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Roboto+Slab:wght@400;600;700&display=swap"
+          rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 {% endblock %}
 
 {% block content_block_0 %}
-    <h1>МЗП -> <a href="{% url 'profile' %}">Профиль</a> -> Трекер привычек</h1>
+{#    <h1>МЗП -> <a href="{% url 'profile' %}">Профиль</a> -> Трекер привычек</h1>#}
 {% endblock %}
 
 {% block content_block_1 %}
