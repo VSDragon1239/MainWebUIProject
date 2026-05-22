@@ -38,6 +38,10 @@
                            class="nav-link text-gray-600 font-medium text-sm">Запросы</a>
                         <a href="#" class="nav-link text-gray-600 font-medium text-sm">Пользователи</a>
                         <a href="#" class="nav-link text-gray-600 font-medium text-sm">Отчётность</a>
+                        <a href="{% url 'admin' %}"
+                           class="nav-link text-gray-600 font-medium text-sm">Администрирование</a>
+                        <a href="{% url 'marketplace' %}"
+                           class="nav-link text-gray-600 font-medium text-sm">Маркетплейс</a>
                     {% else %}
                         {% if request.resolver_match.url_name != 'profile' %}
                             <a href="{% url 'profile' %}"
@@ -61,6 +65,12 @@
                             <a href="{% url 'eco_bonus_list' %}"
                                class="text-gray-700 hover:text-green-600 font-medium text-base">
                                 Бонусы
+                            </a>
+                        {% endif %}
+                        {% if request.resolver_match.url_name != 'marketplace' %}
+                            <a href="{% url 'eco_bonus_list' %}"
+                               class="text-gray-700 hover:text-green-600 font-medium text-base">
+                                Маркетплейс
                             </a>
                         {% endif %}
                         {% if request.resolver_match.url_name != 'rating_board' %}

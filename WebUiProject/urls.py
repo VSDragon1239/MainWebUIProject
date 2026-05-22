@@ -1,11 +1,14 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
+from django.views.generic import RedirectView
+
 from WebUiProject.views import IndexView, AboutView, ApplicationsView, \
     UserCreateView, UserUpdateView, UserDeleteView
 
 urlpatterns = [
     # Роли пользователей:
     path('', IndexView.as_view(), name='main'),
+    path('admin/', RedirectView.as_view(url='sysadmin/', permanent=True)),
 
     # Управление пользователями:
     path('create/', UserCreateView.as_view(), name='user_create'),

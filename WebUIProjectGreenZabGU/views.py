@@ -1,4 +1,5 @@
 import logging
+import uuid
 from datetime import datetime
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -17,12 +18,13 @@ from MainWebUIProject import settings
 from .email_sender import send_templated_mail
 from .forms import BlogPostForm, BlogPostImageFormSet, RegistrationRequestForm, ProfileAvatarForm, UserEditForm
 from WebUiProject.models import Project, Blog, EcoTransactionType, EcoTask, UserTaskCompletion, \
-    EcoHabit, UserHabitLog, EcoHabitCategory, Profile, RegistrationRequest, EcoCoinTransaction, Event, EventCategory
+    EcoHabit, UserHabitLog, EcoHabitCategory, Profile, RegistrationRequest, EcoCoinTransaction, Event, EventCategory, \
+    UserPromoCode, Offer
 from .permissions import RoleRequiredMixin
 
 from django.views import View
 
-from .services import EcoCoinService, process_registration_approval
+from .services import EcoCoinService, process_registration_approval, InsufficientFundsError
 
 logger = logging.getLogger(__name__)
 
@@ -737,4 +739,70 @@ class LogEcoHabitView(LoginRequiredMixin, View):
             import logging
             logger = logging.getLogger(__name__)
             logger.error(f"Habit Log Error: {str(e)}", exc_info=True)
+            return JsonResponse({"error": "Ошибка сервера"}, status=500)
+
+
+class MarketplaceView(LoginRequiredMixin, ListView):
+    """Витрина маркетплейса"""
+    model = Offer
+    template_name = "webuiprojectgreenzabgu/marketplace/marketplace.html"
+    context_object_name = 'offers'
+
+    def get_queryset(self):
+        return Offer.objects.filter(is_active=True).select_related('partner')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Получаем активные промокоды пользователя для нижнего блока
+        context['my_promocodes'] = UserPromoCode.objects.filter(
+            user=self.request.user,
+            is_used=False
+        ).select_related('offer__partner').order_by('-created_at')
+        return context
+
+
+class ExchangeOfferView(LoginRequiredMixin, View):
+    """AJAX обмен ECO-коинов на промокод"""
+
+    def post(self, request, pk):
+        offer = get_object_or_404(Offer, pk=pk, is_active=True)
+        user = request.user
+
+        # Формируем уникальный код (например: ECO-1A2B3C4D)
+        external_id = f"exchange_offer:{offer.id}:user:{user.id}"
+
+        try:
+            with db_transaction.atomic():
+                # 1. Списываем монеты
+                new_balance = EcoCoinService.debit(
+                    user=user,
+                    amount=offer.price_in_eco,
+                    tx_type=EcoTransactionType.SHOP_PURCHASE,
+                    external_id=external_id
+                )
+
+                # 2. Генерируем промокод
+                promo_code = f"ECO-{uuid.uuid4().hex[:8].upper()}"
+
+                # 3. Сохраняем промокод
+                UserPromoCode.objects.create(
+                    user=user,
+                    offer=offer,
+                    code=promo_code
+                )
+
+            return JsonResponse({
+                "status": "success",
+                "message": f"Успешно приобретено: {offer.title}",
+                "promo_code": promo_code,
+                "partner_name": offer.partner.name,
+                "new_balance": str(new_balance)
+            })
+
+        except InsufficientFundsError:
+            return JsonResponse({"error": "Недостаточно ECO-коинов для обмена"}, status=400)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Exchange error: {str(e)}", exc_info=True)
             return JsonResponse({"error": "Ошибка сервера"}, status=500)

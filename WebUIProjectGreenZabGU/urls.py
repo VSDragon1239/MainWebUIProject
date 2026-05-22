@@ -1,14 +1,17 @@
 from django.urls import path
+from django.views.generic import RedirectView
+
 from WebUIProjectGreenZabGU.views import AddBlogPostView, AchievementsView, \
     CategoriesEventsView, EventsView, EcoHabitsTrackerView, EcoHabitsCategoriesView, \
     EcoHabitsView, EventDetailsView, EcoTasksTrackerView, EcoTaskDetailsView, EcoHabitDetailsView, \
     CompleteEcoTaskView, LogEcoHabitView, AdminView, ParticipantView, ContentManagerView, IndexGreenView, \
     BlogView, ProfileView, EcoBonusListView, EditEcoBonusView, AddEcoBonusView, RatingBoardView, \
-    ContactsView, ModerateRequestView, EditProfileView
+    ContactsView, ModerateRequestView, EditProfileView, MarketplaceView, ExchangeOfferView
 
 urlpatterns = [
     path('', IndexGreenView.as_view(), name='green_main'),  # Главная страница, надо чтобы было два вида - для не зарегистрированных и для участников
     path('administrations/', AdminView.as_view(), name='administrations'),      # Страница для администратора, позволяет управлять данными
+    path('admin/', RedirectView.as_view(url='sysadmin/', permanent=True)),
     path('api/moderate-request/<int:pk>/', ModerateRequestView.as_view(), name='api_moderate_request'),     # Управляет кнопками для заявок на регистрацию
     path('participant/', ParticipantView.as_view(), name='participant'),    # Страница для менеджеров, позволяет управлять и добавлять участников
     path('content_manager/', ContentManagerView.as_view(), name='content_manager'),  # Управляющий событиями, позволяет управлять новостями и блогами...
@@ -64,4 +67,8 @@ urlpatterns = [
     path('eco-tasks-tracker/', EcoTasksTrackerView.as_view(), name='eco_tasks_tracker'),
     path('eco-task-details/<int:pk>/', EcoTaskDetailsView.as_view(), name='eco_task_details'),
     path('eco-tasks/complete/<int:task_id>/', CompleteEcoTaskView.as_view(), name='eco_task_complete'),
+
+    # --- МАРКЕТПЛЕЙС ---
+    path('marketplace/', MarketplaceView.as_view(), name='marketplace'),
+    path('marketplace/exchange/<int:pk>/', ExchangeOfferView.as_view(), name='marketplace_exchange'),
 ]

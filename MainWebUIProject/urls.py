@@ -26,7 +26,8 @@ from WebUiProject.views import NoAccessView
 
 urlpatterns = [
     path('', RedirectView.as_view(url='main/', permanent=True)),
-    path('sysadmin/', admin.site.urls),
+    path('admin/', RedirectView.as_view(url='sysadmin/', permanent=True), name='admin'),
+    path('admin/sysadmin/', admin.site.urls),
     path('main/', include('WebUiProject.urls')),  # Доступ по адресу /main/, главная для всего...
     path('main/green-zabgu/', include('WebUIProjectGreenZabGU.urls')),
     # Доступ по адресу main/green-zabgu/, главная для МЗП

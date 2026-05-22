@@ -7,7 +7,8 @@ from django.utils.crypto import get_random_string
 from WebUIProjectGreenZabGU.email_sender import send_templated_mail
 from WebUIProjectGreenZabGU.services import process_registration_approval, EcoCoinService
 from .models import ProjectType, Project, Blog, BlogImage, EcoTask, UserTaskCompletion, EcoCoinTransaction, \
-    EcoHabitCategory, EcoHabit, RegistrationRequest, Profile, EventCategory, Event, EcoTaskType
+    EcoHabitCategory, EcoHabit, RegistrationRequest, Profile, EventCategory, Event, EcoTaskType, Partner, Offer, \
+    UserPromoCode
 
 
 @admin.register(ProjectType)
@@ -184,3 +185,20 @@ admin.site.register(EventCategory)
 class EventAdmin(admin.ModelAdmin):
     list_display = ('title', 'category', 'event_date', 'location')
     list_filter = ('category',)
+
+
+admin.site.register(Partner)
+
+
+@admin.register(Offer)
+class OfferAdmin(admin.ModelAdmin):
+    list_display = ('title', 'partner', 'category', 'price_in_eco', 'is_active')
+    list_filter = ('category', 'is_active')
+    list_editable = ('is_active',)
+
+
+@admin.register(UserPromoCode)
+class UserPromoCodeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'offer', 'code', 'is_used', 'created_at')
+    list_filter = ('is_used', 'offer__partner')
+    search_fields = ('code', 'user__username')
