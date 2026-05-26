@@ -197,11 +197,20 @@ class UserDeleteView(RoleRequiredMixin, DeleteView):
 
 # Страница нет доступа (вместо ошибки 403)
 class NoAccessView(TemplateView):
-    template_name = "pages/no_access.html"
+    template_name = "webuiproject/pages/no_access.html"
 
     def get(self, request, *args, **kwargs):
+        # # 1. Проверяем авторизацию
+        # if request.user.is_authenticated:
+        #     # 2. Проверяем группу
+        #     if request.user.groups.filter(name="Партнеры").exists():
+        #         # 3. Перенаправляем (здесь должно быть имя из urls.py или прямой путь '/partner/')
+        #         return redirect("partner_dashboard")
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Передаем простую переменную True/False в шаблон
+        context['is_partner'] = self.request.user.is_authenticated and self.request.user.groups.filter(
+            name="Партнеры").exists()
         return context

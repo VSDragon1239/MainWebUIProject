@@ -3,11 +3,11 @@ from django.contrib.auth.models import User, Group
 from django.core.checks import messages
 from django.shortcuts import redirect
 from django.utils.crypto import get_random_string
-
+from django.utils.html import format_html
 from WebUIProjectGreenZabGU.services import process_registration_approval, EcoCoinService, \
     process_registration_rejection
-from .models import ProjectType, Project, Blog, BlogImage, EcoTask, UserTaskCompletion, EcoCoinTransaction, \
-    EcoHabitCategory, EcoHabit, RegistrationRequest, Profile, EventCategory, Event, EcoTaskType, Partner, Offer, \
+from .models import ProjectType, Project, Blog, BlogImage, EcoTask, UserTaskCompletion, \
+    EcoHabitCategory, EcoHabit, RegistrationRequest, EventCategory, Event, EcoTaskType, Partner, Offer, \
     UserPromoCode
 
 
@@ -187,18 +187,94 @@ class EventAdmin(admin.ModelAdmin):
     list_filter = ('category',)
 
 
-admin.site.register(Partner)
+# admin.site.register(Partner)
+@admin.register(Partner)
+class PartnerAdmin(admin.ModelAdmin):
+    list_display = ('name', 'get_user_display', 'get_total_offers', 'get_status_badge')
+    search_fields = ('name', 'user__username')
+    list_filter = ('name',)
+    ordering = ('name',)
+
+    # 1. Настраиваем выпадающий список пользователей
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'user':
+            # Показываем только тех, кто еще не привязан к другому бизнесу
+            qs = User.objects.filter(managed_partner__isnull=True)
+            kwargs['queryset'] = qs
+            return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    # 2. Создание/Привязка аккаунта
+    def save_model(self, request, obj, form, change):
+        if not change and not obj.user:
+            # Если создаем нового партнера и юзер не выбран в дропдауне:
+            username = f"partner_{obj.name.lower().replace(' ', '_')}_{obj.id}"
+            email = f"{username}@zabgu.ru"
+            raw_password = get_random_string(length=12)
+
+            # Создаем юзера и сразу хешируем пароль
+            user = User.objects.create_user(username=username, email=email, password=raw_password)
+
+            # Добавляем в нужную группу
+            try:
+                partner_group = Group.objects.get(name='Партнеры')
+                user.groups.add(partner_group)
+            except Group.DoesNotExist:
+                pass
+
+            obj.user = user
+
+        super().save_model(request, obj, form, change)
+
+    def get_user_display(self, obj):
+        if obj.user:
+            # В строке 2 плейсхолдера {}, передаем 2 аргумента:
+            # {0} - ID пользователя, {1} - Логин
+            return format_html(
+                '<a href="/admin/auth/user/{}/change/" target="_blank" class="text-blue-600 hover:underline font-semibold">{}</a>',
+                obj.user.id,
+                obj.user.username
+            )
+        return format_html('<span class="text-gray-400">Не привязан</span>')
+
+    def get_total_offers(self, obj):
+        count = Offer.objects.filter(partner=obj).count()
+        return format_html('<span class="badge bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">{}</span>', count)
+
+    def get_status_badge(self, obj):
+        if obj.user:
+            return format_html('<span class="badge bg-success text-white text-xs px-2 py-1 rounded">Активен</span>')
+        return format_html(
+            '<span class="badge bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded">Без аккаунта</span>')
+
+    actions = ['generate_temp_password']
+
+    @admin.action(description='Сгенерировать новый пароль для привязанных партнеров')
+    def generate_temp_password(self, request, queryset):
+        count = 0
+        for partner in queryset:
+            if partner.user:
+                new_pass = get_random_string(length=12)
+                partner.user.set_password(new_pass)
+                partner.user.save()
+                count += 1
+        if count > 0:
+            self.message_user(request, f"Пароли обновлены для {count} партнеров. Проверьте консоль.", messages.SUCCESS)
 
 
+# ==========================================================
+# ОСТАЛЬНОЕ АДМИНКИ (опциональные улучшения)
+# ==========================================================
 @admin.register(Offer)
 class OfferAdmin(admin.ModelAdmin):
     list_display = ('title', 'partner', 'category', 'price_in_eco', 'is_active')
-    list_filter = ('category', 'is_active')
+    list_filter = ('partner', 'category', 'is_active')
     list_editable = ('is_active',)
+    search_fields = ('title', 'partner__name')
 
 
 @admin.register(UserPromoCode)
 class UserPromoCodeAdmin(admin.ModelAdmin):
-    list_display = ('user', 'offer', 'code', 'is_used', 'created_at')
+    list_display = ('code', 'user', 'offer', 'is_used', 'created_at')
     list_filter = ('is_used', 'offer__partner')
     search_fields = ('code', 'user__username')
+    readonly_fields = ('code', 'created_at')

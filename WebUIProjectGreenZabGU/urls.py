@@ -7,7 +7,7 @@ from WebUIProjectGreenZabGU.views import AddBlogPostView, AchievementsView, \
     CompleteEcoTaskView, LogEcoHabitView, AdminView, ParticipantView, ContentManagerView, IndexGreenView, \
     BlogView, ProfileView, EcoBonusListView, EditEcoBonusView, AddEcoBonusView, RatingBoardView, \
     ContactsView, ModerateRequestView, EditProfileView, MarketplaceView, ExchangeOfferView, PartnerDashboardView, \
-    PartnerOfferCreateView, PartnerOfferListView
+    PartnerOfferCreateView, PartnerOfferListView, PartnerOfferUpdateView, PartnerOfferDeleteView
 
 urlpatterns = [
     path('', IndexGreenView.as_view(), name='green_main'),  # Главная страница, надо чтобы было два вида - для не зарегистрированных и для участников
@@ -77,4 +77,6 @@ urlpatterns = [
     path('partner/dashboard/', PartnerDashboardView.as_view(), name='partner_dashboard'),
     path('partner/offers/', PartnerOfferListView.as_view(), name='partner_offers'),
     path('partner/offers/create/', PartnerOfferCreateView.as_view(), name='partner_offer_create'),
+    path('partner/offers/<int:pk>/edit/', PartnerOfferUpdateView.as_view(), name='partner_offer_edit'),
+    path('partner/offer/<int:pk>/delete/', PartnerOfferDeleteView.as_view(), name='partner_offer_delete'),
 ]
